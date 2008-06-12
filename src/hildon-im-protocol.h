@@ -163,6 +163,7 @@ typedef enum
   HILDON_IM_COMMIT_REDIRECT,
   HILDON_IM_COMMIT_SURROUNDING,
   HILDON_IM_COMMIT_BUFFERED,
+  HILDON_IM_COMMIT_PREEDIT,
 } HildonIMCommitMode;
 
 /* Command activation message, from context to IM (see HildonIMCommand) */
