@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: hildon-input-method-framework
+Description: Hildon Input Method Framework
+Version: @VERSION@ 
+Libs: -L${libdir}/hildon-input-method -lhildon_im_common
+Cflags: -I${includedir}/hildon-input-method

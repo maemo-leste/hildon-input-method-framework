@@ -1,0 +1,191 @@
+hildon-input-method-framework (1:2.0.1-1) unstable; urgency=low
+
+  * Fixes: NB#79664, NB#80146.
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Wed,  6 Feb 2008 14:04:00 +0200
+
+hildon-input-method-framework (1:2.0.0-1) unstable; urgency=low
+
+  * New release.
+
+ -- Richard Sun <richard.sun@nokia.com>  Fri, 11 Jan 2008 10:38:15 +0200
+
+hildon-input-method-framework (1:1.99.24-1) unstable; urgency=low
+
+  * Fixes: NB#76248, NB#73109.
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Mon, 19 Nov 2007 14:03:00 +0300
+
+hildon-input-method-framework (1:1.99.23-1) unstable; urgency=low
+
+  * Fixes: NB#71928, NB#71497. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Wed, 24 Oct 2007 14:20:14 +0300
+
+hildon-input-method-framework (1:1.99.22-1) unstable; urgency=low
+
+  * Fixes: NB#69229, NB#71149 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Fri, 28 Sep 2007 11:52:04 +0300
+
+hildon-input-method-framework (1:1.99.21-1) unstable; urgency=low
+
+  * Fixes: NB#69697, NB#70297. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Fri, 21 Sep 2007 11:13:19 +0300
+
+hildon-input-method-framework (1:1.99.20-1) unstable; urgency=low
+
+  * New release.
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Mon, 10 Sep 2007 16:22:00 +0300
+
+hildon-input-method-framework (1:1.99.19-1) unstable; urgency=low
+
+  * Fixes: NB#58192, NB#64072 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Mon, 10 Sep 2007 13:38:03 +0300
+
+hildon-input-method-framework (1:1.99.18-1) unstable; urgency=low
+
+  * Fixes: NB#63208, NB#58966
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Tue, 21 Aug 2007 11:06:42 +0300
+
+hildon-input-method-framework (1:1.99.17-1) unstable; urgency=low
+
+  * Fixes: NB#63230, NB#62824.
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Thu, 19 Jul 2007 15:05:00 +0300
+
+hildon-input-method-framework (1:1.99.16-1) unstable; urgency=low
+
+  * Fixes: NB#62216, NB#62084
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Fri,  6 Jul 2007 15:44:20 +0300
+
+hildon-input-method-framework (1:1.99.15-1) unstable; urgency=low
+
+  * New release. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Tue,  3 Jul 2007 17:02:27 +0300
+
+hildon-input-method-framework (1:1.99.14-1) unstable; urgency=low
+
+  * New release. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Mon,  2 Jul 2007 11:11:23 +0300
+
+hildon-input-method-framework (1:1.99.13-1) unstable; urgency=low
+
+  * Implemented: NR#167507 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Fri, 29 Jun 2007 16:08:17 +0300
+
+hildon-input-method-framework (1:1.99.12-1) unstable; urgency=low
+
+  * Fixes: NB#60434.
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Tue, 19 Jun 2007 16:21:00 +0300
+
+hildon-input-method-framework (1:1.99.11-1) unstable; urgency=low
+
+  * Fixes: NB#59960
+
+ -- Mohammad Anwari <Mohammad.Anwari@nokia.com>  Tue,  5 Jun 2007 14:55:00 +0300
+
+hildon-input-method-framework (1:1.99.10-1) unstable; urgency=low
+
+  * Fixes: NB#55690
+
+ -- Tomas Junnonen <tomas.junnonen@nokia.com>  Tue,  5 Jun 2007 14:55:00 +0300
+
+hildon-input-method-framework (1:1.99.9-1) unstable; urgency=low
+
+  * Updated interaction with UI and shift/autocaps handling.
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Mon,  4 Jun 2007 20:35:52 +0300
+
+hildon-input-method-framework (1:1.99.8-1) unstable; urgency=low
+
+  * Implemented: NR#167766 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Fri, 18 May 2007 11:23:16 +0300
+
+hildon-input-method-framework (1:1.99.7-1) unstable; urgency=low
+
+  * Fixes: NB#55666 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Tue, 15 May 2007 15:50:02 +0300
+
+hildon-input-method-framework (1:1.99.6-1) unstable; urgency=low
+
+  * Removed -header package.
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Wed,  9 May 2007 17:40:03 +0300
+
+hildon-input-method-framework (1:1.99.5-1) unstable; urgency=low
+
+  * Fixes: NB#56191 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Tue,  8 May 2007 16:02:45 +0300
+
+hildon-input-method-framework (1:1.99.4-1) unstable; urgency=low
+
+  * New license. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Thu,  3 May 2007 17:24:25 +0300
+
+hildon-input-method-framework (1:1.99.3-1) unstable; urgency=low
+
+  * New upstream release (3.0.6).
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Sun, 29 Apr 2007 11:48:55 +0300
+
+hildon-input-method-framework (1:1.99.2-1) unstable; urgency=low
+
+  * New upstream release. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Thu, 19 Apr 2007 15:40:13 +0300
+
+hildon-input-method-framework (1:1.99.1-1) unstable; urgency=low
+
+  * No link to any libraries in header package.
+
+ -- Mohammad Anwari <mdamt@sudirman>  Fri, 23 Mar 2007 15:27:54 +0200
+
+hildon-input-method-framework (1:1.99.0-1) unstable; urgency=low
+
+  * Conforms to consolidated Hildon version numbering. 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Mon, 19 Mar 2007 16:44:07 +0200
+
+hildon-input-method-framework (3.0.3-2) unstable; urgency=low
+
+  * Updated compatibility with the transitional package 
+
+ -- Mohammad Anwari <mdamt@maemo.org>  Wed, 21 Feb 2007 11:32:51 +0200
+
+hildon-input-method-framework (3.0.3-1) unstable; urgency=low
+
+  * Guarded #MAEMO_CHANGES with ifdef 
+
+ -- Mohammad Anwari <mdamt@sudirman>  Fri, 16 Feb 2007 14:52:24 +0200
+
+hildon-input-method-framework (3.0.2-1) unstable; urgency=low
+
+  *  Added #define MAEMO_CHANGES
+
+ -- Mohammad Anwari <mdamt@sudirman>  Fri, 16 Feb 2007 14:23:02 +0200
+
+hildon-input-method-framework (3.0.1-1) unstable; urgency=low
+
+  *  Added inclusion to gtk/gtkenums.h and disabled pedantic mode during compilation.
+
+ -- Mohammad Anwari <mdamt@sudirman>  Fri, 16 Feb 2007 11:35:26 +0200
+
+hildon-input-method-framework (3.0.0-1) unstable; urgency=low
+
+  * New branch
+
+ -- Mohammad Anwari <Mohammad.Anwari@nokia.com>  Mon,  5 Feb 2007 13:34:04 +0200

@@ -1,0 +1,780 @@
+2008-02-06  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 2.0.1
+
+2008-02-05  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Fixed autocap changing multiple
+	  characters when there are several key press events in
+	  the queue and the mainloop iteration does not run between
+	  their processing. Fixes NB#79664.
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	  Introduce HILDON_IM_CONTEXT_ENTER_ON_FOCUS, which generates
+	  a virtual enter key event when the client widget receives
+	  focus. This is mainly useful for fullscreen plugins.
+
+2008-02-04  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Allow applications to supply the
+	  window ID the IM will be set transient to, for children of
+	  GtkPlug. Fixes NB#80146.
+
+2008-01-11  Richard Sun  <richard.sun@nokia.com>
+
+	* Version 1:2.0.0
+	
+2007-11-19  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 1:1.99.24-1
+	* src/hildon-im-context.c:
+	- Pressing shift no longer resets the dead key state, which
+	  makes shift + dead keys commutative. Fixes NB#76248.
+	- Unrealizing widgets should only trigger an IM hide command
+	  if the widget in question had focus. Fixes NB#73109.
+
+2007-10-24  Mohammad Anwari  <mohammad.anwari@nokia.com> 
+
+	* Version 1:1.99.23-1
+
+2007-10-22  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Modifier key presses should
+	  not clear the sticky or lock state. This allows stickying
+	  of multiple keys at the same time. Fixes NB#71928.
+
+2007-10-19  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Always send Return/Enter to the IM,
+	  even if the key event activated the widget or moved the focus.
+	  Fixes NB#71497.
+
+2007-09-28  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Applied patch by Mohammad Anwari:
+	 - Compare surroundings and relative cursor positions therein
+	   when checking if the cursor has moved. This fixes a context
+	   reset being issued whenever the text shifts as a result of
+	   formatting being applied, or the client widget allocation
+	   changing.
+	Fixes NB#69229, NB#71149.
+
+2007-09-21  Mohammad Anwari  <mohammad.anwari@nokia.com> 
+
+	* Version 1:1.99.21-1
+
+2007-09-19  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Exclude return from changing the focus. Fixes NB#69697.
+	- Enable sticky shift for non-printable keys. Fixes NB#70297.
+
+2007-09-12  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-gtk.c: Only consider mapped and visible widgets
+	  as potential focus targets. Fixes NB#69237.
+
+2007-09-10  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 1:1.99.20-1
+	* src/hildon-im-context.c:
+	- Restrict override of tab focus target to GtkEntries
+	- Entries with activate signal handlers must not move focus on enter
+
+2007-09-10  Mohammad Anwari  <mohammad.anwari@nokia.com> 
+
+	* Version 1:1.99.19-1
+
+2007-09-10  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, +src/hildon-im-gtk[c,h], src/Makefile.am:
+	- Introduce Hildon platform behavior previously contained in Maemo
+	  branch of GTK:
+	  - Pressing tab in a text widget focuses the next text widget
+	  - Pressing enter in a text widget without a default action simulates tab
+	Fixes NB#58192, NB#64072.
+
+2007-09-05  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Reworked emission hooks to work without persistent context and widget references
+	- Fixed crash on widget unmap in non-maemo code path
+	- hildon_im_context_hide no longer requires a valid context, allowing its use
+	  in the emissions hooks and elimination of the maemo specific code paths
+
+2007-08-21  Mohammad Anwari  <mohammad.anwari@nokia.com> 
+
+	* src/hildon-im-context.c: Non-maemo combo (Put MAEMO_CHANGES guard for
+	non-maemo platforms)
+	- Removed input modes and clipboard stuff
+	- Connected the client widget's button press/release event and run it to the the filter_event.
+	- Don't connect to interfaces which do not exist in vanilla gtk.
+
+2007-08-30  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-protocol.h: Document the protocol
+
+2007-08-29  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h: Minor cleanups
+
+2007-08-21  Mohammad Anwari  <mohammad.anwari@nokia.com> 
+
+	* Version 1:1.99.18-1
+
+2007-07-26  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	  Set the internal commit mode on entering buffered and surrounding
+	  modes. Fixes backspace not working after entering and leaving
+	  redirect mode. Fixes NB#58966.
+
+2007-07-25  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: If the widget holding the current
+	  selection does not share the toplevel with the new focus
+	  widget, don't automatically deselect the text.
+	  Fixes NB#63208.
+
+2007-07-19  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 1:1.99.17-1
+
+2007-07-17  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Translate event when level key held down even if already level locked
+	- Fixed backspace changing the behavior of the next Return key press. Fixes NB#63230.
+	- Don't track previous surrounding in set_cursor_location as this is an
+	  expensive operation. This may cause extra start of sentence checks in
+	  GtkTextViews with formatting tags, but should otherwise give a net boost.
+	- Fixed entering redirected commit mode moving the cursor in special cases
+	- Send the selection range to the IM after the surrounding
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	- Add new IM communication HILDON_IM_CONTEXT_CLEAR_STICKY to clear
+	  the sticky state from the IM
+
+2007-07-10  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h: Removed
+	multiline check and messages, use HILDON_GTK_INPUT_MODE_MULTILINE
+	HildonGtkInputMode flag instead. Fixes NB#62824.
+
+2007-07-09  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 1:1.99.16-1
+
+2007-07-06  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Minor cleanups:
+	- Remove rapid activation check, doesn't seem necessary anymore
+	- Change the ambiguously named client_signal_handler to
+	  client_changed_signal_handler
+	- Remove unused includes
+	- Remove button 8 handling
+
+2007-07-04  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.[c,h]:
+	- Remove unused copy/cut/paste message definitions
+	- Add copy-clipboard handler to all GTK text widgets and
+	  generate a HILDON_IM_CLIPBOARD_COPIED message on emission.
+
+2007-07-03  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Keep key presses in widgets
+	  internal to the IM from generating X messages and thereby
+          causing the IM to lose the client widget handle.
+	  Fixes NB#62084.
+
+2007-07-03  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 1:1.99.15-1
+
+2007-07-02  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Ensure the keyval for level lookup doesn't change the keyboard group
+	- Fixed option_changed messages generating a harmless message
+
+2007-07-02  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 1:1.99.14-1
+
+2007-06-29  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Prevent keyval lookup for levels
+	  higher than the number of keysyms attached to the keycode
+
+2007-06-29  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 1:1.99.13-1
+
+2007-06-28  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	- Include hardware keycode in HildonIMKeyEventMessage
+	- Introduce HildonIMOptionMask to configure context features
+	- Deprecate HILDON_IM_CONTEXT_AUTOCASE_ON, HILDON_IM_CONTEXT_AUTOCASE_OFF,
+	  HILDON_IM_CONTEXT_AUTOCORRECTION_ON messages
+	- Added option to enter a keyboard level lock state
+
+2007-06-19  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 3.0.15-1
+
+2007-06-18  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Claim composed characters as having
+	already been handled in the key filter. Fixes NB#60434.
+
+2007-06-13  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, configure.ac: Replace Pango-FT2 glyph
+	check with Pango-Cairo version
+
+2007-06-12  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.14-1
+
+2007-06-12  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: If the digit keys are level shifted and the
+	  input mode is strictly numeric, it's not necessary to actually
+	  press the level key to enter numbers.
+
+2007-06-08  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon_im_context.c: Implement level lock and sticky functionality. Fixes NB#59960.
+
+2007-06-04  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 3.0.13-1
+	* src/hildon-im-context.c: Consume GDK_Multi_key events
+
+2007-06-04  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.12-1
+
+2007-05-25  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Saner shift and autocap handling,
+	always choose uppercase on shift lock or shift held down.
+
+2007-05-22  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context, src/hildon-im-protocol.h:
+	- When the input widget changes, reset the modifier mask
+
+2007-05-18  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, hildon-im-protocol.h:
+	- Move return/enter handling logic to the IM
+	- Carry the client window id in the key event messages
+	- Remove HILDON_IM_TOGGLE command as the logic is in the IM
+	- Remove KEYBOARD_CONNECTED and KEYBOARD_DISCONNECTED state messages
+	  as they are no longer used
+
+2007-05-18  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.11-1
+
+2007-05-16  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Added sticky key and lock support for shift keys
+	- Combined the internally tracked key states into one key mask
+
+2007-05-15  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.10-1
+
+2007-05-15  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Don't commit preedit on _show. Fixes NB#55666.
+	- Use the client widget font description when performing character validation
+
+2007-05-10  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-protocol.h: Add do-nothing trigger
+
+2007-05-09  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.9-1
+	* Makefile.am, configure.ac, hildon-input-method-framework-header-3.0: Removed
+	-header package.
+
+2007-05-09  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	- Replace HildonIMKbMode with smaller HildonIMTrigger that more
+	  closely map to the current plugin activation mechanism
+	- Deprecate HILDON_IM_FLAG_BROWSER_WIDGET
+	- Surrounding is now provided only upon explicit request
+	- Split indirect commit mode into redirected and surrounding modes,
+	  keep direct mode stricly for the non-fullscreen plugins
+	- Replace FKB specific parts with more general versions
+
+2007-05-08  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.8-1
+
+2007-05-08  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Focus handler must not call context functions not part of the stock GTK API, fixes NB#56191.
+
+2007-05-03  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.7-1
+	* Changed license to LGPL.
+
+2007-04-19  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.6-1
+	* src/hildon-im-context.c, src/hildon-im-protocol.h: Renamed some constants to
+	use HILDON_IM_ namespace.
+
+2007-04-24  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Override default get_surrounding method for
+	  GtkTextView, fixes autocap after newline no longer working with gtk 2.10
+
+2007-04-19  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.5-1
+
+2007-03-27  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Remove the browser widget hacks
+	- Disable the public im_context_reset, all resets should now be
+	  triggered from the context itself only
+	- The editable surrounding is now simply the entire text of the widget
+	  as the overly complicated paragraph segmenting is removed
+
+2007-03-23  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.4-1
+	* hildon-input-method-framework-header-3.0.pc.in: Removed link to
+	im_common 
+	
+2007-03-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/hildon-im-protocol.h, src/hildon-im-context.c: Renamed constants in
+	HildonIMKbMode.
+	* configure.ac: Replaced hildon-libs in favor of hildon-1
+
+2007-02-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.3-1
+	* src/hildon-im-protocol.h: Guarded #define MAEMO_CHANGES with ifdef
+
+2007-02-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.1-2
+	* src/hildon-im-protocol.h: Added #define MAEMO_CHANGES 
+
+2007-02-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.1-2
+	* src/hildon-im-protocol.h: Added inclusion to gtk/gtkenums.h
+	* configure.ac: Disable pedantic
+
+2007-02-15  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 3.0.0-1
+
+2007-02-14  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	- autocap, key event propagation fixes
+
+2007-01-31  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.[c,h]:
+	- Propagate key events to the plugins
+
+2007-01-15  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.[c.h]:
+	- Deprecate unused constants, keep all of the context data private
+	- Space after special character should not trigger lowercase autocap. Fixes NB#48664.
+
+2006-12-04  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.8-2
+
+2006-12-01  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 2.2.8-1
+	* src/hildon-im-context.c:
+	- Enable extension events for the client widgets
+	- Check the pressure axis of button events. Fixes NB#46578.
+
+2006-11-28  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-imcontext.c: Ask the IM to select the text from the
+	url entry after the plugin has been created. Fixes NB#48607.
+
+2006-11-28  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.7-1
+
+2006-11-28  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.[c,h]:
+	- Clean up the showing of the IM: Remove the button release hook,
+	always set the client in focus in, handle browser and GTK widgets the
+	same in the event filter. Fixes NB#41925, NB#48349
+	- When applications calls hildon_gtk_im_context_show, assume they
+	want the VKB. Fixes NB#46954, NB#46955
+	- Disconnect the hide signal handler when the client widget changes
+
+2006-11-21  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/hildon-im-protocol.h: Changed the license to full license.
+
+2006-11-14  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.6-1
+	* src/hildon-im-context.c: Always set the client when having a focus in.
+
+2006-10-25  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.5-1
+
+2006-10-25  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Workaround for Pango leak introduced by previous addition
+
+2006-10-24  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Check that the composed character is available in the font. Fixes NB#42728.
+
+2006-10-20  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.4-1
+
+2006-10-20  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Cut the rapid activation period a bit. Part of fix NB#43934.
+
+2006-10-12  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.3-1
+
+2006-10-11  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Check non-null client widget in hide cb, fixes NB#42735
+
+2006-10-05  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Clear the dead key state on non-printable
+	characters, fixes dead key combination after backspace or cursor movement
+
+2006-10-04  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.2-1
+	* src/hildon-im-context.c: Commit the printable version of combining character if last combining character is pressed again or space is pressed.  Fixes NB#40356.
+
+2006-10-03  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- Reset activation timer on focus out, fixes autocap not keeping up in browser
+	- Don't update kb mode during event filtering if activation just occured,
+	  fixes backspace not working correctly in some situations, NB#42148
+
+2006-09-29  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Don't do rapid activation check on activating the VKB, fixes NB#41870
+
+2006-09-20  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.1-1
+
+2006-09-14  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Don't hide IM in hide signal cb unless it has focus, fixes NB#40586
+
+2006-09-13  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.2.0-1
+
+2006-09-11 Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Implemented dead-key character compose filter. Fixes: NB#40356.
+
+2006-09-11  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.20-1
+
+2006-09-06  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.[c,h]: Require that widget got both the key press and the release to toggle the IM, fixes NB#36807
+
+2006-09-06  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.19-1
+
+2006-09-05  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Hide IM on client widget hide signal, fixes NB#39671
+
+2006-08-29  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.18-1
+
+2006-08-24  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Clear kb mode on switching to VKB, fixes NB#38699
+
+2006-08-23  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Add context_reset implementation from 2005 branch, fixes NB#38436
+
+2006-08-21  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Added new selection command, url entry identifier, fixes NB#28610
+
+2006-08-11  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 2.0.16-1
+
+2006-08-08  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Don't check activation time when hiding IM, fixes NB#36876
+
+2006-07-28  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Version 2.0.15-1
+
+2006-07-26  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.[c,h]:
+	- Remove redundant mouse button press and release handlers
+	- Introduce cooldown period between activations,
+	  fixes NB#35032, NB#35411, NB#35408, NB#35359
+
+2006-07-11  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.14-1
+	* src/hildon-im-context.c: Don't clear when show. Fixes NB#34504.
+
+2006-07-05  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Pass return key to application when
+	hw keyboard is attached
+
+2006-07-05  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.13-1
+
+2006-07-04  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- IM is toggled on select key release instead of press, fixes N#33786
+	- Remove repeat limiter on select key
+
+2006-06-28  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.12-1
+
+2006-06-27  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: HW Keyboard event handling, implements N#31984
+
+2006-06-26  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-protocol.h: Remove duplicate message format defines
+
+2006-06-09  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.11-1 (sync'ed with IT-2006 up to version 1.2.30-1)
+	* src/hildon-im-context.c: Assure client widget in multiline check,
+fixes N#32276/N#32321, partial fix for N#32219	
+
+2006-06-07  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.10-1
+	* src/hildon-im-context.c: Enable FKB invocation while in secret mode. Fixes N#28934.
+
+2006-06-07  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.9-1
+	* src/hildon-im-context.c: Fixed missing codes after synchronization with IT-2006. Fixes N#29698.
+
+2006-06-06  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.8-1
+
+2006-06-06  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* Sync'ed with IT-2006 up to version 1.2.29-1 (r17078), fixes N#31569
+
+2006-05-24  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.7-1
+	* Sync'ed with IT-2006 up to version 1.2.26-1
+	* src/hildon-im-context.c: Don't reset kb mode on browser widget
+	focus out, fixes N#28506, N#28512/N#30683.
+
+2006-05-24  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.6-1
+	* Sync'ed with IT-2006 up to version 1.2.25-1
+	* src/hildon-im-context.c: Clear valid context on null widget, fixes N#30510/N#30636
+
+2006-05-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.5-1
+	* Sync'ed with IT-2006 up to version 1.2.22-4
+	* src/hildon-im-context.c: Ignore browser_focus out requests when focus moves outside the browser, fixes N#29598/N#29820
+
+2006-05-15  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.4-1
+	* Sync'ed with IT-2006 up to version 1.2.22-1
+	* src/hildon-im-context.c: Send autocap message even if autocap mode is not set, but only if mode still contains ALPHA, fixes N#28404/N#29581 
+	* src/hildon-im-context.c: Don't remove selection on accessing combo boxes, fixes N#29109
+
+2006-05-11  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.3-1
+	* Sync'ed with IT-2006 up to version 1.2.21-1
+	* src/hildon-im-context.c: Don't close IM on combobox window children focus, fixes N#22809/N#29354
+	* src/hildon-im-context.c: Fix casting warnings, always use timeout in hide
+	* src/hildon-im-context.c: Check multiline status on select key activation, fixes N#28439.
+
+2006-05-09  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.2-1
+	* src/hildon-im-context.c: Fix to auto-correction.
+	* src/hildon-im-common.[c,h]: Added one function to detect whether a string is an auto-correction trigger.
+
+2006-05-01  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.1-1
+	* src/hildon-im-context.c: More fix to auto-correction.
+	* Below are sync'ed with IT-2006 up to version 1.2.19-1
+	* src/hildon-im-context.c:
+	- Detect browser widget in grab focus handler, second part of fix for N#27153
+	- Don't hide IM on entry completion popup, fixes N#27603
+	* src/hildon-im-context.c: Enclosures FKB with #ifdef for Maemo-SDK.  Part of N#27674 fixes.
+	* src/hildon-im-context.c: Override FKB activation for secret
+	entries, fixes N#25853
+	* src/hildon-im-context.c:
+	* Fixes to N#22809:
+	* src/hildon-im-context.c (hildon_im_hook_grab_focus_handler): If focus is moved to GtkComboBox, close the IM.
+	* src/hildon-im-context.c (hildon_im_context_activate_keyboard): If IM context is for browser, set HILDON_IM_FLAG_BROWSER_WIDGET flag in kb_mode.
+	* src/hildon-im-protocol.h: Added HILDON_IM_FLAG_BROWSER_WIDGET to HildonIMKbMode.
+	* src/hildon-im-context.c: Clear client widget selection on FKB launch, fixes N#26432
+	* src/hildon-im-context.c: Skipped hiding the UI if FKB's textview is unrealized. Fixes N#23256.
+	* src/hildon-im-context.[ch]: Moved is_browser_widget as object's
+	variable.
+	* src/hildon-im-context.c: hildon_im_context_focus_in,
+	hildon_im_context_focus_out: Fix FKB closing on browser
+	widget focus out, and re-launching on focus in.
+
+2006-03-31  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 2.0.0-1
+	* src/hildon-im-context.c: Auto-correction: " ." and "  " to ". "
+
+2006-03-29  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c:
+	- hildon_im_context_filter_event, allowing the context to handle button release events internally
+	- send the surrounding header even if widget doesn't provide the contents, so the right commit mode
+	  is always accessible to the IM plugins
+	- Free pre_edit_buffer in indirect mode, fixes N#25200, N#24097
+
+2006-03-28  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+	
+	* Version 1.2.10-1
+	* src/hildon-im-context.c: 
+	- Clipboard functionalities for browser widget. 
+	- Removed check_sentence_start in focus_in as it is checked in other places too. Fixes N#22306
+
+2006-03-18  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+	
+	* Version 1.2.9-1
+	* src/hildon-im-context.c: Added check whether the client widget is a browser widget in focus_in/out. Fixes N#23370.
+
+2006-03-10  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/hildon-im-context.c:
+	- hildon_im_context_focus_in: 
+	- hildon_im_context_focus_out: removed clearing the preedit buffer in im
+	- hildon_im_context_set_client_window: added clearing the preedit buffer in im, this is the rational place this operation should be carried out
+	* Fixes N#23208
+
+2006-03-09  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context: Check if client widget supports
+	multiple lines before showing IM, fixes N#23279
+
+2006-03-06  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+	
+	* Version 1.2.7-1
+
+2006-03-07  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, src/hildon-im-protocol.h:
+	- Recheck the commit mode on a indirect mode message, fixes the problem of
+	  not knowing what IM plugin was launched when using the rocker key
+
+2006-03-06  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+	
+	* Version 1.2.6-1
+
+2006-03-03  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c, hildon-im-protocol.[c,h]:
+	- Expanded surrounding of GtkTextViews to a full paragraph
+	- Relative cursor movement & "direct" commit mode message added, fixes N#22945
+
+2006-03-02  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+	
+	* Version 1.2.5-1
+
+2006-03-02  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context: Introduce a small delay (70msec) in which a later
+	arriving button press can cancel a pending IM show request, fixes N#23239, N#23260
+
+2006-02-22  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Version 1.2.4-1
+	* src/hildon-im-context.c:
+	- hildon_im_context_activate_keyboard: make sure that correct mode are  sent with every message we send.
+	- And all functions that calls hildon_im_context_activate_keyboard
+	- Fixes N#23054
+	- client_message_filter: record backspace fakekey as internal change to im context, will prevent im context from sending clearing message to the input method.
+	- Fixes N#22655
+
+2006-02-15  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/hildon-im-context.c
+	- hildon_im_context_check_sentence_start: now the entry has to have both HILDON_GTK_INPUT_MODE_AUTOCAP and HILDON_GTK_INPUT_MODE_ALPHA flags to enable autocap message sending
+	- Fixes N#22574, N#22874
+
+2006-02-14  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hild-im-protocol.[c,h], src/hildon-im-context.[c,h]: Merged the FKB changes
+
+2006-02-14  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/Makefile.am: Moved the lib from /u/l/him to /u/l
+
+2006-02-02  Tomas Junnonen  <tomas.junnonen@nokia.com>
+
+	* src/hildon-im-context.c: Fixed crash for widgets that don't
+	give their surrounding
+
+2006-02-01  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* src/hildon-im-protocol.c, src/hildon-im-context.c: Uses the new GtkIMContext interface.
+
+2006-01-16  Mohammad Anwari  <Mohammad.Anwari@nokia.com>
+
+	* Package reorganization.
