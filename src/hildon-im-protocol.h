@@ -109,6 +109,7 @@ typedef enum
   HILDON_IM_CONTEXT_DIRECT_MODE,
   HILDON_IM_CONTEXT_REDIRECT_MODE,
   HILDON_IM_CONTEXT_SURROUNDING_MODE,
+  HILDON_IM_CONTEXT_PREEDIT_MODE,
 
   HILDON_IM_CONTEXT_CLIPBOARD_COPY,            /* Copy client selection to clipboard */
   HILDON_IM_CONTEXT_CLIPBOARD_CUT,             /* Cut client selection to clipboard */

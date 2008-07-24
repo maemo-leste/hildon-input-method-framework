@@ -314,7 +314,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
       gtk_editable_get_editable (GTK_EDITABLE(focus_widget));
     is_editable_text_view = GTK_IS_TEXT_VIEW (focus_widget) &&
       gtk_text_view_get_editable (GTK_TEXT_VIEW (focus_widget));
-    is_inside_completion_popup = 
+    is_inside_completion_popup =
       strncmp(gtk_widget_get_name(toplevel), HILDON_ENTRY_COMPLETION_POPUP,
              sizeof(HILDON_ENTRY_COMPLETION_POPUP)) == 0;
 
@@ -419,7 +419,7 @@ hildon_im_context_class_init (HildonIMContextClass *im_context_class)
   gtk_im_context_class->filter_event = hildon_im_context_filter_event;
 #endif
   gtk_im_context_class->set_client_window = hildon_im_context_set_client_window;
-  gtk_im_context_class->filter_keypress = hildon_im_context_filter_keypress;  
+  gtk_im_context_class->filter_keypress = hildon_im_context_filter_keypress;
   gtk_im_context_class->set_cursor_location = hildon_im_context_set_cursor_location;
   gtk_im_context_class->reset = hildon_im_context_reset;
   gtk_im_context_class->get_surrounding = hildon_im_context_get_surrounding;
@@ -537,7 +537,7 @@ hildon_im_context_init(HildonIMContext *self)
 #endif
 }
 
-static void 
+static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
   if (self->pre_edit_buffer != NULL)
@@ -636,7 +636,7 @@ hildon_im_context_get_textview_surrounding(GtkIMContext *context,
   gchar *text;
   gchar *text_between = NULL;
 
-  gtk_text_buffer_get_iter_at_mark(text_view->buffer, &cursor,  
+  gtk_text_buffer_get_iter_at_mark(text_view->buffer, &cursor,
                                    gtk_text_buffer_get_insert(text_view->buffer));
   end = start = cursor;
 
@@ -647,14 +647,14 @@ hildon_im_context_get_textview_surrounding(GtkIMContext *context,
   if (gtk_text_iter_backward_char (&start))
     gtk_text_iter_backward_find_char(&start, surroundings_search_predicate,
                                      NULL, NULL);
-  
+
   text_between = gtk_text_iter_get_slice(&start, &cursor);
-    
+
   if(text_between  != NULL)
     pos = strlen(text_between);
   else
     pos = 0;
-    
+
   text = gtk_text_iter_get_slice(&start, &end);
 
   *surrounding = text;
@@ -725,7 +725,7 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
     if (end-start > 0)
     {
       /* Offset to the start of the line, from the insertion point */
-      offset_start = str - start; 
+      offset_start = str - start;
       /* Offset to the end of the line */
       offset_end = end - start;
 
@@ -787,7 +787,7 @@ hildon_im_context_set_client_cursor_location(HildonIMContext *self,
 
       gtk_text_buffer_place_cursor(buffer, &iter);
     }
-  }  
+  }
 }
 
 static void
@@ -921,6 +921,16 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           }
           commit_mode = HILDON_IM_COMMIT_SURROUNDING;
           break;
+        case HILDON_IM_CONTEXT_PREEDIT_MODE:
+          /* TODO show the contents of the plugin buffer, if any */
+          if (self->pre_edit_buffer != NULL)
+          {
+            hildon_im_context_commit_preedit_data(self);
+            g_string_free(self->pre_edit_buffer, TRUE);
+            self->pre_edit_buffer = NULL;
+          }
+          commit_mode = HILDON_IM_COMMIT_PREEDIT;
+          break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING:
           hildon_im_context_check_commit_mode(self);
           hildon_im_context_send_surrounding(self);
@@ -1002,7 +1012,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
                                                    msg->offset_is_relative,
                                                    msg->cursor_offset);
       result = GDK_FILTER_REMOVE;
-      
+
     }
   }
   return result;
@@ -1150,7 +1160,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
       if (strncmp(gtk_widget_get_name(widget), HILDON_IM_INTERNAL_TEXTVIEW, sizeof(HILDON_IM_INTERNAL_TEXTVIEW)) == 0)
       {
         is_internal_widget = TRUE;
-      } 
+      }
       else if (strncmp (gtk_widget_get_name(widget), MAEMO_BROWSER_URL_ENTRY, sizeof(MAEMO_BROWSER_URL_ENTRY)) == 0)
       {
         self->is_url_entry = TRUE;
@@ -1272,7 +1282,7 @@ combining_character_to_unicode (guint32 combining)
     case 0x0301: unicode = 0x00b4; break;
     case 0x0302: unicode = 0x005e; break;
     case 0x0303: unicode = 0x007e; break;
-    case 0x0304: unicode = 0x00af; break;    
+    case 0x0304: unicode = 0x00af; break;
     case 0x0307: unicode = 0x02d9; break;
     case 0x0308: unicode = 0x00a8; break;
     case 0x0309: unicode = 0x0294; break;
@@ -1282,7 +1292,7 @@ combining_character_to_unicode (guint32 combining)
     case 0x031b: unicode = 0x031b; break;
     case 0x0323: unicode = 0x02d4; break;
     case 0x0327: unicode = 0x00b8; break;
-    case 0x0328: unicode = 0x02db; break;            
+    case 0x0328: unicode = 0x02db; break;
     case 0x032e: unicode = 0x032e; break;
     default: unicode = 0; break; /* Unknown combining char */
   }
@@ -1612,7 +1622,7 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
     if ((last == self->combining_char) || event->keyval == GDK_space)
     {
       c = combining_character_to_unicode (self->combining_char);
-    } else 
+    } else
       c = gdk_keyval_to_unicode (event->keyval);
 
     self->combining_char = 0;
@@ -1646,7 +1656,7 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
 
       base_length = g_unichar_to_utf8(c, combined);
       combinator_length = g_unichar_to_utf8(self->combining_char, &combined[base_length]);
-      
+
       composed = g_utf8_normalize(combined,
                                   base_length + combinator_length,
                                   G_NORMALIZE_DEFAULT_COMPOSE);
@@ -1718,7 +1728,7 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
   }
 
   self = HILDON_IM_CONTEXT(context);
-  
+
   if (event->type == GDK_BUTTON_PRESS)
   {
     GdkEventButton *button_event = (GdkEventButton*)event;
@@ -1792,7 +1802,7 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
     gint   cpos;
     guint  hash = 0;
 
-    need_free = gtk_im_context_get_surrounding(context, &surrounding, &cpos); 
+    need_free = gtk_im_context_get_surrounding(context, &surrounding, &cpos);
     if (surrounding)
       hash = g_str_hash(surrounding);
 
@@ -1859,7 +1869,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 #ifdef MAEMO_CHANGES
   g_object_get(self, "hildon-input-mode", &input_mode, NULL);
   if ((input_mode & (HILDON_GTK_INPUT_MODE_ALPHA |
-       HILDON_GTK_INPUT_MODE_AUTOCAP)) != 
+       HILDON_GTK_INPUT_MODE_AUTOCAP)) !=
       (HILDON_GTK_INPUT_MODE_ALPHA |
        HILDON_GTK_INPUT_MODE_AUTOCAP))
   {
@@ -1959,16 +1969,16 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
         if (surrounding [cpos - 1] == ' ')
         {
           to_copy = hildon_im_autocorrection_check_character (text);
-          
+
           if (to_copy > 0)
           {
             memcpy (tmp, text, to_copy);
             text_clean = g_strconcat (tmp, " ", text + to_copy, NULL);
-            gtk_im_context_delete_surrounding (GTK_IM_CONTEXT(self), 
+            gtk_im_context_delete_surrounding (GTK_IM_CONTEXT(self),
                 -1, 1);
             free_text = TRUE;
           }
-        }       
+        }
       }
       g_free (surrounding);
     }
@@ -2005,7 +2015,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
       g_free (text_clean);
       free_text = FALSE;
     }
-    
+
     text_clean = self->pre_edit_buffer->str;
   }
   else
@@ -2032,7 +2042,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   /* If last_internal_change is still TRUE, it means set_cursor_location()
      wasn't called yet. This happens at least with GtkEntry where it's called
      in idle handler. */
-  
+
   if (self->last_internal_change && self->changed_count > 1)
   {
     /* External change seen, clear IM in set_cursor_location() handler */
@@ -2106,7 +2116,7 @@ hildon_im_context_send_command(HildonIMContext *self,
   msg->cmd = cmd;
   msg->input_mode = input_mode;
   msg->trigger = trigger;
-  
+
   /*trap X errors.  We need this, because if the IM window is destroyed for some
    *reason (segfault etc), then it's possible that the IM window id
    *is invalid.
@@ -2257,7 +2267,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self)
     return;
   }
 
-  /* Split surrounding context into pieces that are small enough 
+  /* Split surrounding context into pieces that are small enough
      to send in a x message */
   str = surrounding;
   do
@@ -2324,7 +2334,7 @@ static gboolean
 hildon_im_context_show_cb(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
- 
+
   /* Avoid autocap on inactive window. */
   if (self->has_focus)
   {
@@ -2394,5 +2404,5 @@ hildon_im_context_reset(GtkIMContext *context)
   {
     internal_reset = FALSE;
     hildon_im_context_reset_real(context);
-  }  
+  }
 }
