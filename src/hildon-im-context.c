@@ -179,6 +179,12 @@ static void       hildon_im_context_send_key_event      (HildonIMContext *self,
                                                          guint16 hardware_keycode);
 static void       hildon_im_context_commit_surrounding  (HildonIMContext*
                                                          self);
+static void       hildon_im_context_get_preedit_string  (GtkIMContext *context,
+                                                         gchar **str,
+                                                         PangoAttrList **attrs,
+                                                         gint *cursor_pos);
+static void       hildon_im_context_set_use_preedit     (GtkIMContext *context,
+                                                         gboolean use_preedit);
 
 /* Useful functions */
 static Window          get_window_id                    (Atom window_atom);
@@ -423,6 +429,8 @@ hildon_im_context_class_init (HildonIMContextClass *im_context_class)
   gtk_im_context_class->set_cursor_location = hildon_im_context_set_cursor_location;
   gtk_im_context_class->reset = hildon_im_context_reset;
   gtk_im_context_class->get_surrounding = hildon_im_context_get_surrounding;
+  gtk_im_context_class->get_preedit_string = hildon_im_context_get_preedit_string;
+  gtk_im_context_class->set_use_preedit = hildon_im_context_set_use_preedit;
 
   signal_id = g_signal_lookup("grab-focus", GTK_TYPE_WIDGET);
   grab_focus_hook_id =
@@ -541,7 +549,11 @@ static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
   if (self->pre_edit_buffer != NULL)
+  {
+    g_signal_emit_by_name(self, "commit", self->pre_edit_buffer->str);
     g_string_truncate(self->pre_edit_buffer, 0);
+  }
+  g_signal_emit_by_name(self, "preedit-changed", NULL);
 }
 
 static void
@@ -746,6 +758,56 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
 }
 
 static void
+hildon_im_context_get_preedit_string (GtkIMContext *context,
+                                      gchar **str,
+                                      PangoAttrList **attrs,
+                                      gint *cursor_pos)
+{
+  /* TODO this should be enough to show a preview of the predicted text */
+  HildonIMContext *self;
+
+  g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
+ 
+  PangoAttribute *attr1, *attr2;
+
+  /* TODO leak? unref? adapt it to use the current style */
+  attr1 = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);
+  attr1->start_index = 0;
+  attr1->end_index = G_MAXINT;
+  attr2 = pango_attr_background_new (2*65535/3, 2*65535/3, 2*65535/3);
+  attr2->start_index = 0;
+  attr2->end_index = G_MAXINT;
+  if (attrs != NULL)
+  {
+    *attrs = pango_attr_list_new ();
+    pango_attr_list_insert (*attrs, attr1);
+    pango_attr_list_insert (*attrs, attr2);
+  }
+
+  if (str != NULL)
+  {
+    if (self->pre_edit_buffer != NULL)
+      *str = g_strdup (self->pre_edit_buffer->str);
+    else
+      *str = g_strdup ("");
+  }
+  
+  if (cursor_pos != NULL)
+    *cursor_pos = 0;
+  
+  return;
+}
+
+static void
+hildon_im_context_set_use_preedit (GtkIMContext *context,
+                                   gboolean use_preedit)
+{
+  /* TODO something... */
+  return;
+}
+
+static void
 hildon_im_context_set_client_cursor_location(HildonIMContext *self,
                                              gboolean is_relative,
                                              gint offset)
@@ -889,24 +951,25 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           if (self->pre_edit_buffer == NULL)
           {
             self->pre_edit_buffer = g_string_new(NULL);
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
           }
           commit_mode = HILDON_IM_COMMIT_BUFFERED;
           break;
         case HILDON_IM_CONTEXT_DIRECT_MODE:
           if (self->pre_edit_buffer != NULL)
           {
-            hildon_im_context_commit_preedit_data(self);
             g_string_free(self->pre_edit_buffer, TRUE);
             self->pre_edit_buffer = NULL;
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
           }
           commit_mode = HILDON_IM_COMMIT_DIRECT;
           break;
         case HILDON_IM_CONTEXT_REDIRECT_MODE:
           if (self->pre_edit_buffer != NULL)
           {
-            hildon_im_context_commit_preedit_data(self);
             g_string_free(self->pre_edit_buffer, TRUE);
             self->pre_edit_buffer = NULL;
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
           }
           commit_mode = HILDON_IM_COMMIT_REDIRECT;
           hildon_im_context_check_commit_mode(self);
@@ -915,19 +978,19 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
         case HILDON_IM_CONTEXT_SURROUNDING_MODE:
           if (self->pre_edit_buffer != NULL)
           {
-            hildon_im_context_commit_preedit_data(self);
             g_string_free(self->pre_edit_buffer, TRUE);
             self->pre_edit_buffer = NULL;
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
           }
           commit_mode = HILDON_IM_COMMIT_SURROUNDING;
           break;
         case HILDON_IM_CONTEXT_PREEDIT_MODE:
-          /* TODO show the contents of the plugin buffer, if any */
+          /* TODO show the contents of the predicted buffer, if any */
           if (self->pre_edit_buffer != NULL)
           {
-            hildon_im_context_commit_preedit_data(self);
             g_string_free(self->pre_edit_buffer, TRUE);
             self->pre_edit_buffer = NULL;
+            g_signal_emit_by_name(self, "preedit-changed", NULL); /* TODO this doesn't work well */
           }
           commit_mode = HILDON_IM_COMMIT_PREEDIT;
           break;
@@ -941,6 +1004,14 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_FLUSH_PREEDIT:
           hildon_im_context_commit_preedit_data(self);
+          break;
+        case HILDON_IM_CONTEXT_CANCEL_PREEDIT:
+          if (self->pre_edit_buffer != NULL)
+          {
+            g_string_free(self->pre_edit_buffer, TRUE);
+            self->pre_edit_buffer = NULL;
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
+          }
           break;
 #ifdef MAEMO_CHANGES
         case HILDON_IM_CONTEXT_CLIPBOARD_COPY:
@@ -1179,7 +1250,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
   /* We can safely assume that once the client window is changed
    * it is time to clear preedit buffer */
-  hildon_im_context_commit_preedit_data(self);
+  g_string_truncate(self->pre_edit_buffer, 0);
 }
 
 static void
@@ -1212,6 +1283,13 @@ hildon_im_context_focus_out(GtkIMContext *context)
   self = HILDON_IM_CONTEXT(context);
 
   self->has_focus = FALSE;
+
+  if (self->pre_edit_buffer != NULL)
+  {
+    g_string_free(self->pre_edit_buffer, TRUE);
+    self->pre_edit_buffer = NULL;
+  }
+  g_signal_emit_by_name(self, "preedit-changed", NULL);
 }
 
 static gboolean
@@ -1955,7 +2033,15 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   gboolean has_surrounding, free_text = FALSE;
 
   g_return_if_fail( OSSO_IS_IM_CONTEXT(self) );
-
+  
+  /* TODO TEST this is ugly and hackish */
+  if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
+  {
+    self->pre_edit_buffer = g_string_new (text_clean);
+    g_signal_emit_by_name(self, "preedit-changed", text_clean);
+    return;
+  }
+  
   if (self->options & HILDON_IM_AUTOCORRECT)
   {
     has_surrounding = gtk_im_context_get_surrounding (
@@ -2009,6 +2095,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
     {
       g_string_append(self->pre_edit_buffer, text_clean);
     }
+    g_signal_emit_by_name(self, "preedit-changed", text_clean);
 
     if (free_text == TRUE)
     {
@@ -2390,8 +2477,8 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  hildon_im_context_commit_preedit_data(self);
-  hildon_im_context_send_command(self, HILDON_IM_CLEAR);
+  g_string_truncate(self->pre_edit_buffer, 0);
+  hildon_im_context_send_command(self, HILDON_IM_CLEAR); /* TODO o rly? */
 }
 
 /* This function is disabled from use outside the scope of the

@@ -103,6 +103,7 @@ typedef enum
   HILDON_IM_CONTEXT_HANDLE_SPACE,           /* Virtual space activated */
   HILDON_IM_CONTEXT_CONFIRM_SENTENCE_START, /* Query the autocap state at cursor */
   HILDON_IM_CONTEXT_FLUSH_PREEDIT,          /* Finalize the preedit to the client widget */
+  HILDON_IM_CONTEXT_CANCEL_PREEDIT,          /* Clean the preedit buffer */
 
   /* See HildonIMCommitMode for a description of the commit modes */
   HILDON_IM_CONTEXT_BUFFERED_MODE,
