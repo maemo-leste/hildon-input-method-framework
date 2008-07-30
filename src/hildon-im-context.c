@@ -191,8 +191,10 @@ static Window          get_window_id                    (Atom window_atom);
 
 static GdkFilterReturn client_message_filter            (GdkXEvent *xevent,
                                                          GdkEvent *event,
-                                                         HildonIMContext *
-                                                         self);
+                                                         HildonIMContext *self);
+/* this takes care of notifying changes in the buffer */
+static void         set_preedit_buffer                  (HildonIMContext *self,
+                                                         const gchar* s);
 
 static void
 hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
@@ -546,14 +548,27 @@ hildon_im_context_init(HildonIMContext *self)
 }
 
 static void
+set_preedit_buffer (HildonIMContext *self, const gchar* s)
+{
+  if (self->pre_edit_buffer != NULL)
+  {
+    g_string_truncate(self->pre_edit_buffer, 0);
+    if (s != NULL)
+    {
+      g_string_append(self->pre_edit_buffer, s);
+    }
+    g_signal_emit_by_name(self, "preedit-changed", self->pre_edit_buffer->str);
+  }
+}
+
+static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
   if (self->pre_edit_buffer != NULL)
   {
     g_signal_emit_by_name(self, "commit", self->pre_edit_buffer->str);
-    g_string_truncate(self->pre_edit_buffer, 0);
+    set_preedit_buffer(self, NULL);
   }
-  g_signal_emit_by_name(self, "preedit-changed", NULL);
 }
 
 static void
@@ -990,7 +1005,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           {
             g_string_free(self->pre_edit_buffer, TRUE);
             self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL); /* TODO this doesn't work well */
+            g_signal_emit_by_name(self, "preedit-changed", NULL);
           }
           commit_mode = HILDON_IM_COMMIT_PREEDIT;
           break;
@@ -1250,7 +1265,11 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
   /* We can safely assume that once the client window is changed
    * it is time to clear preedit buffer */
-  g_string_truncate(self->pre_edit_buffer, 0);
+  if (self->pre_edit_buffer != NULL)
+  {
+    g_string_free(self->pre_edit_buffer, TRUE);
+    self->pre_edit_buffer = NULL;
+  }
 }
 
 static void
@@ -2477,7 +2496,12 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  g_string_truncate(self->pre_edit_buffer, 0);
+  if (self->pre_edit_buffer != NULL)
+  {
+    g_string_free(self->pre_edit_buffer, TRUE);
+    self->pre_edit_buffer = NULL;
+    g_signal_emit_by_name(self, "preedit-changed", NULL);
+  }
   hildon_im_context_send_command(self, HILDON_IM_CLEAR); /* TODO o rly? */
 }
 
