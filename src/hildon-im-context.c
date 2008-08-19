@@ -2344,7 +2344,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self)
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
   /* For the textview we force a larger surrounding than the one provided
-     through the GTK IM context */
+   * through the GTK IM context
   if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
   {
     GtkTextMark *insert_mark;
@@ -2366,6 +2366,9 @@ hildon_im_context_send_surrounding(HildonIMContext *self)
     has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
                                                      &surrounding, &cpos);
   }
+   */
+  has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
+                                                       &surrounding, &cpos);
 
   if (!has_surrounding)
   {
