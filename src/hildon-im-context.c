@@ -780,19 +780,28 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
 {
   /* TODO this should be enough to show a preview of the predicted text */
   HildonIMContext *self;
-
+  GtkStyle *style;
+  PangoAttribute *attr1, *attr2, *attr3;
+  
   g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
- 
-  PangoAttribute *attr1, *attr2;
-
-  /* TODO leak? unref? adapt it to use the current style */
+  style = gtk_widget_get_default_style(); 
+  
+  /* TODO leak? unref?
+   * TODO adapt it to use the current style */
   attr1 = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);
   attr1->start_index = 0;
   attr1->end_index = G_MAXINT;
-  attr2 = pango_attr_background_new (2*65535/3, 2*65535/3, 2*65535/3);
+  attr2 = pango_attr_background_new (style->bg[GTK_STATE_SELECTED].red,
+                                     style->bg[GTK_STATE_SELECTED].green,
+                                     style->bg[GTK_STATE_SELECTED].blue);
   attr2->start_index = 0;
   attr2->end_index = G_MAXINT;
+  attr3 = pango_attr_foreground_new (style->fg[GTK_STATE_SELECTED].red,
+                                     style->fg[GTK_STATE_SELECTED].green,
+                                     style->fg[GTK_STATE_SELECTED].blue);
+  attr3->start_index = 0;
+  attr3->end_index = G_MAXINT;
   if (attrs != NULL)
   {
     *attrs = pango_attr_list_new ();
