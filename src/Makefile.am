@@ -36,7 +36,7 @@ hildon_im_module_la_SOURCES = \
 	hildon-im-gtk.h \
 	hildon-im-gtk.c
 hildon_im_module_la_LIBADD = \
-	$(GTK_LIBS) $(XTST_LIBS) \
+	$(GTK_LIBS) $(XTST_LIBS) $(HILDON_LIBS) \
 	-lhildon_im_common
 hildon_im_module_la_LDFLAGS = \
 	-rpath $(immoduledir) \

@@ -25,26 +25,22 @@
  *
  */
 
-#include "hildon-im-context.h"
-#include "hildon-im-gtk.h"
-#include "hildon-im-common.h"
+#include <string.h>
+#include <libintl.h>
+#include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkx.h>
+#include <pango/pango.h>
+#include <cairo/cairo.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
-#include <string.h>
-#include <pango/pango.h>
-#include <cairo/cairo.h>
+#include <hildon/hildon-banner.h>
+#include "hildon-im-context.h"
+#include "hildon-im-gtk.h"
+#include "hildon-im-common.h"
 
-#include <gtk/gtksocket.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkcomboboxentry.h>
-#include <gtk/gtktoolbar.h>
-#include <gtk/gtkscrollbar.h>
-#include <gtk/gtkeditable.h>
-#include <gtk/gtkentry.h>
-#include <gtk/gtktextview.h>
+#define _(String) gettext(String)
 
 #define HILDON_IM_FINGER_LAUNCH_BUTTON 2
 #define HILDON_IM_FINGER_PRESSURE_THRESHOLD 0.4
@@ -96,7 +92,7 @@ struct _HildonIMContext
   GdkWindow *client_gdk_window;
   GtkWidget *client_gtk_widget;
 
-  GString *pre_edit_buffer;
+  GString *preedit_buffer;
 
   /* IDs of handlers attached to client widget */
   gint client_changed_signal_handler;
@@ -550,23 +546,24 @@ hildon_im_context_init(HildonIMContext *self)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
-  if (self->pre_edit_buffer != NULL)
+  if (self->preedit_buffer != NULL
+      && !(s == NULL && self->preedit_buffer->len == 0))
   {
-    g_string_truncate(self->pre_edit_buffer, 0);
+    g_string_truncate(self->preedit_buffer, 0);
     if (s != NULL)
     {
-      g_string_append(self->pre_edit_buffer, s);
+      g_string_append(self->preedit_buffer, s);
     }
-    g_signal_emit_by_name(self, "preedit-changed", self->pre_edit_buffer->str);
+    g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
   }
 }
 
 static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
-  if (self->pre_edit_buffer != NULL)
+  if (self->preedit_buffer != NULL)
   {
-    g_signal_emit_by_name(self, "commit", self->pre_edit_buffer->str);
+    g_signal_emit_by_name(self, "commit", self->preedit_buffer->str);
     set_preedit_buffer(self, NULL);
   }
 }
@@ -811,8 +808,8 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
 
   if (str != NULL)
   {
-    if (self->pre_edit_buffer != NULL)
-      *str = g_strdup (self->pre_edit_buffer->str);
+    if (self->preedit_buffer != NULL)
+      *str = g_strdup (self->preedit_buffer->str);
     else
       *str = g_strdup ("");
   }
@@ -972,50 +969,25 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_commit_preedit_data(self);
           break;
         case HILDON_IM_CONTEXT_BUFFERED_MODE:
-          if (self->pre_edit_buffer == NULL)
-          {
-            self->pre_edit_buffer = g_string_new(NULL);
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           commit_mode = HILDON_IM_COMMIT_BUFFERED;
           break;
         case HILDON_IM_CONTEXT_DIRECT_MODE:
-          if (self->pre_edit_buffer != NULL)
-          {
-            g_string_free(self->pre_edit_buffer, TRUE);
-            self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           commit_mode = HILDON_IM_COMMIT_DIRECT;
           break;
         case HILDON_IM_CONTEXT_REDIRECT_MODE:
-          if (self->pre_edit_buffer != NULL)
-          {
-            g_string_free(self->pre_edit_buffer, TRUE);
-            self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           commit_mode = HILDON_IM_COMMIT_REDIRECT;
           hildon_im_context_check_commit_mode(self);
           hildon_im_context_clear_selection(self);
           break;
         case HILDON_IM_CONTEXT_SURROUNDING_MODE:
-          if (self->pre_edit_buffer != NULL)
-          {
-            g_string_free(self->pre_edit_buffer, TRUE);
-            self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           commit_mode = HILDON_IM_COMMIT_SURROUNDING;
           break;
         case HILDON_IM_CONTEXT_PREEDIT_MODE:
-          /* TODO show the contents of the predicted buffer, if any */
-          if (self->pre_edit_buffer != NULL)
-          {
-            g_string_free(self->pre_edit_buffer, TRUE);
-            self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           commit_mode = HILDON_IM_COMMIT_PREEDIT;
           break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING:
@@ -1030,12 +1002,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_commit_preedit_data(self);
           break;
         case HILDON_IM_CONTEXT_CANCEL_PREEDIT:
-          if (self->pre_edit_buffer != NULL)
-          {
-            g_string_free(self->pre_edit_buffer, TRUE);
-            self->pre_edit_buffer = NULL;
-            g_signal_emit_by_name(self, "preedit-changed", NULL);
-          }
+          set_preedit_buffer (self, NULL);
           break;
 #ifdef MAEMO_CHANGES
         case HILDON_IM_CONTEXT_CLIPBOARD_COPY:
@@ -1274,10 +1241,10 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
   /* We can safely assume that once the client window is changed
    * it is time to clear preedit buffer */
-  if (self->pre_edit_buffer != NULL)
+  if (self->preedit_buffer != NULL)
   {
-    g_string_free(self->pre_edit_buffer, TRUE);
-    self->pre_edit_buffer = NULL;
+    g_string_free(self->preedit_buffer, TRUE);
+    self->preedit_buffer = NULL;
   }
 }
 
@@ -1312,12 +1279,7 @@ hildon_im_context_focus_out(GtkIMContext *context)
 
   self->has_focus = FALSE;
 
-  if (self->pre_edit_buffer != NULL)
-  {
-    g_string_free(self->pre_edit_buffer, TRUE);
-    self->pre_edit_buffer = NULL;
-  }
-  g_signal_emit_by_name(self, "preedit-changed", NULL);
+  set_preedit_buffer (self, NULL);
 }
 
 static gboolean
@@ -1458,17 +1420,27 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
                                  HildonIMInternalModifierMask sticky_mask,
                                  gboolean was_press_and_release)
 {
-  /* Pressing the key while already locked clears the state */
   if (*mask & lock_mask)
+  {
+    /* Pressing the key while already locked clears the state */
     *mask &= ~(lock_mask | sticky_mask);
-  /* When the key is already sticky, a second press locks the key */
+  }
   else if (*mask & sticky_mask)
+  {
+    /* When the key is already sticky, a second press locks the key */
     *mask |= lock_mask;
-  /* Pressing the key for the first time stickies the key for one character,
-     but only if no characters were entered while holding the key down */
-  else if (was_press_and_release) {
+    if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
+      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_shift_locked"));
+    else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
+      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_level_locked"));
+  }
+  else if (was_press_and_release)
+  {
+    /* Pressing the key for the first time stickies the key for one character,
+     * but only if no characters were entered while holding the key down */
     *mask |= sticky_mask;
   }
+  
 }
 
 /* Filter for key events received by the client widget. */
@@ -2065,7 +2037,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   /* TODO TEST this is ugly and hackish */
   if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
-    self->pre_edit_buffer = g_string_new (text_clean);
+    self->preedit_buffer = g_string_new (text_clean);
     g_signal_emit_by_name(self, "preedit-changed", text_clean);
     return;
   }
@@ -2100,16 +2072,16 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
 
   self->last_internal_change = TRUE;
 
-  if (self->pre_edit_buffer)
+  if (self->preedit_buffer)
   {
     /* If g_string empty, emit 'commit' signal to delete highlighted text */
-    if(self->pre_edit_buffer->len == 0)
+    if(self->preedit_buffer->len == 0)
     {
       g_signal_emit_by_name(self, "commit","");
     }
     else
     {
-      char_count = g_utf8_strlen(self->pre_edit_buffer->str, -1);
+      char_count = g_utf8_strlen(self->preedit_buffer->str, -1);
 
       gtk_im_context_delete_surrounding(GTK_IM_CONTEXT(self),
                                         -char_count, char_count);
@@ -2117,11 +2089,11 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
 
     if(flag == HILDON_IM_MSG_START)
     {
-      g_string_assign(self->pre_edit_buffer, text_clean);
+      g_string_assign(self->preedit_buffer, text_clean);
     }
     else
     {
-      g_string_append(self->pre_edit_buffer, text_clean);
+      g_string_append(self->preedit_buffer, text_clean);
     }
     g_signal_emit_by_name(self, "preedit-changed", text_clean);
 
@@ -2131,7 +2103,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
       free_text = FALSE;
     }
 
-    text_clean = self->pre_edit_buffer->str;
+    text_clean = self->preedit_buffer->str;
   }
   else
   {
@@ -2508,10 +2480,10 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  if (self->pre_edit_buffer != NULL)
+  if (self->preedit_buffer != NULL)
   {
-    g_string_free(self->pre_edit_buffer, TRUE);
-    self->pre_edit_buffer = NULL;
+    g_string_free(self->preedit_buffer, TRUE);
+    self->preedit_buffer = NULL;
     g_signal_emit_by_name(self, "preedit-changed", NULL);
   }
   hildon_im_context_send_command(self, HILDON_IM_CLEAR); /* TODO o rly? */
