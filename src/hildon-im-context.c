@@ -252,6 +252,8 @@ hildon_im_context_finalize(GObject *obj)
     launch_delay_timeout_id = 0;
   }
 
+  g_string_free (imc->preedit_buffer, TRUE);
+
   G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
@@ -536,6 +538,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->prev_cursor_x = None;
   self->has_focus = FALSE;
   self->surrounding = g_strdup("");
+  self->preedit_buffer = g_string_new ("");
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -1239,13 +1242,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
     }
   }
 
-  /* We can safely assume that once the client window is changed
-   * it is time to clear preedit buffer */
-  if (self->preedit_buffer != NULL)
-  {
-    g_string_free(self->preedit_buffer, TRUE);
-    self->preedit_buffer = NULL;
-  }
+  set_preedit_buffer(self, NULL);
 }
 
 static void
@@ -1725,6 +1722,9 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   {
     gchar utf8[10];
 
+    /* entering a new character cleans the preedit buffer */
+    set_preedit_buffer (self, NULL);
+
     /* Pressing a dead key followed by a regular key combines to form
        an accented character */
     if (self->combining_char)
@@ -2037,8 +2037,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   /* TODO TEST this is ugly and hackish */
   if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
-    self->preedit_buffer = g_string_new (text_clean);
-    g_signal_emit_by_name(self, "preedit-changed", text_clean);
+    set_preedit_buffer (self, text_clean);
     return;
   }
   
@@ -2480,12 +2479,7 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  if (self->preedit_buffer != NULL)
-  {
-    g_string_free(self->preedit_buffer, TRUE);
-    self->preedit_buffer = NULL;
-    g_signal_emit_by_name(self, "preedit-changed", NULL);
-  }
+  set_preedit_buffer(self, NULL);
   hildon_im_context_send_command(self, HILDON_IM_CLEAR); /* TODO o rly? */
 }
 
