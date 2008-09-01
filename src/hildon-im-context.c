@@ -559,6 +559,11 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
     }
     g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
   }
+  else
+  {
+    self->preedit_buffer = g_string_new ("");  
+    g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
+  }
 }
 
 static void
@@ -2025,7 +2030,6 @@ static void
 hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
                               const char *text)
 {
-  gint char_count;
   gint cpos;
   gint to_copy;
   gchar *surrounding, *text_clean = (gchar*) text;
@@ -2039,6 +2043,10 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   {
     set_preedit_buffer (self, text_clean);
     return;
+  }
+  else
+  {
+    set_preedit_buffer (self, NULL);
   }
   
   if (self->options & HILDON_IM_AUTOCORRECT)
@@ -2070,45 +2078,6 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   }
 
   self->last_internal_change = TRUE;
-
-  if (self->preedit_buffer)
-  {
-    /* If g_string empty, emit 'commit' signal to delete highlighted text */
-    if(self->preedit_buffer->len == 0)
-    {
-      g_signal_emit_by_name(self, "commit","");
-    }
-    else
-    {
-      char_count = g_utf8_strlen(self->preedit_buffer->str, -1);
-
-      gtk_im_context_delete_surrounding(GTK_IM_CONTEXT(self),
-                                        -char_count, char_count);
-    }
-
-    if(flag == HILDON_IM_MSG_START)
-    {
-      g_string_assign(self->preedit_buffer, text_clean);
-    }
-    else
-    {
-      g_string_append(self->preedit_buffer, text_clean);
-    }
-    g_signal_emit_by_name(self, "preedit-changed", text_clean);
-
-    if (free_text == TRUE)
-    {
-      g_free (text_clean);
-      free_text = FALSE;
-    }
-
-    text_clean = self->preedit_buffer->str;
-  }
-  else
-  {
-    /* first commit "" to delete highlighted text */
-    g_signal_emit_by_name(self, "commit", "");
-  }
 
   /* This last "commit" signal adds the actual text. We're assuming it sends
      0 or 1 "changed" signals (we try to guarantee that by sending a "" commit
