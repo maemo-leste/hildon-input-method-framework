@@ -167,7 +167,9 @@ static void       hildon_im_context_check_commit_mode   (HildonIMContext*
 static void       hildon_im_context_check_sentence_start(HildonIMContext*
                                                          self);
 static void       hildon_im_context_send_surrounding    (HildonIMContext*
-                                                         self);
+                                                         self,
+                                                         gboolean
+                                                         send_all_contents);
 static void       hildon_im_context_send_key_event      (HildonIMContext *self,
                                                          GdkEventType type,
                                                          guint state,
@@ -1000,7 +1002,15 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING:
           hildon_im_context_check_commit_mode(self);
-          hildon_im_context_send_surrounding(self);
+          hildon_im_context_send_surrounding(self, FALSE);
+          if (self->is_url_entry)
+          {
+            hildon_im_context_send_command(self, HILDON_IM_SELECT_ALL);
+          }
+          break;
+        case HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL:
+          hildon_im_context_check_commit_mode(self);
+          hildon_im_context_send_surrounding(self, TRUE);
           if (self->is_url_entry)
           {
             hildon_im_context_send_command(self, HILDON_IM_SELECT_ALL);
@@ -2277,7 +2287,7 @@ hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
 /* Send the text of the client widget surrounding the active cursor position,
    as well as the the cursor's position in the surrounding, to the IM */
 static void
-hildon_im_context_send_surrounding(HildonIMContext *self)
+hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_contents)
 {
   HildonIMSurroundingContentMessage *surrounding_content_msg=NULL;
   Window im_window;
@@ -2293,8 +2303,8 @@ hildon_im_context_send_surrounding(HildonIMContext *self)
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
   /* For the textview we force a larger surrounding than the one provided
-   * through the GTK IM context
-  if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
+   * through the GTK IM context */
+  if (send_all_contents)
   {
     GtkTextMark *insert_mark;
     GtkTextBuffer *buffer;
@@ -2315,9 +2325,6 @@ hildon_im_context_send_surrounding(HildonIMContext *self)
     has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
                                                      &surrounding, &cpos);
   }
-   */
-  has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                                       &surrounding, &cpos);
 
   if (!has_surrounding)
   {

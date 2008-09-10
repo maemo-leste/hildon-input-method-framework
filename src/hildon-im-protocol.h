@@ -117,6 +117,7 @@ typedef enum
   HILDON_IM_CONTEXT_CLIPBOARD_PASTE,           /* Paste clipboard selection to client */
   HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY, /* Query if the client has an active selection */
   HILDON_IM_CONTEXT_REQUEST_SURROUNDING,       /* Request the content surrounding the cursor */
+  HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL,          /* Request the contents of the text widget */
   HILDON_IM_CONTEXT_WIDGET_CHANGED,            /* IM detected that the client widget changed */
   HILDON_IM_CONTEXT_OPTION_CHANGED,            /* The OptionMask for the active context is updated */
   HILDON_IM_CONTEXT_CLEAR_STICKY,              /* Clear the sticky key state */
