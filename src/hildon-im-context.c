@@ -92,6 +92,7 @@ struct _HildonIMContext
   GdkWindow *client_gdk_window;
   GtkWidget *client_gtk_widget;
 
+  GtkTextMark *preedit_mark;
   GString *preedit_buffer;
 
   /* IDs of handlers attached to client widget */
@@ -552,12 +553,27 @@ static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
   if (self->preedit_buffer != NULL
-      && !(s == NULL && self->preedit_buffer->len == 0))
+      && !(s == NULL && self->preedit_buffer->len == 0)
+      && self->client_gtk_widget)
   {
+    GtkTextIter cursor;
+    GtkTextBuffer *buffer;
     g_string_truncate(self->preedit_buffer, 0);
     if (s != NULL)
     {
       g_string_append(self->preedit_buffer, s);
+    }
+
+    if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+    {
+      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      gtk_text_buffer_get_iter_at_mark(buffer, &cursor,
+                                       gtk_text_buffer_get_insert(buffer));
+      gtk_text_buffer_move_mark (buffer, self->preedit_mark, &cursor);
+    }
+    else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+    {
+      /* TODO */
     }
     g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
   }
@@ -571,8 +587,16 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
 static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
-  if (self->preedit_buffer != NULL)
+  if (self->preedit_buffer != NULL && self->preedit_buffer->len != 0
+      && self->client_gtk_widget)
   {
+    GtkTextIter iter;
+    GtkTextBuffer *buffer;
+
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+    gtk_text_buffer_get_iter_at_mark (buffer, &iter, self->preedit_mark);
+    gtk_text_buffer_place_cursor (buffer, &iter);
+
     g_signal_emit_by_name(self, "commit", self->preedit_buffer->str);
     set_preedit_buffer(self, NULL);
   }
@@ -684,8 +708,8 @@ hildon_im_context_get_textview_surrounding(GtkIMContext *context,
 
   text_between = gtk_text_iter_get_slice(&start, &cursor);
 
-  if(text_between  != NULL)
-    pos = strlen(text_between);
+  if (text_between != NULL)
+    pos = g_utf8_strlen(text_between, -1);
   else
     pos = 0;
 
@@ -958,13 +982,12 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
           if (commit_mode == HILDON_IM_COMMIT_REDIRECT)
           {
-            GtkTextMark *insert_mark;
             GtkTextBuffer *buffer;
             GtkTextIter iter;
 
             buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
-            insert_mark = gtk_text_buffer_get_insert(buffer);
-            gtk_text_buffer_get_iter_at_mark(buffer, &iter, insert_mark);
+            gtk_text_buffer_get_iter_at_mark(buffer, &iter,
+                                             gtk_text_buffer_get_insert(buffer));
             gtk_text_buffer_backspace(buffer, &iter, TRUE, TRUE);
           }
           else
@@ -1202,6 +1225,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
   self->is_url_entry = FALSE;
   self->client_gdk_window = window;
   self->client_gtk_widget = NULL;
+  self->preedit_mark = NULL;
   self->last_key_event = NULL;
   self->mask = 0;
 
@@ -1229,6 +1253,21 @@ hildon_im_context_set_client_window(GtkIMContext *context,
             g_signal_connect_swapped(widget, "copy-clipboard",
               G_CALLBACK(hildon_im_context_widget_copy_clipboard), self);
         }
+
+        if (GTK_IS_TEXT_VIEW(widget))
+        {
+          GtkTextIter start;
+          gtk_text_buffer_get_start_iter (gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+                                          &start);
+          self->preedit_mark = gtk_text_buffer_create_mark (
+                                gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+                                "preedit", &start, FALSE);
+        }
+        else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+        {
+          /* TODO */
+        }
+
 #ifndef MAEMO_CHANGES
         g_signal_connect(self->client_gtk_widget, "button-press-event",
             G_CALLBACK(button_press_release), self);
@@ -2455,8 +2494,8 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  set_preedit_buffer(self, NULL);
-  hildon_im_context_send_command(self, HILDON_IM_CLEAR); /* TODO o rly? */
+  /* TODO use this?      set_preedit_buffer(self, NULL); */
+  hildon_im_context_send_command(self, HILDON_IM_CLEAR);
 }
 
 /* This function is disabled from use outside the scope of the
