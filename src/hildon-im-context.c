@@ -92,8 +92,12 @@ struct _HildonIMContext
   GdkWindow *client_gdk_window;
   GtkWidget *client_gtk_widget;
 
-  GtkTextMark *preedit_mark;
   GString *preedit_buffer;
+  /* keep the preedit's position on GtkTextView or GtkEditable */
+  GtkTextMark *text_view_preedit_mark;
+  gint editable_preedit_position;
+  /* in case we want to hide the preedit buffer without canceling it */
+  gboolean show_preedit;
 
   /* IDs of handlers attached to client widget */
   gint client_changed_signal_handler;
@@ -542,6 +546,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->has_focus = FALSE;
   self->surrounding = g_strdup("");
   self->preedit_buffer = g_string_new ("");
+  self->show_preedit = FALSE;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -569,17 +574,20 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
       buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
       gtk_text_buffer_get_iter_at_mark(buffer, &cursor,
                                        gtk_text_buffer_get_insert(buffer));
-      gtk_text_buffer_move_mark (buffer, self->preedit_mark, &cursor);
+      gtk_text_buffer_move_mark (buffer, self->text_view_preedit_mark, &cursor);
     }
     else if (GTK_IS_EDITABLE (self->client_gtk_widget))
     {
-      /* TODO */
+      self->editable_preedit_position =
+        gtk_editable_get_position(GTK_EDITABLE(self->client_gtk_widget));
     }
+    self->show_preedit = TRUE;
     g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
   }
   else
   {
-    self->preedit_buffer = g_string_new ("");  
+    self->preedit_buffer = g_string_new ("");
+    self->show_preedit = FALSE;
     g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
   }
 }
@@ -593,9 +601,17 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
     GtkTextIter iter;
     GtkTextBuffer *buffer;
 
-    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
-    gtk_text_buffer_get_iter_at_mark (buffer, &iter, self->preedit_mark);
-    gtk_text_buffer_place_cursor (buffer, &iter);
+    if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+    {
+      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      gtk_text_buffer_get_iter_at_mark (buffer, &iter, self->text_view_preedit_mark);
+      gtk_text_buffer_place_cursor (buffer, &iter);
+    }
+    else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+    {
+      gtk_editable_set_position(GTK_EDITABLE(self->client_gtk_widget),
+                                self->editable_preedit_position);
+    }
 
     g_signal_emit_by_name(self, "commit", self->preedit_buffer->str);
     set_preedit_buffer(self, NULL);
@@ -842,7 +858,7 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
 
   if (str != NULL)
   {
-    if (self->preedit_buffer != NULL)
+    if (self->preedit_buffer != NULL && self->show_preedit)
       *str = g_strdup (self->preedit_buffer->str);
     else
       *str = g_strdup ("");
@@ -1225,7 +1241,8 @@ hildon_im_context_set_client_window(GtkIMContext *context,
   self->is_url_entry = FALSE;
   self->client_gdk_window = window;
   self->client_gtk_widget = NULL;
-  self->preedit_mark = NULL;
+  self->text_view_preedit_mark = NULL;
+  self->editable_preedit_position = 0;
   self->last_key_event = NULL;
   self->mask = 0;
 
@@ -1259,13 +1276,9 @@ hildon_im_context_set_client_window(GtkIMContext *context,
           GtkTextIter start;
           gtk_text_buffer_get_start_iter (gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
                                           &start);
-          self->preedit_mark = gtk_text_buffer_create_mark (
+          self->text_view_preedit_mark = gtk_text_buffer_create_mark (
                                 gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
                                 "preedit", &start, FALSE);
-        }
-        else if (GTK_IS_EDITABLE (self->client_gtk_widget))
-        {
-          /* TODO */
         }
 
 #ifndef MAEMO_CHANGES
@@ -2494,7 +2507,12 @@ hildon_im_context_reset_real(GtkIMContext *context)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
-  /* TODO use this?      set_preedit_buffer(self, NULL); */
+  /* the preedit buffer has to be cleared by the plugin
+   * it will be cleared anyway when the current widget loses the focus
+   */   
+  self->show_preedit = FALSE;
+  g_signal_emit_by_name(self, "preedit-changed", "");
+
   hildon_im_context_send_command(self, HILDON_IM_CLEAR);
 }
 
