@@ -557,9 +557,11 @@ hildon_im_context_init(HildonIMContext *self)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
+  if (self->client_gtk_widget == NULL)
+    return;
+  
   if (self->preedit_buffer != NULL
-      && !(s == NULL && self->preedit_buffer->len == 0)
-      && self->client_gtk_widget)
+      && !(s == NULL && self->preedit_buffer->len == 0))
   {
     GtkTextIter cursor;
     GtkTextBuffer *buffer;
@@ -1306,10 +1308,10 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
       gtk_widget_set_extension_events(self->client_gtk_widget,
                                       GDK_EXTENSION_EVENTS_ALL);
+
+      set_preedit_buffer(self, NULL);
     }
   }
-
-  set_preedit_buffer(self, NULL);
 }
 
 static void
@@ -2512,6 +2514,7 @@ hildon_im_context_reset_real(GtkIMContext *context)
    */   
   self->show_preedit = FALSE;
   g_signal_emit_by_name(self, "preedit-changed", "");
+  /* TODO notify the plugin? */
 
   hildon_im_context_send_command(self, HILDON_IM_CLEAR);
 }
