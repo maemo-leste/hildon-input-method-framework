@@ -557,7 +557,9 @@ hildon_im_context_init(HildonIMContext *self)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
-  if (self->client_gtk_widget == NULL)
+  if (self->client_gdk_window == NULL
+      || self->client_gtk_widget == NULL
+      || !GTK_WIDGET_REALIZED(priv->client_gtk_widget))
     return;
   
   if (self->preedit_buffer != NULL
