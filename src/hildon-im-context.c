@@ -2362,19 +2362,28 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
    * through the GTK IM context */
   if (send_all_contents)
   {
-    GtkTextMark *insert_mark;
-    GtkTextBuffer *buffer;
-    GtkTextIter insert_i, start_i, end_i;
+    if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+    {
+      GtkTextMark *insert_mark;
+      GtkTextBuffer *buffer;
+      GtkTextIter insert_i, start_i, end_i;
 
-    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
-    insert_mark = gtk_text_buffer_get_insert(buffer);
-    gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
+      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      insert_mark = gtk_text_buffer_get_insert(buffer);
+      gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
 
-    gtk_text_buffer_get_bounds(buffer, &start_i, &end_i);
-    surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
+      gtk_text_buffer_get_bounds(buffer, &start_i, &end_i);
+      surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
 
-    has_surrounding = surrounding != NULL;
-    cpos = gtk_text_iter_get_offset(&insert_i);
+      has_surrounding = surrounding != NULL;
+      cpos = gtk_text_iter_get_offset(&insert_i);
+    }
+    else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+    {
+      surrounding = 
+        gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);
+      cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
+    }
   }
   else
   {

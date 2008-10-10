@@ -1,3 +1,8 @@
+2008-10-10  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (hildon_im_context_send_surrounding): do not assume
+	that the client widget is a GtkTextView
+
 2008-10-03  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.4-1
