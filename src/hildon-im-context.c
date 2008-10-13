@@ -2351,7 +2351,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   gint flag;
   gchar *surrounding, *str;
   gint cpos;
-  gboolean has_surrounding;
+  gboolean has_surrounding = FALSE;
 
   g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
 
