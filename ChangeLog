@@ -1,3 +1,7 @@
+2008-10-13  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.5-1
+
 2008-10-10  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (hildon_im_context_send_surrounding): do not assume
