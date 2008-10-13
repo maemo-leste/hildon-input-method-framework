@@ -2349,7 +2349,8 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   Window im_window;
   XEvent event;
   gint flag;
-  gchar *surrounding, *str;
+  gchar *surrounding = NULL;
+  gchar *str;
   gint cpos;
   gboolean has_surrounding = FALSE;
 
@@ -2375,7 +2376,6 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
       gtk_text_buffer_get_bounds(buffer, &start_i, &end_i);
       surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
 
-      has_surrounding = surrounding != NULL;
       cpos = gtk_text_iter_get_offset(&insert_i);
     }
     else if (GTK_IS_EDITABLE (self->client_gtk_widget))
@@ -2384,6 +2384,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
         gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);
       cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
     }
+    has_surrounding = surrounding != NULL;
   }
   else
   {

@@ -1,5 +1,10 @@
 2008-10-13  Felipe Erias Morandeira <femorandeira@maemo.org>
 
+	* Fixed an "unused variable" warning
+	* Version 2.1.5-2
+
+2008-10-13  Felipe Erias Morandeira <femorandeira@maemo.org>
+
 	* Version 2.1.5-1
 
 2008-10-10  Felipe Erias Morandeira <femorandeira@maemo.org>
