@@ -35,7 +35,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
-#include <hildon/hildon-banner.h>
+#include <hildon/hildon.h>
 #include "hildon-im-context.h"
 #include "hildon-im-gtk.h"
 #include "hildon-im-common.h"
@@ -197,6 +197,9 @@ static GdkFilterReturn client_message_filter            (GdkXEvent *xevent,
                                                          HildonIMContext *self);
 /* this takes care of notifying changes in the buffer */
 static void         set_preedit_buffer                  (HildonIMContext *self,
+                                                         const gchar* s);
+/* commits text */
+static void         commit_text                         (HildonIMContext *self,
                                                          const gchar* s);
 
 static void
@@ -555,6 +558,45 @@ hildon_im_context_init(HildonIMContext *self)
 }
 
 static void
+commit_text (HildonIMContext *self, const gchar* s)
+{
+  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  if (self->client_gdk_window == NULL
+      || s == NULL)
+    return;
+
+  /* This is a workaround to fix an issue with HildonEntry and HildonTextView.
+   * It seems that the "commit" signal from GtkIMContext ends up using the
+   * set_text functions from GtkEntry and GtkTextView, and this causes problems
+   * if the widget is empty because the new text is appended to the placeholder
+   * and not to the actual text. */
+
+  if (HILDON_IS_ENTRY(self->client_gtk_widget)
+      && (hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)) == NULL
+          || g_utf8_strlen(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)), 2) <= 0))
+  {
+    hildon_entry_set_text(HILDON_ENTRY(self->client_gtk_widget), s);
+    gtk_editable_set_position (GTK_EDITABLE(self->client_gtk_widget),
+                               g_utf8_strlen(s, -1));
+  }
+  else if (HILDON_IS_TEXT_VIEW(self->client_gtk_widget)
+      && hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget)) != NULL
+      && gtk_text_buffer_get_char_count(hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget))) <= 0)
+  {
+    GtkTextIter iter;
+    GtkTextBuffer *buffer = hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget));
+    gtk_text_buffer_get_iter_at_mark(buffer,
+                                     &iter,
+                                     gtk_text_buffer_get_insert(buffer));
+    gtk_text_buffer_insert(buffer, &iter, s, -1);
+  }
+  else
+  {
+    g_signal_emit_by_name(self, "commit", s);
+  }
+}
+
+static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
   if (self->client_gdk_window == NULL
@@ -617,7 +659,7 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
                                 self->editable_preedit_position);
     }
 
-    g_signal_emit_by_name(self, "commit", self->preedit_buffer->str);
+    commit_text(self, self->preedit_buffer->str);
     set_preedit_buffer(self, NULL);
   }
 }
@@ -815,7 +857,7 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
   }
 
   /* Place the new surrounding context at the insertion point */
-  g_signal_emit_by_name(self, "commit", self->surrounding);
+  commit_text(self, self->surrounding);
 
   if (has_surrounding)
   {
@@ -1828,7 +1870,7 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
                                      event->hardware_keycode);
     self->last_internal_change = TRUE;
     self->auto_upper = FALSE;
-    g_signal_emit_by_name (self, "commit", utf8);
+    commit_text (self, utf8);
 
     return TRUE;
   }
@@ -2154,7 +2196,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
      as a result of the change, and we need to clear IM. */
   self->changed_count = 0;
   self->last_internal_change = TRUE;
-  g_signal_emit_by_name(self, "commit", text_clean);
+  commit_text (self, text_clean);
 
   if (free_text == TRUE)
   {

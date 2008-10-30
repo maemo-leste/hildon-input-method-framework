@@ -1,3 +1,11 @@
+2008-10-30  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.6-1~unreleased
+	* hildon-im-context.c (commit_text) : Workaround to prevent problems with
+	HildonEntry and HildonTextView; when they are empty, throwing a "commit"
+	signal changes the placeholder instead of the actual text.
+	Fixes: NB#89354.
+
 2008-10-13  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Fixed an "unused variable" warning
