@@ -1,3 +1,12 @@
+2008-11-04  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.7-1~unreleased.
+	* hildon-im-context.c : 
+	(get_buffer) : Helper function for getting the buffer of text views.
+	(client_message_filter) : Clear the HILDON_IM_COMPOSE_MASK mask when the
+	HILDON_IM_CONTEXT_CLEAR_STICKY message is received.
+	* Fixes: NB#91567.
+
 2008-10-31  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.6-1.

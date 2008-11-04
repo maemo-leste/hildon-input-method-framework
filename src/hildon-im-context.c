@@ -267,6 +267,21 @@ hildon_im_context_finalize(GObject *obj)
   G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
+static GtkTextBuffer *
+get_buffer(GtkWidget *widget)
+{
+  if (HILDON_IS_TEXT_VIEW(widget))
+  {
+      return hildon_text_view_get_buffer(HILDON_TEXT_VIEW(widget));
+  }
+  else if (GTK_IS_TEXT_VIEW(widget))
+  {
+    return gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+  }
+
+  return NULL;
+}
+
 static gboolean
 hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
                                   guint n_param_values,
@@ -376,8 +391,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
       }
       else if (GTK_IS_TEXT_VIEW (old_focus_widget))
       {
-        GtkTextBuffer *text_buff =
-          gtk_text_view_get_buffer (GTK_TEXT_VIEW (old_focus_widget));
+        GtkTextBuffer *text_buff = get_buffer (old_focus_widget);
 
         if (gtk_text_buffer_get_selection_bounds (text_buff, NULL, NULL))
         {
@@ -580,11 +594,11 @@ commit_text (HildonIMContext *self, const gchar* s)
                                g_utf8_strlen(s, -1));
   }
   else if (HILDON_IS_TEXT_VIEW(self->client_gtk_widget)
-      && hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget)) != NULL
-      && gtk_text_buffer_get_char_count(hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget))) <= 0)
+      && get_buffer(self->client_gtk_widget) != NULL
+      && gtk_text_buffer_get_char_count(get_buffer(self->client_gtk_widget)) <= 0)
   {
     GtkTextIter iter;
-    GtkTextBuffer *buffer = hildon_text_view_get_buffer(HILDON_TEXT_VIEW(self->client_gtk_widget));
+    GtkTextBuffer *buffer = get_buffer(self->client_gtk_widget);
     gtk_text_buffer_get_iter_at_mark(buffer,
                                      &iter,
                                      gtk_text_buffer_get_insert(buffer));
@@ -617,7 +631,7 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
 
     if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
     {
-      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      buffer = get_buffer(self->client_gtk_widget);
       gtk_text_buffer_get_iter_at_mark(buffer, &cursor,
                                        gtk_text_buffer_get_insert(buffer));
       gtk_text_buffer_move_mark (buffer, self->text_view_preedit_mark, &cursor);
@@ -649,7 +663,7 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
 
     if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
     {
-      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      buffer = get_buffer(self->client_gtk_widget);
       gtk_text_buffer_get_iter_at_mark (buffer, &iter, self->text_view_preedit_mark);
       gtk_text_buffer_place_cursor (buffer, &iter);
     }
@@ -755,9 +769,11 @@ hildon_im_context_get_textview_surrounding(GtkIMContext *context,
   gint pos;
   gchar *text;
   gchar *text_between = NULL;
+  GtkTextBuffer *buffer;
 
+  buffer = get_buffer(GTK_WIDGET(text_view));
   gtk_text_buffer_get_iter_at_mark(text_view->buffer, &cursor,
-                                   gtk_text_buffer_get_insert(text_view->buffer));
+                                   gtk_text_buffer_get_insert(buffer));
   end = start = cursor;
 
   gtk_text_iter_set_line_offset(&start, 0);
@@ -945,7 +961,7 @@ hildon_im_context_set_client_cursor_location(HildonIMContext *self,
       GtkTextMark *insert;
       GtkTextIter iter;
 
-      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+      buffer = get_buffer(widget);
 
       insert = gtk_text_buffer_get_mark(buffer, "insert");
       gtk_text_buffer_get_iter_at_mark(buffer, &iter, insert);
@@ -978,7 +994,7 @@ hildon_im_context_clear_selection(HildonIMContext *self)
     GtkTextBuffer *buffer;
     GtkTextIter iter;
 
-    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(self->client_gtk_widget));
+    buffer = get_buffer(self->client_gtk_widget);
     selection = gtk_text_buffer_get_selection_bound(buffer);
     insert = gtk_text_buffer_get_insert(buffer);
     gtk_text_buffer_get_iter_at_mark(buffer, &iter, insert);
@@ -1042,12 +1058,13 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_send_fake_key(GDK_Tab, FALSE);
           break;
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
-          if (commit_mode == HILDON_IM_COMMIT_REDIRECT)
+          if (commit_mode == HILDON_IM_COMMIT_REDIRECT
+              && GTK_IS_TEXT_VIEW(self->client_gtk_widget))
           {
             GtkTextBuffer *buffer;
             GtkTextIter iter;
-
-            buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+ 
+            buffer = get_buffer(self->client_gtk_widget);
             gtk_text_buffer_get_iter_at_mark(buffer, &iter,
                                              gtk_text_buffer_get_insert(buffer));
             gtk_text_buffer_backspace(buffer, &iter, TRUE, TRUE);
@@ -1123,9 +1140,10 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_CLEAR_STICKY:
           self->mask &= ~(HILDON_IM_SHIFT_STICKY_MASK |
-                          HILDON_IM_SHIFT_LOCK_MASK |
+                          HILDON_IM_SHIFT_LOCK_MASK   |
                           HILDON_IM_LEVEL_STICKY_MASK |
-                          HILDON_IM_LEVEL_LOCK_MASK);
+                          HILDON_IM_LEVEL_LOCK_MASK   |
+                          HILDON_IM_COMPOSE_MASK);
           break;
         case HILDON_IM_CONTEXT_OPTION_CHANGED:
           break;
@@ -1226,7 +1244,7 @@ hildon_im_context_widget_copy_clipboard(GtkIMContext *context)
     {
       GtkTextBuffer *buffer;
 
-      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(self->client_gtk_widget));
+      buffer = get_buffer(self->client_gtk_widget);
       copied = gtk_text_buffer_get_selection_bounds(buffer,
                                                     NULL, NULL);
     }
@@ -1320,10 +1338,10 @@ hildon_im_context_set_client_window(GtkIMContext *context,
         if (GTK_IS_TEXT_VIEW(widget))
         {
           GtkTextIter start;
-          gtk_text_buffer_get_start_iter (gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+          gtk_text_buffer_get_start_iter (get_buffer(widget),
                                           &start);
           self->text_view_preedit_mark = gtk_text_buffer_create_mark (
-                                gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+                                get_buffer(widget),
                                 "preedit", &start, FALSE);
         }
 
@@ -2411,7 +2429,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
       GtkTextBuffer *buffer;
       GtkTextIter insert_i, start_i, end_i;
 
-      buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->client_gtk_widget));
+      buffer = get_buffer(self->client_gtk_widget);
       insert_mark = gtk_text_buffer_get_insert(buffer);
       gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
 
