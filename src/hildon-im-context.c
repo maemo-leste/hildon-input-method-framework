@@ -1787,6 +1787,24 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
     }
   }
 
+  /* word completion manipulation */
+  if (event->type == GDK_KEY_PRESS
+      && commit_mode == HILDON_IM_COMMIT_PREEDIT
+      && self->preedit_buffer != NULL
+      && self->preedit_buffer->len != 0)
+  {
+    if (event->keyval == GDK_Right)
+    {
+      hildon_im_context_commit_preedit_data(self);
+      return TRUE;
+    }
+    else if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+    {
+      set_preedit_buffer(self, NULL);
+      return TRUE;
+    }
+  }
+
   /* Sticky and lock state reset */
   if (event->type == GDK_KEY_PRESS)
   {
