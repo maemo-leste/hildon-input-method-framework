@@ -1,3 +1,8 @@
+2008-11-06  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Updated debian/changelog.
+	Fixes: NB#90582, NB#90583.
+
 2008-11-05  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (hildon_im_context_filter_keypress) :
