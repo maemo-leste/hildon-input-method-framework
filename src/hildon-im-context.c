@@ -42,8 +42,6 @@
 
 #define _(String) gettext(String)
 
-#define HILDON_IM_FINGER_LAUNCH_BUTTON 2
-#define HILDON_IM_FINGER_PRESSURE_THRESHOLD 0.4
 #define HILDON_IM_DEFAULT_LAUNCH_DELAY 70
 
 #define COMPOSE_KEY GDK_Multi_key
@@ -1044,6 +1042,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           self->mask = 0;
           break;
         case HILDON_IM_CONTEXT_HANDLE_ENTER:
+          /* TODO this might be not working */
           hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
           hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
           break;
@@ -1927,21 +1926,6 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   return FALSE;
 }
 
-/* Convenience function for dinstinquishing a finger button event */
-static gboolean
-button_event_is_finger_event(GdkEventButton *event)
-{
-  gdouble pressure;
-
-  if (gdk_event_get_axis ((GdkEvent*)event, GDK_AXIS_PRESSURE, &pressure) &&
-      pressure > HILDON_IM_FINGER_PRESSURE_THRESHOLD)
-  {
-    return TRUE;
-  }
-
-  return (event->button == HILDON_IM_FINGER_LAUNCH_BUTTON);
-}
-
 /* Filter for events (currently only button events) received by the client widget.
    This triggers the visibility of the IM window on button release. */
 static gboolean
@@ -1958,42 +1942,29 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
 
   if (event->type == GDK_BUTTON_PRESS)
   {
-    GdkEventButton *button_event = (GdkEventButton*)event;
-
-    if (button_event_is_finger_event(button_event))
+    trigger = HILDON_IM_TRIGGER_FINGER;
+    /* In Diablo, it would be a finger event if 
+     *         gdk_event_get_axis ((GdkEvent*)event, GDK_AXIS_PRESSURE, &pressure)
+     *      && pressure > HILDON_IM_FINGER_PRESSURE_THRESHOLD
+     * 
+     * with       #define HILDON_IM_FINGER_PRESSURE_THRESHOLD 0.4
+     *
+     * A finger event will cancel any prior launch that is still inside
+     * the launch delay window, creating a better chance that a finger
+     * press that generates multiple events is correctly indentified
+     */
+    if (launch_delay_timeout_id != 0)
     {
-      trigger = HILDON_IM_TRIGGER_FINGER;
-
-      /* A finger event will cancel any prior launch that is still inside
-         the launch delay window, creating a better chance that a finger
-         press that generates multiple events is correctly indentified */
-      if (launch_delay_timeout_id != 0)
-      {
-        g_source_remove(launch_delay_timeout_id);
-        launch_delay_timeout_id = 0;
-      }
-
-      launch_delay = 0;
+      g_source_remove(launch_delay_timeout_id);
+      launch_delay_timeout_id = 0;
     }
-    else
-    {
-      trigger = HILDON_IM_TRIGGER_STYLUS;
-      launch_delay = HILDON_IM_DEFAULT_LAUNCH_DELAY;
-    }
+
+    launch_delay = 0;
   }
 
   if (event->type == GDK_BUTTON_RELEASE)
   {
-    GdkEventButton *button_event = (GdkEventButton*)event;
-
-    if (button_event_is_finger_event(button_event))
-    {
-      trigger = HILDON_IM_TRIGGER_FINGER;
-    }
-    else
-    {
-      trigger = HILDON_IM_TRIGGER_STYLUS;
-    }
+    trigger = HILDON_IM_TRIGGER_FINGER;
 
     if (self->has_focus)
     {
@@ -2578,7 +2549,7 @@ hildon_im_context_show_real(GtkIMContext *context)
 static void
 hildon_im_context_show(GtkIMContext *context)
 {
-  trigger = HILDON_IM_TRIGGER_STYLUS;
+  trigger = HILDON_IM_TRIGGER_KEYBOARD;
 
   hildon_im_context_show_real(context);
 }

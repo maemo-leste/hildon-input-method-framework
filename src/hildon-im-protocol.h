@@ -139,7 +139,7 @@ typedef enum {
 typedef enum
 {
   HILDON_IM_TRIGGER_NONE = -1, /* Reserved for non-UI plugins not requiring activation */
-  HILDON_IM_TRIGGER_STYLUS,    /* The user poked the screen with the stylus */
+  HILDON_IM_TRIGGER_STYLUS,    /* The user poked the screen with the stylus; not used in Fremantle */
   HILDON_IM_TRIGGER_FINGER,    /* The user poked the screen with his finger */
   HILDON_IM_TRIGGER_KEYBOARD   /* The user pressed a key */
 } HildonIMTrigger;

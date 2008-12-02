@@ -1,3 +1,10 @@
+2008-12-02  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.8-1~unreleased
+	* hildon-im-context.c (hildon_im_context_filter_event) : Always set the
+	trigger to HILDON_IM_TRIGGER_FINGER when GDK_BUTTON_PRESS and
+	GDK_BUTTON_RELEASE events happen.
+
 2008-11-07  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.7-1
