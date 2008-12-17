@@ -1,8 +1,8 @@
-hildon-input-method-framework (1:2.1.8-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.8-1) unstable; urgency=low
 
-  * Version 1:2.1.8-1~unreleased
+  * Version 1:2.1.8-1
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Tue, 2 Dec 2008 12:00:00 +0200
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Wed, 17 Dec 2008 12:00:00 +0200
 
 hildon-input-method-framework (1:2.1.7-1) unstable; urgency=low
 
