@@ -1,3 +1,10 @@
+2009-01-09  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.9-1~unreleased
+	* hildon-im-context.c : Use "inpu_ib_mode_fn_locked" instead of
+	"inpu_ib_mode_level_locked" when locking the Fn key.
+	Fixes: NB#97514.
+
 2008-12-17  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.8-1

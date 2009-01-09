@@ -1557,7 +1557,7 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
     /* When the key is already sticky, a second press locks the key */
     *mask |= lock_mask;
     if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
-      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_shift_locked"));
+      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_fn_locked"));
     else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
       hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_level_locked"));
   }
