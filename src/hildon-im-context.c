@@ -2412,7 +2412,15 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
    * through the GTK IM context */
   if (send_all_contents)
   {
-    if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+    if (HILDON_IS_ENTRY(self->client_gtk_widget))
+    {
+      surrounding = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
+      if (g_utf8_strlen(surrounding, 2) == 0)
+        cpos = 0;
+      else
+        cpos = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
+    }
+    else if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
     {
       GtkTextMark *insert_mark;
       GtkTextBuffer *buffer;

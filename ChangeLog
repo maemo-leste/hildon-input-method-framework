@@ -1,3 +1,9 @@
+2009-01-13  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (hildon_im_context_send_surrounding) :
+	Handle HildonEntries appropriately.
+	Fixes: NB#93219.
+
 2009-01-09  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.9-1~unreleased
