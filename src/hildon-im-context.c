@@ -2465,7 +2465,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
 
     next_start = get_next_packet_start(str);
     len = next_start - str;
-    g_assert(0 <= len && len < HILDON_IM_CLIENT_MESSAGE_BUFFER_SIZE);
+    g_return_if_fail(0 <= len && len < HILDON_IM_CLIENT_MESSAGE_BUFFER_SIZE);
 
     /*this call will take care of adding the null terminator*/
     memset( &event, 0, sizeof(XEvent) );

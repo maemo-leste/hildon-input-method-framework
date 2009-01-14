@@ -1,3 +1,7 @@
+2009-01-14  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c : Removed g_assert.
+
 2009-01-13  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (hildon_im_context_send_surrounding) :
