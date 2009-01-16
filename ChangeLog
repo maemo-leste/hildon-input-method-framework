@@ -1,3 +1,8 @@
+2009-01-16  Richard Sun <richard.sun@nokia.com>
+
+	* configure.ac, src/Makefile.am, debian/control:
+	Cleanup build dependency and configuration based on libXi updates 
+
 2009-01-16  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.9-1
