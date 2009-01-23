@@ -1,3 +1,8 @@
+2009-01-23  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.10-1~unreleased
+	* Code cleaning
+
 2009-01-16  Richard Sun <richard.sun@nokia.com>
 
 	* configure.ac, src/Makefile.am, debian/control:

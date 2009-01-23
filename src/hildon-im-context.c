@@ -2294,6 +2294,7 @@ hildon_im_context_send_command(HildonIMContext *self,
   gdk_error_trap_push();
 
   XSendEvent(GDK_DISPLAY(), im_window, False, 0, &event);
+  /* TODO this call can cause a hang, see NB#97380 */
   XSync(GDK_DISPLAY(), False);
 
   xerror = gdk_error_trap_pop();
