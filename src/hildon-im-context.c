@@ -685,6 +685,12 @@ hildon_im_clipboard_copied(HildonIMContext *self)
 
   im_window = get_window_id(
           hildon_im_protocol_get_atom(HILDON_IM_WINDOW) );
+  
+  if (im_window == None)
+  {
+    g_warning("hildon_im_clipboard_copied: Could not get the window id.\n");
+    return;
+  }
 
   memset(&ev, 0, sizeof(ev));
   ev.xclient.type = ClientMessage;
@@ -720,6 +726,12 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 
   im_window = get_window_id(
           hildon_im_protocol_get_atom(HILDON_IM_WINDOW) );
+
+  if (im_window == None)
+  {
+    g_warning("hildon_im_clipboard_selection_query: Could not get the window id.\n");
+    return;
+  }
 
   memset(&ev, 0, sizeof(ev));
   ev.xclient.type = ClientMessage;
@@ -2250,6 +2262,12 @@ hildon_im_context_send_command(HildonIMContext *self,
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
+  if (im_window == None)
+  {
+    g_warning("hildon_im_context_send_command: Could not get the window id.\n");
+    return;
+  }
+  
   memset(&event, 0, sizeof(XEvent));
   event.xclient.type = ClientMessage;
   event.xclient.window = im_window;
@@ -2409,6 +2427,12 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   flag = HILDON_IM_MSG_START;
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
+  if (im_window == None)
+  {
+    g_warning("hildon_im_context_send_surrounding: Could not get the window id.\n");
+    return;
+  }
+
   /* For the textview we force a larger surrounding than the one provided
    * through the GTK IM context */
   if (send_all_contents)
@@ -2505,6 +2529,13 @@ hildon_im_context_send_key_event(HildonIMContext *self,
     return;
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+  
+  if (im_window == None)
+  {
+    g_warning("hildon_im_context_send_key_event: Could not get the window id.\n");
+    return;
+  }
+  
   memset(&event, 0, sizeof(XEvent));
   event.xclient.message_type = hildon_im_protocol_get_atom(HILDON_IM_KEY_EVENT);
   event.xclient.format = HILDON_IM_KEY_EVENT_FORMAT;
