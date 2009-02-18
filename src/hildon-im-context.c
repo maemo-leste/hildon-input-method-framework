@@ -899,12 +899,16 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
 {
   /* TODO this should be enough to show a preview of the predicted text */
   HildonIMContext *self;
-  GtkStyle *style;
+  GtkStyle *style = NULL;
   PangoAttribute *attr1, *attr2, *attr3;
   
   g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
-  style = gtk_widget_get_default_style(); 
+  style = gtk_widget_get_style (self->client_gtk_widget);
+  if (style == NULL)
+  {
+    style = gtk_widget_get_default_style ();
+  }
   
   /* TODO leak? unref?
    * TODO adapt it to use the current style */
@@ -926,6 +930,7 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
     *attrs = pango_attr_list_new ();
     pango_attr_list_insert (*attrs, attr1);
     pango_attr_list_insert (*attrs, attr2);
+    pango_attr_list_insert (*attrs, attr3);
   }
 
   if (str != NULL)
