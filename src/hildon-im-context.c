@@ -2254,16 +2254,20 @@ hildon_im_context_send_command(HildonIMContext *self,
   Window im_window;
   GdkWindow *input_window = NULL;
 
-  if (self != NULL)
+  g_return_if_fail (self != NULL);
+
+  if (self->client_gdk_window != NULL)
   {
     input_window = self->client_gdk_window;
-    if (!input_window)
-      return;
+  }
+  else
+  {
+    return;
+  }
 
 #ifdef MAEMO_CHANGES
-    g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
 #endif
-  }
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
@@ -2475,6 +2479,8 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   }
   else
   {
+    /* TODO gtk_im_context_get_surrounding doesn't work well with multiple lines
+     * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
     has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
                                                      &surrounding, &cpos);
   }
