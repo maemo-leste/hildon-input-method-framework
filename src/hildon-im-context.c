@@ -96,6 +96,8 @@ struct _HildonIMContext
   gint editable_preedit_position;
   /* in case we want to hide the preedit buffer without canceling it */
   gboolean show_preedit;
+  /* append a space after the text is committed */
+  gboolean space_after_commit;
 
   /* IDs of handlers attached to client widget */
   gint client_changed_signal_handler;
@@ -562,6 +564,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->surrounding = g_strdup("");
   self->preedit_buffer = g_string_new ("");
   self->show_preedit = FALSE;
+  self->space_after_commit = FALSE;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -671,6 +674,11 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
                                 self->editable_preedit_position);
     }
 
+    if (self->space_after_commit)
+    {
+      g_string_append(self->preedit_buffer, " ");
+    }
+    
     commit_text(self, self->preedit_buffer->str);
     set_preedit_buffer(self, NULL);
   }
@@ -1162,6 +1170,12 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
                           HILDON_IM_COMPOSE_MASK);
           break;
         case HILDON_IM_CONTEXT_OPTION_CHANGED:
+          break;
+        case HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT:
+          self->space_after_commit = TRUE;
+          break;
+        case HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT:
+          self->space_after_commit = FALSE;
           break;
         default:
           g_warning("Invalid communication message from IM");
