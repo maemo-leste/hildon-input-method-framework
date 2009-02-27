@@ -4,6 +4,7 @@
 	* hildon-im-protocol: Added HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT, to
 	indicate a space when the preedit text is committed, and
 	HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT to indicate the opposite.
+	* Version 2.1.12-1
 
 2009-02-26  Felipe Erias Morandeira <femorandeira@maemo.org>
 
