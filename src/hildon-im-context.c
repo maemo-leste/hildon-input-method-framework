@@ -51,6 +51,11 @@
 #define NUMERIC_LEVEL 2
 #define LOCKABLE_LEVEL 4
 
+/* if we don't use gtk_im_context_get_surrounding or a text buffer to get the
+ * surrounding, this is the fixed size that will be used */
+#define SURROUNDING_CHARS_BEFORE_CURSOR 30
+#define SURROUNDING_CHARS_AFTER_CURSOR  10
+
 /* Special cased widgets */
 #define HILDON_IM_INTERNAL_TEXTVIEW "him-textview"
 #define HILDON_ENTRY_COMPLETION_POPUP "hildon-completion-window"
@@ -65,7 +70,6 @@ static guint launch_delay_timeout_id = 0;
 static guint launch_delay = HILDON_IM_DEFAULT_LAUNCH_DELAY;
 static HildonIMTrigger trigger = 0;
 static HildonIMCommitMode commit_mode = 0;
-static gboolean is_internal_widget = FALSE;
 static gboolean internal_reset = FALSE;
 static gboolean enter_on_focus_pending = FALSE;
 
@@ -89,6 +93,7 @@ struct _HildonIMContext
 
   GdkWindow *client_gdk_window;
   GtkWidget *client_gtk_widget;
+  gboolean is_internal_widget;
 
   GString *preedit_buffer;
   /* keep the preedit's position on GtkTextView or GtkEditable */
@@ -202,6 +207,14 @@ static void         set_preedit_buffer                  (HildonIMContext *self,
 static void         commit_text                         (HildonIMContext *self,
                                                          const gchar* s);
 
+
+static void hildon_im_context_set_mask_state (HildonIMInternalModifierMask *mask,
+                                              HildonIMInternalModifierMask lock_mask,
+                                              HildonIMInternalModifierMask sticky_mask,
+                                              gboolean was_press_and_release);
+
+static void hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self);
+
 static void
 hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
 {
@@ -294,9 +307,10 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
   g_return_val_if_fail(n_param_values > 0, TRUE);
 
   /* Widgets created by the IM have valid contexts, but focusing them
-     should not cause any action */
+     should not cause any action 
   if (is_internal_widget)
     return TRUE;
+     */
 
   focus_widget = g_value_get_object(&param_values[0]);
 
@@ -547,7 +561,7 @@ button_press_release (GtkWidget *widget, GdkEventButton *event, gpointer user_da
   HildonIMContext *self = HILDON_IM_CONTEXT(user_data);
 
   if ((GTK_IS_ENTRY(widget) || GTK_IS_TEXT_VIEW(widget)) &&
-      (is_internal_widget == FALSE ||  self->is_url_entry))
+      (!self->is_internal_widget ||  self->is_url_entry))
   {
     return hildon_im_context_filter_event (GTK_IM_CONTEXT(self), (GdkEvent *)event);
   }
@@ -565,6 +579,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->preedit_buffer = g_string_new ("");
   self->show_preedit = FALSE;
   self->space_after_commit = FALSE;
+  self->is_internal_widget = FALSE;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -576,7 +591,7 @@ static void
 commit_text (HildonIMContext *self, const gchar* s)
 {
   g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
-  if (self->client_gdk_window == NULL
+  if (self->client_gtk_widget == NULL
       || s == NULL)
     return;
 
@@ -614,8 +629,7 @@ commit_text (HildonIMContext *self, const gchar* s)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
-  if (self->client_gdk_window == NULL
-      || self->client_gtk_widget == NULL
+  if (self->client_gtk_widget == NULL
       || !GTK_WIDGET_REALIZED(self->client_gtk_widget))
     return;
   
@@ -834,9 +848,9 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
   if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
   {
     result = hildon_im_context_get_textview_surrounding(context,
-        GTK_TEXT_VIEW(self->client_gtk_widget),
-        text,
-        cursor_index);
+                                                        GTK_TEXT_VIEW(self->client_gtk_widget),
+                                                        text,
+                                                        cursor_index);
   }
   else
   {
@@ -844,8 +858,8 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
     gint local_index;
 
     result = parent_class->get_surrounding(context,
-                 text ? text : &local_text,
-                 cursor_index ? cursor_index : &local_index);
+                                           text ? text : &local_text,
+                                           cursor_index ? cursor_index : &local_index);
 
     if (result)
     {
@@ -1065,6 +1079,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
       {
         case HILDON_IM_CONTEXT_WIDGET_CHANGED:
           self->mask = 0;
+          hildon_im_context_change_set_mask_for_input_mode (self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_ENTER:
           /* TODO this might be not working */
@@ -1325,7 +1340,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
     if (window == NULL && self->has_focus ) /* Hide IM window when textwidget is unrealized */
     {
-      if (is_internal_widget == FALSE)
+      if (!self->is_internal_widget)
       {
         hildon_im_context_send_command(self, HILDON_IM_HIDE);
       }
@@ -1385,7 +1400,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
       if (strncmp(gtk_widget_get_name(widget), HILDON_IM_INTERNAL_TEXTVIEW, sizeof(HILDON_IM_INTERNAL_TEXTVIEW)) == 0)
       {
-        is_internal_widget = TRUE;
+        self->is_internal_widget = TRUE;
       }
       else if (strncmp (gtk_widget_get_name(widget), MAEMO_BROWSER_URL_ENTRY, sizeof(MAEMO_BROWSER_URL_ENTRY)) == 0)
       {
@@ -1402,6 +1417,9 @@ hildon_im_context_set_client_window(GtkIMContext *context,
                                       GDK_EXTENSION_EVENTS_ALL);
 
       set_preedit_buffer(self, NULL);
+      
+      /* if (GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget)) */
+        hildon_im_context_change_set_mask_for_input_mode (self);
     }
   }
 }
@@ -1412,8 +1430,10 @@ hildon_im_context_focus_in(GtkIMContext *context)
   HildonIMContext *self = HILDON_IM_CONTEXT(context);
 
   self->has_focus = TRUE;
+  
+  hildon_im_context_change_set_mask_for_input_mode (self);
 
-  if (is_internal_widget == TRUE)
+  if (self->is_internal_widget)
   {
     return;
   }
@@ -1588,9 +1608,9 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
     /* When the key is already sticky, a second press locks the key */
     *mask |= lock_mask;
     if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
-      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_fn_locked"));
-    else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
       hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_level_locked"));
+    else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
+      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_fn_locked"));
   }
   else if (was_press_and_release)
   {
@@ -1599,6 +1619,27 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
     *mask |= sticky_mask;
   }
   
+}
+
+static void
+hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self)
+{
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+
+  g_return_if_fail (self != NULL);
+
+  /* Numeric and Telephone fields require the Fn key to be sticky */
+  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+
+  if ((input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
+      (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
+      ( (input_mode & HILDON_GTK_INPUT_MODE_NUMERIC) != 0 ||
+        (input_mode & HILDON_GTK_INPUT_MODE_TELE)    != 0))
+  {
+    self->mask = HILDON_IM_LEVEL_LOCK_MASK | HILDON_IM_LEVEL_STICKY_MASK;
+  }
+#endif
 }
 
 /* Filter for key events received by the client widget. */
@@ -2184,7 +2225,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
 
   g_return_if_fail( OSSO_IS_IM_CONTEXT(self) );
   
-  /* TODO TEST this is ugly and hackish */
+  /* in PREEDIT mode, the text is used as the predicted suffix */
   if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
     set_preedit_buffer (self, text_clean);
@@ -2443,7 +2484,6 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   gchar *surrounding = NULL;
   gchar *str;
   gint cpos;
-  gboolean has_surrounding = FALSE;
 
   g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
 
@@ -2489,17 +2529,59 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
         gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);
       cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
     }
-    has_surrounding = surrounding != NULL;
   }
   else
   {
     /* TODO gtk_im_context_get_surrounding doesn't work well with multiple lines
      * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
-    has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                                     &surrounding, &cpos);
+    gboolean multiline = FALSE;
+#ifdef MAEMO_CHANGES
+    HildonGtkInputMode input_mode;
+    g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+    multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0;
+#else
+    /* TODO add other multiline widgets */
+    multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget);
+#endif
+
+    if (multiline && GTK_IS_EDITABLE(self->client_gtk_widget))
+    {
+      cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
+
+      surrounding = 
+        gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget),
+                               MAX(cpos - SURROUNDING_CHARS_BEFORE_CURSOR, 0),
+                               cpos + SURROUNDING_CHARS_AFTER_CURSOR);
+    }
+    else if (multiline && GTK_IS_TEXT_VIEW(self->client_gtk_widget))
+    {
+      GtkTextMark *insert_mark;
+      GtkTextBuffer *buffer;
+      GtkTextIter insert_i, start_i, end_i;
+
+      buffer = get_buffer(self->client_gtk_widget);
+      insert_mark = gtk_text_buffer_get_insert(buffer);
+      gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
+
+      start_i = insert_i;
+      end_i = insert_i;
+
+      gtk_text_iter_backward_chars (&start_i, SURROUNDING_CHARS_BEFORE_CURSOR);
+      gtk_text_iter_forward_chars (&end_i, SURROUNDING_CHARS_AFTER_CURSOR);
+
+      surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
+
+      /* this is the offset in the whole widget!!!!! */
+      cpos = gtk_text_iter_get_offset(&insert_i) - gtk_text_iter_get_offset(&start_i);
+    }
+    else
+    {
+      gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
+                                     &surrounding, &cpos);
+    }
   }
 
-  if (!has_surrounding)
+  if (surrounding == NULL)
   {
     hildon_im_context_send_surrounding_header(self, 0);
     return;
@@ -2550,7 +2632,7 @@ hildon_im_context_send_key_event(HildonIMContext *self,
 
   g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
 
-  if (is_internal_widget)
+  if (self->is_internal_widget)
     return;
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
@@ -2596,8 +2678,10 @@ hildon_im_context_show_cb(GtkIMContext *context)
 static void
 hildon_im_context_show_real(GtkIMContext *context)
 {
+  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+
   /* Prevent IM UI recursion */
-  if (is_internal_widget)
+  if (self->is_internal_widget)
   {
     return;
   }
