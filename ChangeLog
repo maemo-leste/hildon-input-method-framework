@@ -1,3 +1,8 @@
+2009-03-06  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c : Use gtk_text_buffer_get_slice(), so inline images
+	are represented with the 0xFFFC character.
+
 2009-03-05  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c :  

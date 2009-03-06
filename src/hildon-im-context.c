@@ -2519,7 +2519,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
       gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
 
       gtk_text_buffer_get_bounds(buffer, &start_i, &end_i);
-      surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
+      surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
 
       cpos = gtk_text_iter_get_offset(&insert_i);
     }
@@ -2569,7 +2569,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
       gtk_text_iter_backward_chars (&start_i, SURROUNDING_CHARS_BEFORE_CURSOR);
       gtk_text_iter_forward_chars (&end_i, SURROUNDING_CHARS_AFTER_CURSOR);
 
-      surrounding = gtk_text_buffer_get_text(buffer, &start_i, &end_i, FALSE);
+      surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
 
       /* this is the offset in the whole widget!!!!! */
       cpos = gtk_text_iter_get_offset(&insert_i) - gtk_text_iter_get_offset(&start_i);
