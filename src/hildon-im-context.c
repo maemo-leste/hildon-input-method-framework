@@ -373,7 +373,10 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
          !is_combo_box_entry &&
          !is_inside_completion_popup))
     {
-      hildon_im_context_hide(NULL);
+      if (context != NULL)
+      {
+        hildon_im_context_hide(context);
+      }
     }
 
     if (is_inside_toolbar && context)
@@ -436,7 +439,17 @@ hildon_im_hook_unmap_handler(GSignalInvocationHint *ihint,
   /* If the IM is opened for this widget, hide the IM */
   if (GTK_WIDGET_HAS_FOCUS(widget))
   {
-    hildon_im_context_hide(NULL);
+    GtkIMContext *context = NULL;
+
+    if (GTK_IS_ENTRY (widget))
+      context = GTK_ENTRY (widget)->im_context;
+    else if (GTK_IS_TEXT_VIEW (widget))
+      context = GTK_TEXT_VIEW (widget)->im_context;
+    
+    if (context != NULL)
+    {
+      hildon_im_context_hide(context);
+    }
   }
 
   return TRUE;
@@ -2566,12 +2579,18 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
       start_i = insert_i;
       end_i = insert_i;
 
-      gtk_text_iter_backward_chars (&start_i, SURROUNDING_CHARS_BEFORE_CURSOR);
-      gtk_text_iter_forward_chars (&end_i, SURROUNDING_CHARS_AFTER_CURSOR);
+      if (gtk_text_iter_get_line_offset (&start_i) != 0)
+      {
+        gtk_text_iter_set_line_offset (&start_i, 0);
+      }
+      else
+      {
+        gtk_text_iter_backward_line (&start_i);
+      }
+      gtk_text_iter_forward_to_line_end (&end_i);
 
       surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
 
-      /* this is the offset in the whole widget!!!!! */
       cpos = gtk_text_iter_get_offset(&insert_i) - gtk_text_iter_get_offset(&start_i);
     }
     else

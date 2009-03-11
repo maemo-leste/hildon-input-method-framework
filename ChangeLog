@@ -1,3 +1,10 @@
+2009-03-11  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 1:2.1.14-1.
+	* Remove references to libhildonhelp.
+	* Improve the fetching of the surrounding text by using get_slice().
+	* Fixes: NB#98022, NB#101169.
+
 2009-03-06  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c : Use gtk_text_buffer_get_slice(), so inline images
