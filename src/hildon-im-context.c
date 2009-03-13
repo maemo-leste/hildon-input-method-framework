@@ -939,45 +939,49 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
   
   g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
-  style = gtk_widget_get_style (self->client_gtk_widget);
-  if (style == NULL)
-  {
-    style = gtk_widget_get_default_style ();
-  }
   
-  /* TODO leak? unref?
-   * TODO adapt it to use the current style */
-  attr1 = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);
-  attr1->start_index = 0;
-  attr1->end_index = G_MAXINT;
-  attr2 = pango_attr_background_new (style->bg[GTK_STATE_SELECTED].red,
-                                     style->bg[GTK_STATE_SELECTED].green,
-                                     style->bg[GTK_STATE_SELECTED].blue);
-  attr2->start_index = 0;
-  attr2->end_index = G_MAXINT;
-  attr3 = pango_attr_foreground_new (style->fg[GTK_STATE_SELECTED].red,
-                                     style->fg[GTK_STATE_SELECTED].green,
-                                     style->fg[GTK_STATE_SELECTED].blue);
-  attr3->start_index = 0;
-  attr3->end_index = G_MAXINT;
-  if (attrs != NULL)
+  if (cursor_pos != NULL)
+    *cursor_pos = 0;
+  
+  if (str != NULL)
   {
+    if (self->preedit_buffer != NULL && self->show_preedit)
+    {
+      *str = g_strdup (self->preedit_buffer->str);
+    }
+    else
+    {
+      *str = g_strdup ("");
+    }
+  }
+
+  if (attrs != NULL && self->client_gtk_widget != NULL)
+  {
+    style = gtk_widget_get_style (self->client_gtk_widget);
+    if (style == NULL)
+    {
+      style = gtk_widget_get_default_style ();
+    }
+    
+    attr1 = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);
+    attr1->start_index = 0;
+    attr1->end_index = G_MAXINT;
+    attr2 = pango_attr_background_new (style->bg[GTK_STATE_SELECTED].red,
+                                       style->bg[GTK_STATE_SELECTED].green,
+                                       style->bg[GTK_STATE_SELECTED].blue);
+    attr2->start_index = 0;
+    attr2->end_index = G_MAXINT;
+    attr3 = pango_attr_foreground_new (style->fg[GTK_STATE_SELECTED].red,
+                                       style->fg[GTK_STATE_SELECTED].green,
+                                       style->fg[GTK_STATE_SELECTED].blue);
+    attr3->start_index = 0;
+    attr3->end_index = G_MAXINT;
+
     *attrs = pango_attr_list_new ();
     pango_attr_list_insert (*attrs, attr1);
     pango_attr_list_insert (*attrs, attr2);
     pango_attr_list_insert (*attrs, attr3);
   }
-
-  if (str != NULL)
-  {
-    if (self->preedit_buffer != NULL && self->show_preedit)
-      *str = g_strdup (self->preedit_buffer->str);
-    else
-      *str = g_strdup ("");
-  }
-  
-  if (cursor_pos != NULL)
-    *cursor_pos = 0;
   
   return;
 }
