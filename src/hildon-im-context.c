@@ -603,7 +603,7 @@ hildon_im_context_init(HildonIMContext *self)
 static void
 commit_text (HildonIMContext *self, const gchar* s)
 {
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
   if (self->client_gtk_widget == NULL
       || s == NULL)
     return;
@@ -803,10 +803,9 @@ surroundings_search_predicate (gunichar c, gpointer data)
 }
 
 static gboolean
-hildon_im_context_get_textview_surrounding(GtkIMContext *context,
-                                           GtkTextView *text_view,
-                                           gchar **surrounding,
-                                           gint *cursor_index)
+get_textview_surrounding(GtkTextView *text_view,
+                         gchar **surrounding,
+                         gint *cursor_index)
 {
   GtkTextIter start;
   GtkTextIter end;
@@ -854,16 +853,15 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
   HildonIMContext *self;
   gboolean result = FALSE;
 
-  g_return_val_if_fail(OSSO_IS_IM_CONTEXT(context), FALSE);
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
   self = HILDON_IM_CONTEXT(context);
 
   /* Override the textview surrounding handler */
   if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
   {
-    result = hildon_im_context_get_textview_surrounding(context,
-                                                        GTK_TEXT_VIEW(self->client_gtk_widget),
-                                                        text,
-                                                        cursor_index);
+    result = get_textview_surrounding(GTK_TEXT_VIEW(self->client_gtk_widget),
+                                      text,
+                                      cursor_index);
   }
   else
   {
@@ -937,7 +935,7 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
   GtkStyle *style = NULL;
   PangoAttribute *attr1, *attr2, *attr3;
   
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
   
   if (cursor_pos != NULL)
@@ -1071,7 +1069,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
   GdkFilterReturn result = GDK_FILTER_CONTINUE;
   XEvent *xe = (XEvent *)xevent;
 
-  g_return_val_if_fail(OSSO_IS_IM_CONTEXT(self), GDK_FILTER_CONTINUE);
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), GDK_FILTER_CONTINUE);
 
   if (xe->type == ClientMessage)
   {
@@ -1277,7 +1275,7 @@ hildon_im_context_widget_hide(GtkIMContext *context)
 {
   HildonIMContext *self;
 
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
 
   if (self->client_gtk_widget &&
@@ -1291,9 +1289,10 @@ static void
 hildon_im_context_widget_copy_clipboard(GtkIMContext *context)
 {
   HildonIMContext *self;
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(context));
-  self = HILDON_IM_CONTEXT(context);
   gboolean copied = FALSE;
+
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
   if (self->client_gtk_widget)
   {
@@ -1325,8 +1324,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 {
   HildonIMContext *self;
 
-  g_return_if_fail( OSSO_IS_IM_CONTEXT( context ) );
-
+  g_return_if_fail( HILDON_IS_IM_CONTEXT( context ) );
   self = HILDON_IM_CONTEXT(context);
 
   if (self->client_changed_signal_handler > 0)
@@ -1444,7 +1442,9 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 static void
 hildon_im_context_focus_in(GtkIMContext *context)
 {
-  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
   self->has_focus = TRUE;
   
@@ -1469,7 +1469,7 @@ static void
 hildon_im_context_focus_out(GtkIMContext *context)
 {
   HildonIMContext *self;
-
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
 
   self->has_focus = FALSE;
@@ -1486,7 +1486,7 @@ hildon_im_context_font_has_char(HildonIMContext *self, guint32 c)
   gchar utf8[7];
   gint len;
 
-  g_return_val_if_fail(OSSO_IS_IM_CONTEXT(self), TRUE);
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), TRUE);
   g_return_val_if_fail(self->client_gtk_widget &&
                        self->client_gtk_widget->window, TRUE);
 
@@ -1625,7 +1625,7 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
     /* When the key is already sticky, a second press locks the key */
     *mask |= lock_mask;
     if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
-      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_level_locked"));
+      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_shift_locked"));
     else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
       hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_fn_locked"));
   }
@@ -1670,7 +1670,7 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   guint32 c = 0;
   guint last_keyval = 0;
 
-  g_return_val_if_fail(OSSO_IS_IM_CONTEXT(context), FALSE);
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
   self = HILDON_IM_CONTEXT(context);
 
   if (!self->has_focus)
@@ -2027,6 +2027,7 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
     return FALSE;
   }
 
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
   self = HILDON_IM_CONTEXT(context);
 
   if (event->type == GDK_BUTTON_PRESS)
@@ -2068,19 +2069,21 @@ static void
 hildon_im_context_set_cursor_location(GtkIMContext *context,
                                       GdkRectangle *area)
 {
-  HildonIMContext *imc = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
-  if (!imc->has_focus)
+  if (!self->has_focus)
   {
     return;
   }
 
-  if (imc->last_internal_change)
+  if (self->last_internal_change)
   {
     /* Our own change */
-    hildon_im_context_check_sentence_start(imc);
-    imc->last_internal_change = FALSE;
-    imc->prev_surrounding_hash = 0;
+    hildon_im_context_check_sentence_start(self);
+    self->last_internal_change = FALSE;
+    self->prev_surrounding_hash = 0;
   }
   else
   {
@@ -2098,23 +2101,23 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
 
     /* Now we wish to see if cursor has actually moved.
        If cursor x/y hasn't moved, we're in same position */
-    if ((area->y != imc->prev_cursor_y || area->x != imc->prev_cursor_x) &&
-        (imc->prev_surrounding_cursor_pos != cpos ||
-         imc->prev_surrounding_hash != hash ||
-         imc->prev_surrounding_hash == 0)
+    if ((area->y != self->prev_cursor_y || area->x != self->prev_cursor_x) &&
+        (self->prev_surrounding_cursor_pos != cpos ||
+         self->prev_surrounding_hash != hash ||
+         self->prev_surrounding_hash == 0)
        )
     {
       /* Moved, clear IM. */
-      hildon_im_context_check_sentence_start(imc);
+      hildon_im_context_check_sentence_start(self);
       hildon_im_context_reset_real(context);
     }
 
-    imc->prev_surrounding_hash = hash;
-    imc->prev_surrounding_cursor_pos = cpos;
+    self->prev_surrounding_hash = hash;
+    self->prev_surrounding_cursor_pos = cpos;
   }
 
-  imc->prev_cursor_y = area->y;
-  imc->prev_cursor_x = area->x;
+  self->prev_cursor_y = area->y;
+  self->prev_cursor_x = area->x;
 }
 
 static void
@@ -2151,7 +2154,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   gboolean has_surrounding, space;
   gunichar ch;
 
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
 #ifdef MAEMO_CHANGES
   g_object_get(self, "hildon-input-mode", &input_mode, NULL);
@@ -2240,7 +2243,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   gchar tmp[3] = { 0, 0, 0};
   gboolean has_surrounding, free_text = FALSE;
 
-  g_return_if_fail( OSSO_IS_IM_CONTEXT(self) );
+  g_return_if_fail( HILDON_IS_IM_CONTEXT(self) );
   
   /* in PREEDIT mode, the text is used as the predicted suffix */
   if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
@@ -2474,7 +2477,7 @@ hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
   Window im_window;
   XEvent event;
 
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
@@ -2502,7 +2505,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   gchar *str;
   gint cpos;
 
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   flag = HILDON_IM_MSG_START;
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
@@ -2653,7 +2656,7 @@ hildon_im_context_send_key_event(HildonIMContext *self,
   Window im_window;
   XEvent event;
 
-  g_return_if_fail(OSSO_IS_IM_CONTEXT(self));
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   if (self->is_internal_widget)
     return;
@@ -2683,12 +2686,15 @@ hildon_im_context_send_key_event(HildonIMContext *self,
 static gboolean
 hildon_im_context_show_cb(GtkIMContext *context)
 {
-  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+  
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
+  self = HILDON_IM_CONTEXT(context);
 
   /* Avoid autocap on inactive window. */
   if (self->has_focus)
   {
-    hildon_im_context_check_sentence_start(HILDON_IM_CONTEXT(context));
+    hildon_im_context_check_sentence_start(self);
   }
 
   hildon_im_context_send_command(self, HILDON_IM_SETNSHOW);
@@ -2701,7 +2707,10 @@ hildon_im_context_show_cb(GtkIMContext *context)
 static void
 hildon_im_context_show_real(GtkIMContext *context)
 {
-  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
   /* Prevent IM UI recursion */
   if (self->is_internal_widget)
@@ -2731,7 +2740,9 @@ hildon_im_context_show(GtkIMContext *context)
 static void
 hildon_im_context_hide(GtkIMContext *context)
 {
-  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
   hildon_im_context_send_command(self, HILDON_IM_HIDE);
 }
@@ -2740,7 +2751,9 @@ hildon_im_context_hide(GtkIMContext *context)
 static void
 hildon_im_context_reset_real(GtkIMContext *context)
 {
-  HildonIMContext *self = HILDON_IM_CONTEXT(context);
+  HildonIMContext *self;
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
+  self = HILDON_IM_CONTEXT(context);
 
   /* the preedit buffer has to be cleared by the plugin
    * it will be cleared anyway when the current widget loses the focus

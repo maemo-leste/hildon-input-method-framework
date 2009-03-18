@@ -35,7 +35,7 @@
 
 #include "hildon-im-protocol.h"
 
-#define OSSO_IS_IM_CONTEXT(obj) (GTK_CHECK_TYPE (obj, im_context_type))
+#define HILDON_IS_IM_CONTEXT(obj) (GTK_CHECK_TYPE (obj, im_context_type))
 #define HILDON_IM_CONTEXT(obj) \
         (GTK_CHECK_CAST (obj, im_context_type, HildonIMContext))
 

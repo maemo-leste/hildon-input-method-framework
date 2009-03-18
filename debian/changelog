@@ -1,9 +1,9 @@
-hildon-input-method-framework (1:2.1.15-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.15-1) unstable; urgency=low
 
-  * Version 1:2.1.15-1~unreleased
-  * Fixes: NB#105646.
+  * Version 1:2.1.15-1
+  * Fixes: NB#105646, NB#104945.
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Fri, 13 Mar 2009 12:00:00 +0200
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Wed, 18 Mar 2009 12:00:00 +0200
 
 hildon-input-method-framework (1:2.1.14-1) unstable; urgency=low
 
