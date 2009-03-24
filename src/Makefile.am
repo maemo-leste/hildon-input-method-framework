@@ -42,7 +42,7 @@ hildon_im_module_la_LDFLAGS = \
 	-rpath $(immoduledir) \
 	-avoid-version \
 	-module
-hildon_im_module_la_CFLAGS = @CFLAGS@
+hildon_im_module_la_CFLAGS = @CFLAGS@ -DG_LOG_DOMAIN=\""hildon-im-module"\"
 
 hildon_input_method_frameworkincludeinstdir = $(includedir)/hildon-input-method
 hildon_input_method_frameworkincludeinst_DATA = \

@@ -1,3 +1,7 @@
+2009-03-24  Richard Sun  <richard.sun@nokia.com>
+
+	* src/Makefile.am:add logging domain. Fixes: NB#107568 
+
 2009-03-18  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.15-1
