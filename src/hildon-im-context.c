@@ -955,7 +955,11 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
 
   if (attrs != NULL && self->client_gtk_widget != NULL)
   {
-    style = gtk_widget_get_style (self->client_gtk_widget);
+    if (GTK_IS_WIDGET(self->client_gtk_widget))
+    {
+      style = gtk_widget_get_style (self->client_gtk_widget);
+    }
+    
     if (style == NULL)
     {
       style = gtk_widget_get_default_style ();
@@ -1434,7 +1438,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
       set_preedit_buffer(self, NULL);
       
       /* if (GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget)) */
-        hildon_im_context_change_set_mask_for_input_mode (self);
+      hildon_im_context_change_set_mask_for_input_mode (self);
     }
   }
 }
