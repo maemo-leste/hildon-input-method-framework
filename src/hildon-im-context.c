@@ -2153,8 +2153,9 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 #ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode;
 #endif
-  gchar *surrounding, *iter;
-  gint cpos;
+  gchar *surrounding = NULL;
+  gchar *iter;
+  gint cpos = 0;
   gboolean has_surrounding, space;
   gunichar ch;
 
