@@ -40,7 +40,7 @@
 #include "hildon-im-gtk.h"
 #include "hildon-im-common.h"
 
-#define _(String) gettext(String)
+#define _(String) dgettext(GETTEXT_PACKAGE, String)
 
 #define HILDON_IM_DEFAULT_LAUNCH_DELAY 70
 
@@ -799,26 +799,27 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 static gboolean
 surroundings_search_predicate (gunichar c, gpointer data)
 {
-  return c != ' ' && c != '\t' && c != '\r' && c != '\n';
+  return g_unichar_isspace(c);
 }
 
 static gboolean
 get_textview_surrounding(GtkTextView *text_view,
+                         GtkTextIter *iter,  /* the beginning of the selection or the location of the cursor */
                          gchar **surrounding,
-                         gint *cursor_index)
+                         gint *iter_index)
 {
   GtkTextIter start;
   GtkTextIter end;
-  GtkTextIter cursor;
   gint pos;
   gchar *text;
   gchar *text_between = NULL;
   GtkTextBuffer *buffer;
 
   buffer = get_buffer(GTK_WIDGET(text_view));
-  gtk_text_buffer_get_iter_at_mark(text_view->buffer, &cursor,
-                                   gtk_text_buffer_get_insert(buffer));
-  end = start = cursor;
+  if (iter != NULL)
+    end = start = *iter;
+  
+  gtk_text_buffer_get_selection_bounds (buffer, &start, &end);
 
   gtk_text_iter_set_line_offset(&start, 0);
   gtk_text_iter_forward_to_line_end (&end);
@@ -828,7 +829,7 @@ get_textview_surrounding(GtkTextView *text_view,
     gtk_text_iter_backward_find_char(&start, surroundings_search_predicate,
                                      NULL, NULL);
 
-  text_between = gtk_text_iter_get_slice(&start, &cursor);
+  text_between = gtk_text_iter_get_slice(&start, iter);
 
   if (text_between != NULL)
     pos = g_utf8_strlen(text_between, -1);
@@ -838,7 +839,7 @@ get_textview_surrounding(GtkTextView *text_view,
   text = gtk_text_iter_get_slice(&start, &end);
 
   *surrounding = text;
-  *cursor_index = pos;
+  *iter_index = pos;
 
   g_free(text_between);
 
@@ -859,7 +860,14 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
   /* Override the textview surrounding handler */
   if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
   {
+    GtkTextIter cursor;
+    GtkTextBuffer *buffer;
+    
+    buffer = get_buffer(self->client_gtk_widget);
+    gtk_text_buffer_get_iter_at_mark(buffer, &cursor,
+                                    gtk_text_buffer_get_insert(buffer));
     result = get_textview_surrounding(GTK_TEXT_VIEW(self->client_gtk_widget),
+                                      &cursor,
                                       text,
                                       cursor_index);
   }
@@ -2180,13 +2188,44 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   }
 #endif
 
-  has_surrounding = gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                                   &surrounding, &cpos);
+  if (GTK_IS_ENTRY (self->client_gtk_widget))
+  {
+    if (!gtk_editable_get_selection_bounds (GTK_EDITABLE (self->client_gtk_widget),
+                                            &cpos, NULL))
+    {
+      cpos = gtk_editable_get_position(GTK_EDITABLE (self->client_gtk_widget));
+    }
+                                        
+    if (HILDON_IS_ENTRY (self->client_gtk_widget))
+        surrounding = g_strdup (hildon_entry_get_text (HILDON_ENTRY (self->client_gtk_widget)));
+    else
+        surrounding = g_strdup (gtk_entry_get_text (GTK_ENTRY (self->client_gtk_widget)));
+
+    has_surrounding = (surrounding != NULL) && (strlen(surrounding) > 0);
+  }
+  else if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+  {
+      GtkTextIter iter;
+      GtkTextBuffer *buffer;
+      buffer = get_buffer(self->client_gtk_widget);
+      gtk_text_buffer_get_selection_bounds (buffer, &iter, NULL);
+      has_surrounding = get_textview_surrounding(GTK_TEXT_VIEW(self->client_gtk_widget),
+                                                &iter, &surrounding, &cpos);
+  }
+  else
+  {
+    has_surrounding = hildon_im_context_get_surrounding(GTK_IM_CONTEXT(self),
+                                                        &surrounding, &cpos);
+  }
 
   if (!has_surrounding)
   {
-    self->auto_upper = FALSE;
-    hildon_im_context_send_command(self, HILDON_IM_LOW);
+    self->auto_upper = self->options & HILDON_IM_AUTOCASE;
+    
+    if (self->auto_upper)
+      hildon_im_context_send_command(self, HILDON_IM_UPP);
+    else
+      hildon_im_context_send_command(self, HILDON_IM_LOW);
     return;
   }
 
@@ -2230,10 +2269,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
     hildon_im_context_send_command(self, HILDON_IM_LOW);
   }
 
-  if (has_surrounding)
-  {
-    g_free (surrounding);
-  }
+  g_free (surrounding);
 }
 
 /* Ask the client widget to insert the specified text at the cursor
@@ -2764,8 +2800,10 @@ hildon_im_context_reset_real(GtkIMContext *context)
    * it will be cleared anyway when the current widget loses the focus
    */   
   self->show_preedit = FALSE;
-  g_signal_emit_by_name(self, "preedit-changed", "");
-  /* TODO notify the plugin? */
+  
+  /* TODO This emission has to be removed, it causes problems because it emits too many signals 
+    g_signal_emit_by_name(self, "preedit-changed", "");
+   */
 
   hildon_im_context_send_command(self, HILDON_IM_CLEAR);
 }

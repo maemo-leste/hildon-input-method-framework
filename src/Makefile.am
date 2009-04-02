@@ -14,7 +14,8 @@ INCLUDES = \
 	$(LIBOSSOHELP_CFLAGS) \
 	$(HILDON_LGPL_CFLAGS) \
 	$(XEXTPROTO_CFLAGS) \
-	-DLOCALEDIR=\"$(localedir)\"
+	-DLOCALEDIR=\"$(localedir)\" \
+	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
 
 immoduledir = $(libdir)/gtk-2.0/$(GTK_VERSION)/immodules
 immodule_LTLIBRARIES = hildon-im-module.la 
