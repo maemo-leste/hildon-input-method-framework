@@ -561,6 +561,8 @@ hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(object);
 
+  hildon_im_context_change_set_mask_for_input_mode (self);
+  
   /* Notify IM of any input mode changes in cases where the UI is
      already visible. */
   hildon_im_context_send_command(self, HILDON_IM_MODE);
