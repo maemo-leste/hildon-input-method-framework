@@ -1,3 +1,7 @@
+2009-04-15  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Fixes: NB#110883
+
 2009-04-14  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c :Fixed updating the context's mask when the input
