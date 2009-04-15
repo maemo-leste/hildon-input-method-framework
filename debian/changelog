@@ -2,6 +2,8 @@ hildon-input-method-framework (1:2.1.17-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.17-1~unreleased
   * Fixes: NB#110883 Existing word is displayed as wordcompletion in Bluetooth device name field
+  * Fixes: NB#99075 Wrong logical id is displayed when shift is locked
+  * Fixes: NB#109665 Logical ID - "inpu_ib_mode_shift_locked"
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 02 Apr 2009 12:00:00 +0200
 
