@@ -1821,6 +1821,14 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
                                         &translated_keyval,
                                         NULL, NULL, NULL);
     event->keyval = translated_keyval;
+
+    if (event->keyval == COMPOSE_KEY)
+    {
+      if (event->type == GDK_KEY_PRESS) 
+        self->mask |= HILDON_IM_COMPOSE_MASK;
+      else 
+        self->mask &= ~HILDON_IM_COMPOSE_MASK;
+    }
   }
 #ifdef MAEMO_CHANGES
   /* If the input mode is strictly numeric and the digits are level
