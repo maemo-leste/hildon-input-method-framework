@@ -7,6 +7,7 @@ hildon-input-method-framework (1:2.1.17-1~unreleased) unstable; urgency=low
   * Fixes: NB#106193 Logical id is displayed if Fn is locked
   * Fixes: NB#107745 TOP 10: Unable to enter characters through hardware keyboard in certain scenario
   * Fixes: NB#104848 Country dialog while selecting the country for address field : Country started from typed letters are not highlighted.
+  * Fixes: NB#110843 Incorrect caps lock after using special characters
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 02 Apr 2009 12:00:00 +0200
 

@@ -2239,7 +2239,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
     return;
   }
 
-  iter = surrounding + cpos;
+  iter = g_utf8_offset_to_pointer (surrounding, cpos);
   space = FALSE;
 
   while (TRUE)

@@ -1,3 +1,8 @@
+2009-04-16  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.17-1~unreleased
+	* Fixes: NB#110843 Incorrect caps lock after using special characters
+
 2009-04-16  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Fixes: NB#106193
