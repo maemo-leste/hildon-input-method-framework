@@ -1,3 +1,9 @@
+2009-04-21  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (hildon_im_context_input_mode_changed) : Set the state
+	of the Fn key according to the new input mode.
+	* Fixes: NB#107392.
+
 2009-04-16  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.17-1

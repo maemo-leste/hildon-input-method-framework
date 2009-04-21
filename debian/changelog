@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.17-1) unstable; urgency=low
+hildon-input-method-framework (1:2.1.17-1~unreleased) unstable; urgency=low
 
-  * Version 1:2.1.17-1
+  * Version 1:2.1.17-1~unreleased
   * Fixes: NB#110883 Existing word is displayed as wordcompletion in Bluetooth device name field
   * Fixes: NB#99075 Wrong logical id is displayed when shift is locked
   * Fixes: NB#109665 Logical ID - "inpu_ib_mode_shift_locked"
@@ -8,8 +8,9 @@ hildon-input-method-framework (1:2.1.17-1) unstable; urgency=low
   * Fixes: NB#107745 TOP 10: Unable to enter characters through hardware keyboard in certain scenario
   * Fixes: NB#104848 Country dialog while selecting the country for address field : Country started from typed letters are not highlighted.
   * Fixes: NB#110843 Incorrect caps lock after using special characters
+  * Fixes: NB#107392 Fn remains locked on unsetting the TELE input mode
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 16 Apr 2009 12:00:00 +0200
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Tue, 21 Apr 2009 12:00:00 +0200
 
 hildon-input-method-framework (1:2.1.16-1) unstable; urgency=low
 
