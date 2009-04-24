@@ -1,3 +1,15 @@
+hildon-input-method-framework (1:2.1.19-1~unreleased) unstable; urgency=low
+
+
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Fri, 24 Apr 2009 08:48:04 +0300
+
+hildon-input-method-framework (1:2.1.18-1) unstable; urgency=low
+
+  * Version 1:2.1.18-1
+  * Fixes: NB#107392 Fn remains locked on unsetting the TELE input mode
+
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Fri, 24 Apr 2009 08:48:04 +0300
+
 hildon-input-method-framework (1:2.1.17-1) unstable; urgency=low
 
   * Version 1:2.1.17-1
@@ -8,7 +20,6 @@ hildon-input-method-framework (1:2.1.17-1) unstable; urgency=low
   * Fixes: NB#107745 TOP 10: Unable to enter characters through hardware keyboard in certain scenario
   * Fixes: NB#104848 Country dialog while selecting the country for address field : Country started from typed letters are not highlighted.
   * Fixes: NB#110843 Incorrect caps lock after using special characters
-  * Fixes: NB#107392 Fn remains locked on unsetting the TELE input mode
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 23 Apr 2009 12:00:00 +0200
 
