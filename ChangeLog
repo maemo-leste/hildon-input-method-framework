@@ -1,3 +1,10 @@
+2009-04-28  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.19-1~unreleased
+	* hildon-im-context.c : set the set_preedit function to only erase the preedit
+	  buffer in case the new contents are NULL, otherwise they get appended.
+	* Fixes: NB#106525
+
 2009-04-28  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c : send the committed preedit string to the HIM process

@@ -670,11 +670,11 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
   {
     GtkTextIter cursor;
     GtkTextBuffer *buffer;
-    g_string_truncate(self->preedit_buffer, 0);
-    if (s != NULL)
-    {
+
+    if (s == NULL)
+      g_string_truncate(self->preedit_buffer, 0);
+    else
       g_string_append(self->preedit_buffer, s);
-    }
 
     if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
     {
