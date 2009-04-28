@@ -180,6 +180,8 @@ static void       hildon_im_context_send_surrounding    (HildonIMContext*
                                                          self,
                                                          gboolean
                                                          send_all_contents);
+static void       hildon_im_context_send_committed_preedit(HildonIMContext *self,
+                                                           gchar* committed_preedit);
 static void       hildon_im_context_send_key_event      (HildonIMContext *self,
                                                          GdkEventType type,
                                                          guint state,
@@ -204,7 +206,7 @@ static GdkFilterReturn client_message_filter            (GdkXEvent *xevent,
 static void         set_preedit_buffer                  (HildonIMContext *self,
                                                          const gchar* s);
 /* commits text */
-static void         commit_text                         (HildonIMContext *self,
+static gboolean     commit_text                         (HildonIMContext *self,
                                                          const gchar* s);
 
 
@@ -616,13 +618,13 @@ hildon_im_context_init(HildonIMContext *self)
 #endif
 }
 
-static void
+static gboolean
 commit_text (HildonIMContext *self, const gchar* s)
 {
-  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
+  g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), FALSE);
   if (self->client_gtk_widget == NULL
       || s == NULL)
-    return;
+    return FALSE;
 
   /* This is a workaround to fix an issue with HildonEntry and HildonTextView.
    * It seems that the "commit" signal from GtkIMContext ends up using the
@@ -653,6 +655,7 @@ commit_text (HildonIMContext *self, const gchar* s)
   {
     g_signal_emit_by_name(self, "commit", s);
   }
+  return TRUE;
 }
 
 static void
@@ -699,6 +702,8 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
 static void
 hildon_im_context_commit_preedit_data(HildonIMContext *self)
 {
+  gchar *prefix_to_commit;
+  
   if (self->preedit_buffer != NULL && self->preedit_buffer->len != 0
       && self->client_gtk_widget)
   {
@@ -717,13 +722,21 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
                                 self->editable_preedit_position);
     }
 
+    prefix_to_commit = g_strdup(self->preedit_buffer->str);
+    
     if (self->space_after_commit)
     {
       g_string_append(self->preedit_buffer, " ");
     }
     
-    commit_text(self, self->preedit_buffer->str);
+    if (commit_text(self, self->preedit_buffer->str))
+    {
+      hildon_im_context_send_committed_preedit (self, prefix_to_commit);
+    }
+    
     set_preedit_buffer(self, NULL);
+    
+    g_free(prefix_to_commit);
   }
 }
 
@@ -2707,6 +2720,71 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
 
   g_free(surrounding);
 }
+
+/* Send to the IM the preedit text that has been committed by the context. You
+ * can think of this as a way to make the IM aware of the "commit" signal. */
+static void
+hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed_preedit)
+{
+  HildonIMPreeditCommittedMessage *preedit_comm_msg = NULL;
+  HildonIMPreeditCommittedContentMessage *preedit_comm_content_msg = NULL;
+  Window im_window;
+  XEvent event;
+  gint flag;
+  gchar *surrounding = NULL;
+  gchar *str;
+
+  g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
+
+  flag = HILDON_IM_MSG_START;
+  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+
+  if (im_window == None)
+  {
+    g_warning("hildon_im_context_send_surrounding: Could not get the window id.\n");
+    return;
+  }
+
+  str = committed_preedit;
+  do
+  {
+    gchar *next_start;
+    gsize len;
+
+    next_start = get_next_packet_start(str);
+    len = next_start - str;
+    g_return_if_fail(0 <= len && len < HILDON_IM_CLIENT_MESSAGE_BUFFER_SIZE);
+
+    memset( &event, 0, sizeof(XEvent) );
+    event.xclient.message_type = hildon_im_protocol_get_atom( HILDON_IM_PREEDIT_COMMITTED_CONTENT );
+    event.xclient.format = HILDON_IM_PREEDIT_COMMITTED_CONTENT_FORMAT;
+
+    preedit_comm_content_msg = (HildonIMPreeditCommittedContentMessage *) &event.xclient.data;
+    preedit_comm_content_msg->msg_flag = flag;
+    memcpy(preedit_comm_content_msg->committed_preedit, str, len);
+
+    hildon_im_context_send_event(im_window, &event);
+
+    str = next_start;
+    flag = HILDON_IM_MSG_CONTINUE;
+  } while (*str);
+
+  /*
+   * Now we send the header.
+   */
+  
+  memset( &event, 0, sizeof(XEvent) );
+  event.xclient.message_type = hildon_im_protocol_get_atom(HILDON_IM_PREEDIT_COMMITTED);
+  event.xclient.format = HILDON_IM_PREEDIT_COMMITTED_FORMAT;
+
+  preedit_comm_msg = (HildonIMPreeditCommittedMessage *) &event.xclient.data;
+  preedit_comm_msg->commit_mode = commit_mode;
+  hildon_im_context_send_event(im_window, &event);
+
+  g_free(surrounding);
+}
+
+
 /* Send a key event to the IM, which makes it available to the plugins */
 static void
 hildon_im_context_send_key_event(HildonIMContext *self,

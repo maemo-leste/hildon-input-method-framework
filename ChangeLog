@@ -1,3 +1,10 @@
+2009-04-28  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c : send the committed preedit string to the HIM process
+	when the user commits it from the context.
+	* hildon-im-protocol.[hc] : add the infraestructure to implement the
+	HILDON_IM_PREEDIT_COMMITTED and HILDON_IM_PREEDIT_COMMITTED_CONTENT messages
+
 2009-04-23  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.18-1

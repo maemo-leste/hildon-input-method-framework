@@ -45,6 +45,8 @@ typedef enum
   HILDON_IM_CLIPBOARD_COPIED,
   HILDON_IM_CLIPBOARD_SELECTION_QUERY,
   HILDON_IM_CLIPBOARD_SELECTION_REPLY,
+  HILDON_IM_PREEDIT_COMMITTED,
+  HILDON_IM_PREEDIT_COMMITTED_CONTENT,
 
   /* always last */
   HILDON_IM_NUM_ATOMS
@@ -64,6 +66,8 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_CLIPBOARD_COPIED_NAME          "_HILDON_IM_CLIPBOARD_COPIED"
 #define HILDON_IM_CLIPBOARD_SELECTION_QUERY_NAME "_HILDON_IM_CLIPBOARD_SELECTION_QUERY"
 #define HILDON_IM_CLIPBOARD_SELECTION_REPLY_NAME "_HILDON_IM_CLIPBOARD_SELECTION_REPLY"
+#define HILDON_IM_PREEDIT_COMMITTED_NAME         "_HILDON_IM_PREEDIT_COMMITTED"
+#define HILDON_IM_PREEDIT_COMMITTED_CONTENT_NAME "_HILDON_IM_PREEDIT_COMMITTED_CONTENT"
 
 /* IM ClientMessage formats */
 #define HILDON_IM_WINDOW_ID_FORMAT 32
@@ -75,6 +79,8 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_COM_FORMAT 8
 #define HILDON_IM_CLIPBOARD_FORMAT 32
 #define HILDON_IM_CLIPBOARD_SELECTION_REPLY_FORMAT 32
+#define HILDON_IM_PREEDIT_COMMITTED_FORMAT 8
+#define HILDON_IM_PREEDIT_COMMITTED_CONTENT_FORMAT 8
 
 /* IM commands, from context to IM process */
 typedef enum
@@ -212,6 +218,20 @@ typedef struct
   int msg_flag;
   char surrounding[HILDON_IM_CLIENT_MESSAGE_BUFFER_SIZE];
 } HildonIMSurroundingContentMessage;
+
+/* Message carrying information about the committed preedit */
+typedef struct
+{
+  int msg_flag;
+  HildonIMCommitMode commit_mode;
+} HildonIMPreeditCommittedMessage;
+
+/* The committed preedit text, sent by context */
+typedef struct
+{
+  int msg_flag;
+  char committed_preedit[HILDON_IM_CLIENT_MESSAGE_BUFFER_SIZE];
+} HildonIMPreeditCommittedContentMessage;
 
 /* Key event message, from context to IM */
 typedef struct
