@@ -1832,49 +1832,6 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   g_object_get(self, "hildon-input-mode", &input_mode, NULL);
 #endif
 
-  /* When the level key is in sticky or locked state, translate the
-     keyboard state as if that level key was being held down. */
-  if ((self->mask & (HILDON_IM_LEVEL_STICKY_MASK | HILDON_IM_LEVEL_LOCK_MASK)) ||
-      event->state == LEVEL_KEY_MOD_MASK)
-  {
-    guint translated_keyval;
-
-    gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
-                                        event->hardware_keycode,
-                                        LEVEL_KEY_MOD_MASK,
-                                        event->group,
-                                        &translated_keyval,
-                                        NULL, NULL, NULL);
-    event->keyval = translated_keyval;
-
-    if (event->keyval == COMPOSE_KEY)
-    {
-      if (event->type == GDK_KEY_PRESS) 
-        self->mask |= HILDON_IM_COMPOSE_MASK;
-      else 
-        self->mask &= ~HILDON_IM_COMPOSE_MASK;
-    }
-  }
-#ifdef MAEMO_CHANGES
-  /* If the input mode is strictly numeric and the digits are level
-     shifted on the layout, it's not necessary for the level key to
-     be pressed at all. */
-  else if (self->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
-           (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
-                                                                 event,
-                                                                 NUMERIC_LEVEL);
-  }
-#endif
-  /* The input is forced to a predetermined level */
-  else if (self->options & HILDON_IM_LOCK_LEVEL)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
-                                                                 event,
-                                                                 LOCKABLE_LEVEL);
-  }
-
 #ifdef MAEMO_CHANGES
   /* Hardware keyboard autocapitalization  */
   if (self->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
@@ -1920,6 +1877,49 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
       else
         event->keyval = upper;
     }
+  }
+
+  /* When the level key is in sticky or locked state, translate the
+     keyboard state as if that level key was being held down. */
+  if ((self->mask & (HILDON_IM_LEVEL_STICKY_MASK | HILDON_IM_LEVEL_LOCK_MASK)) ||
+      event->state == LEVEL_KEY_MOD_MASK)
+  {
+    guint translated_keyval;
+
+    gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
+                                        event->hardware_keycode,
+                                        LEVEL_KEY_MOD_MASK,
+                                        event->group,
+                                        &translated_keyval,
+                                        NULL, NULL, NULL);
+    event->keyval = translated_keyval;
+
+    if (event->keyval == COMPOSE_KEY)
+    {
+      if (event->type == GDK_KEY_PRESS) 
+        self->mask |= HILDON_IM_COMPOSE_MASK;
+      else 
+        self->mask &= ~HILDON_IM_COMPOSE_MASK;
+    }
+  }
+#ifdef MAEMO_CHANGES
+  /* If the input mode is strictly numeric and the digits are level
+     shifted on the layout, it's not necessary for the level key to
+     be pressed at all. */
+  else if (self->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
+           (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
+  {
+    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
+                                                                 event,
+                                                                 NUMERIC_LEVEL);
+  }
+#endif
+  /* The input is forced to a predetermined level */
+  else if (self->options & HILDON_IM_LOCK_LEVEL)
+  {
+    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
+                                                                 event,
+                                                                 LOCKABLE_LEVEL);
   }
 
   /* word completion manipulation */
