@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.20-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.20-1) unstable; urgency=low
 
-  * Version 1:2.1.20-1~unreleased
+  * Version 1:2.1.20-1
   * Fixes: NB#114473 Words having skandinavic letters are not added to predicted text
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Wed, 6 May 2009 08:48:04 +0300
