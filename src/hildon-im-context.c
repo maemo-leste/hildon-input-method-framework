@@ -2579,7 +2579,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   gint flag;
   gchar *surrounding = NULL;
   gchar *str;
-  gint cpos;
+  gint cpos = 0;
 
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
@@ -2680,6 +2680,13 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
     {
       gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
                                      &surrounding, &cpos);
+      /* The following is needed since the value assigned to cpos is
+       * the byte position, not the real cursor position in the text */
+      if (surrounding != NULL)
+      {
+        gchar *str_pos = surrounding + cpos;
+        cpos = g_utf8_pointer_to_offset (surrounding, str_pos);
+      }
     }
   }
 

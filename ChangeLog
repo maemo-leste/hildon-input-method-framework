@@ -1,3 +1,10 @@
+2009-05-06  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.20-1~unreleased
+	* hildon-im-context.c : Converted the cursor position from byte index to
+	  the real position in the UTF8 string.
+	* Fixes: NB#114473
+
 2009-04-30  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.19-1
