@@ -77,8 +77,6 @@ AC_SUBST(XEXTPROTO_CFLAGS)
 GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
 AC_SUBST(GTK_VERSION)
 
-GETTEXT_PACKAGE=hildon-input-method
-AC_SUBST(GETTEXT_PACKAGE)
 AM_GLIB_GNU_GETTEXT
 
 localedir=${datadir}/locale

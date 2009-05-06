@@ -82,7 +82,7 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_PREEDIT_COMMITTED_FORMAT 8
 #define HILDON_IM_PREEDIT_COMMITTED_CONTENT_FORMAT 8
 
-/* IM commands, from context to IM process */
+/* IM commands and notifications, from context to IM process */
 typedef enum
 {
   HILDON_IM_MODE,        /* Update the hildon-input-mode property */
@@ -95,6 +95,11 @@ typedef enum
   HILDON_IM_SETCLIENT,   /* Set the client window */
   HILDON_IM_SETNSHOW,    /* Set the client and show the IM window */
   HILDON_IM_SELECT_ALL,  /* Select the text in the plugin */
+
+  HILDON_IM_SHIFT_LOCKED,
+  HILDON_IM_SHIFT_UNLOCKED,
+  HILDON_IM_MOD_LOCKED,
+  HILDON_IM_MOD_UNLOCKED,
 
   /* always last */
   HILDON_IM_NUM_COMMANDS

@@ -40,8 +40,6 @@
 #include "hildon-im-gtk.h"
 #include "hildon-im-common.h"
 
-#define _(String) dgettext(GETTEXT_PACKAGE, String)
-
 #define HILDON_IM_DEFAULT_LAUNCH_DELAY 70
 
 #define COMPOSE_KEY GDK_Multi_key
@@ -210,7 +208,8 @@ static gboolean     commit_text                         (HildonIMContext *self,
                                                          const gchar* s);
 
 
-static void hildon_im_context_set_mask_state (HildonIMInternalModifierMask *mask,
+static void hildon_im_context_set_mask_state (HildonIMContext *self,
+                                              HildonIMInternalModifierMask *mask,
                                               HildonIMInternalModifierMask lock_mask,
                                               HildonIMInternalModifierMask sticky_mask,
                                               gboolean was_press_and_release);
@@ -1649,7 +1648,8 @@ hildon_im_context_get_event_keyval_for_level(HildonIMContext *self,
 }
 
 static void
-hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
+hildon_im_context_set_mask_state(HildonIMContext *self,
+                                 HildonIMInternalModifierMask *mask,
                                  HildonIMInternalModifierMask lock_mask,
                                  HildonIMInternalModifierMask sticky_mask,
                                  gboolean was_press_and_release)
@@ -1657,16 +1657,22 @@ hildon_im_context_set_mask_state(HildonIMInternalModifierMask *mask,
   if (*mask & lock_mask)
   {
     /* Pressing the key while already locked clears the state */
+    if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
+      hildon_im_context_send_command(self, HILDON_IM_SHIFT_UNLOCKED);
+    else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
+      hildon_im_context_send_command(self, HILDON_IM_MOD_UNLOCKED);    
+    
     *mask &= ~(lock_mask | sticky_mask);
   }
   else if (*mask & sticky_mask)
   {
     /* When the key is already sticky, a second press locks the key */
     *mask |= lock_mask;
+
     if (lock_mask & HILDON_IM_SHIFT_LOCK_MASK)
-      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_shift_locked"));
+      hildon_im_context_send_command(self, HILDON_IM_SHIFT_LOCKED);
     else if (lock_mask & HILDON_IM_LEVEL_LOCK_MASK)
-      hildon_banner_show_information (NULL, NULL, _("inpu_ib_mode_fn_locked"));
+      hildon_im_context_send_command(self, HILDON_IM_MOD_LOCKED);
   }
   else if (was_press_and_release)
   {
@@ -1767,14 +1773,16 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   {
     if (event->keyval == GDK_Shift_L || event->keyval == GDK_Shift_R)
     {
-      hildon_im_context_set_mask_state(&self->mask,
+      hildon_im_context_set_mask_state(self,
+                                       &self->mask,
                                        HILDON_IM_SHIFT_LOCK_MASK,
                                        HILDON_IM_SHIFT_STICKY_MASK,
                                        last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
     }
     else if (event->keyval == LEVEL_KEY)
     {
-      hildon_im_context_set_mask_state(&self->mask,
+      hildon_im_context_set_mask_state(self,
+                                       &self->mask,
                                        HILDON_IM_LEVEL_LOCK_MASK,
                                        HILDON_IM_LEVEL_STICKY_MASK,
                                        last_keyval == LEVEL_KEY);
