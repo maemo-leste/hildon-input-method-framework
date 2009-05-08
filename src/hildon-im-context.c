@@ -827,7 +827,7 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 static gboolean
 surroundings_search_predicate (gunichar c, gpointer data)
 {
-  return g_unichar_isspace(c);
+  return !g_unichar_isspace(c);
 }
 
 static gboolean

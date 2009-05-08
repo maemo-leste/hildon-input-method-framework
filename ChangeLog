@@ -1,3 +1,10 @@
+2009-05-08  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.21-1~unreleased
+	* hildon-im-context.c : The surroundings_search_predicate function is now
+	  returning TRUE only when the character is not a space.
+	* Fixes: NB#114961
+
 2009-05-06  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* src/hildon-im-protocol.h : add to HildonIMCommand the values

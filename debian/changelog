@@ -1,3 +1,10 @@
+hildon-input-method-framework (1:2.1.21-1~unreleased) unstable; urgency=low
+
+  * Version 1:2.1.21-1~unreleased
+  * Fixes: NB#114961 Capital letter comes up when a new line is inserted after a space.
+
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 8 May 2009 08:48:04 +0300
+
 hildon-input-method-framework (1:2.1.20-1) unstable; urgency=low
 
   * Version 1:2.1.20-1
