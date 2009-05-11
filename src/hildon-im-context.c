@@ -2055,6 +2055,9 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   }
   else
   {
+    if (self->mask & (HILDON_IM_LEVEL_STICKY_MASK | HILDON_IM_LEVEL_LOCK_MASK))
+      event->state = LEVEL_KEY_MOD_MASK;
+
     hildon_im_context_send_key_event(self, event->type,
                                      event->state, event->keyval,
                                      event->hardware_keycode);

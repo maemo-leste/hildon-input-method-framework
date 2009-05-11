@@ -1,3 +1,10 @@
+2009-05-11  Joaquim Rocha <jrocha@maemo.org>
+
+	* hildon-im-context.c : Set the event's state as level key mod mask when
+	  the level key is sticky before sending the event so everything works as
+	  if the level key was pressed.
+	* Fixed: NB#99972
+
 2009-05-08  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.21-1~unreleased
