@@ -4,6 +4,7 @@
 	* hildon-im-context.c : The surroundings_search_predicate function is now
 	  returning TRUE only when the character is not a space.
 	* Fixes: NB#114961
+	* Fixes: NB#93437
 
 2009-05-06  Felipe Erias Morandeira <femorandeira@maemo.org>
 
