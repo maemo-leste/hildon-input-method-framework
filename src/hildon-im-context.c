@@ -1743,18 +1743,6 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   }
   self->last_key_event = (GdkEventKey*) gdk_event_copy((GdkEvent*)event);
 
-  /* A dead key will not be immediately commited, but combined with the next key */
-  if (event->keyval >= GDK_dead_grave && event->keyval <= GDK_dead_horn)
-    self->mask |= HILDON_IM_DEAD_KEY_MASK;
-  else
-    self->mask &= ~HILDON_IM_DEAD_KEY_MASK;
-
-  if (self->mask & HILDON_IM_DEAD_KEY_MASK && self->combining_char == 0)
-  {
-    self->combining_char = dead_key_to_unicode_combining_character(event->keyval);
-    return TRUE;
-  }
-
   /* Pressing any key while the compose key is pressed will keep that
      character from being directly submitted to the application. This
      allows the IM process to override the interpretation of the key */
@@ -1970,6 +1958,21 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
     }
   }
 
+  /* A dead key will not be immediately commited, but combined with the next key */
+  if (event->type == GDK_KEY_PRESS)
+  {
+    if (dead_key_to_unicode_combining_character (event->keyval))
+      self->mask |= HILDON_IM_DEAD_KEY_MASK;
+    else
+      self->mask &= ~HILDON_IM_DEAD_KEY_MASK;
+
+    if (self->mask & HILDON_IM_DEAD_KEY_MASK && self->combining_char == 0)
+    {
+      self->combining_char = dead_key_to_unicode_combining_character(event->keyval);
+      return TRUE;
+    }
+  }
+
   if (event->type == GDK_KEY_RELEASE ||
       event->state & GDK_CONTROL_MASK)
   {
@@ -2061,7 +2064,8 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
                                      event->hardware_keycode);
 
     /* Non-printable characters invalidate any previous dead keys */
-    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R)
+    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
+        event->keyval != LEVEL_KEY)
       self->combining_char = 0;
   }
 

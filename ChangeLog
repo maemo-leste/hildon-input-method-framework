@@ -1,8 +1,11 @@
 2009-05-12  Joaquim Rocha <jrocha@maemo.org>
 
 	* hildon-im-context.c : Removed setting preedit as null since by then the
-	  connected widget might not be completely initialized.
+	  connected widget might not be completely initialized; Changed the dead
+	  keys processing code block to under the Fn processing one so the keys
+	  get translated, when needed, before being processed as dead.
 	* Fixed: NB#107575
+	* Fixed: NB#101069
 
 2009-05-11  Joaquim Rocha <jrocha@maemo.org>
 
