@@ -1468,8 +1468,6 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
       gtk_widget_set_extension_events(self->client_gtk_widget,
                                       GDK_EXTENSION_EVENTS_ALL);
-
-      set_preedit_buffer(self, NULL);
       
       /* if (GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget)) */
       hildon_im_context_change_set_mask_for_input_mode (self);

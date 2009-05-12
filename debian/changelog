@@ -4,8 +4,10 @@ hildon-input-method-framework (1:2.1.21-1~unreleased) unstable; urgency=low
   * Fixes: NB#114961 Capital letter comes up when a new line is inserted after a space.
   * Fixes: NB#93437 2n+1 capitalized characters occurs after n smiley icons
   * Fixes: NB#99972 Up/down arrow keys(fn layer) doesn't work in all the Hardware layouts(except english).
+  * Fixes: NB#107575 osso-addressbook: GLIB CRITICAL ** Gtk - gtk_text_layout_set_preedit_string: assertion 
+    `GTK_IS_TEXT_LAYOUT (layout)' failed
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 8 May 2009 08:48:04 +0300
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 12 May 2009 08:48:04 +0300
 
 hildon-input-method-framework (1:2.1.20-1) unstable; urgency=low
 
