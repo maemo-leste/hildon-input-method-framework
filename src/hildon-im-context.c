@@ -1702,36 +1702,403 @@ hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self)
 #endif
 }
 
+static void
+perform_level_translation (GdkEventKey *event)
+{
+  guint translated_keyval;
+
+  gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
+                                      event->hardware_keycode,
+                                      LEVEL_KEY_MOD_MASK,
+                                      event->group,
+                                      &translated_keyval,
+                                      NULL, NULL, NULL);
+  event->keyval = translated_keyval;
+}
+
+static gboolean
+key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
+{
+  gboolean level_key_is_sticky = context->mask & HILDON_IM_LEVEL_STICKY_MASK;
+  gboolean level_key_is_locked = context->mask & HILDON_IM_LEVEL_LOCK_MASK;
+  gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
+
+  if (event->keyval == COMPOSE_KEY)
+      context->mask &= ~HILDON_IM_COMPOSE_MASK;
+
+  if (event->keyval == GDK_Shift_L || event->keyval == GDK_Shift_R)
+  {
+    hildon_im_context_set_mask_state(context,
+                                     &context->mask,
+                                     HILDON_IM_SHIFT_LOCK_MASK,
+                                     HILDON_IM_SHIFT_STICKY_MASK,
+                                     last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
+  }
+  else if (event->keyval == LEVEL_KEY)
+  {
+    hildon_im_context_set_mask_state(context,
+                                     &context->mask,
+                                     HILDON_IM_LEVEL_LOCK_MASK,
+                                     HILDON_IM_LEVEL_STICKY_MASK,
+                                     last_keyval == LEVEL_KEY);
+  }
+
+  if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
+  {
+    perform_level_translation (event);
+
+    if (event->keyval == COMPOSE_KEY)
+      context->mask &= ~HILDON_IM_COMPOSE_MASK;
+  }
+
+  hildon_im_context_send_key_event(context, event->type, event->state,
+                                   event->keyval, event->hardware_keycode);
+
+  return FALSE;
+}
+
+static void
+reset_shift_and_level_keys_if_needed (HildonIMContext *context, GdkEventKey *event)
+{
+  if (event->is_modifier)
+    return;
+
+  /* If not locked, pressing any character resets shift state */
+  if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
+      (context->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
+  {
+    context->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+  }
+  /* If not locked, pressing any character resets level state */
+  if (event->keyval != LEVEL_KEY && (context->mask & HILDON_IM_LEVEL_LOCK_MASK) == 0)
+  {
+    context->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
+  }
+}
+
+static void
+perform_shift_translation (GdkEventKey *event)
+{
+  guint lower, upper;
+
+  gdk_keyval_convert_case(event->keyval, &lower, &upper);
+  /* Simulate shift key being held down in sticky state for non-printables  */
+  if (lower == upper)
+  {
+    gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
+                                        event->hardware_keycode,
+                                        GDK_SHIFT_MASK,
+                                        event->group,
+                                        &event->keyval,
+                                        NULL, NULL, NULL);
+  }
+  /* For printable characters sticky shift negates the case,
+     including any autocapitalization changes */
+  else
+  {
+    if (gdk_keyval_is_upper(event->keyval))
+      event->keyval = lower;
+    else
+      event->keyval = upper;
+  }
+}
+
+static gboolean
+process_enter_key (HildonIMContext *context, GdkEventKey *event)
+{
+  hildon_im_context_send_key_event(context, event->type, event->state,
+                                     event->keyval, event->hardware_keycode);
+
+  /* Enter advances focus as if tab was pressed */
+  if (event->keyval == GDK_KP_Enter || event->keyval == GDK_ISO_Enter)
+  {
+    if (g_signal_handler_find(context->client_gtk_widget,
+                              G_SIGNAL_MATCH_ID,
+                              g_signal_lookup("activate", GTK_TYPE_ENTRY),
+                              0, NULL, NULL, NULL))
+      return FALSE;
+
+    if (GTK_IS_ENTRY(context->client_gtk_widget) &&
+        !gtk_entry_get_activates_default(GTK_ENTRY(context->client_gtk_widget)))
+    {
+      hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
+                                           GTK_DIR_TAB_FORWARD);
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static guint32
+compose_character (HildonIMContext *context, guint32 character, guint32 combining_character)
+{
+  guint32 composed_char = character, tmp_char;
+  gchar combined[12], *composed;
+  gint base_length, combinator_length;
+
+  base_length = g_unichar_to_utf8(character, combined);
+  combinator_length = g_unichar_to_utf8(combining_character, &combined[base_length]);
+
+  composed = g_utf8_normalize(combined,
+                              base_length + combinator_length,
+                              G_NORMALIZE_DEFAULT_COMPOSE);
+
+  /* Prevent composing of characters that are valid,
+   * but not available in the font used */
+  tmp_char = g_utf8_get_char (composed);
+  if (hildon_im_context_font_has_char(context, tmp_char))
+    composed_char = tmp_char;
+
+  g_free(composed);
+
+  context->combining_char = 0;
+
+  return composed_char;
+}
+
+static guint32
+get_representation_for_dead_character (GdkEventKey *event, guint32 dead_character)
+{
+  gint32 last;
+  last = dead_key_to_unicode_combining_character (event->keyval);
+
+  if ((last == dead_character) || event->keyval == GDK_space)
+    return combining_character_to_unicode (dead_character);
+
+  return gdk_keyval_to_unicode (event->keyval);
+}
+
+static gboolean
+key_pressed (HildonIMContext *context, GdkEventKey *event)
+{
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+#endif
+
+  guint32 c = 0;
+
+  gboolean is_suggesting_autocompleted_word;
+
+  gboolean shift_key_is_down = event->state & GDK_SHIFT_MASK;
+  gboolean shift_key_is_locked = context->mask & HILDON_IM_SHIFT_LOCK_MASK;
+  gboolean shift_key_is_sticky = context->mask & HILDON_IM_SHIFT_STICKY_MASK;
+
+  gboolean level_key_is_sticky = context->mask & HILDON_IM_LEVEL_STICKY_MASK;
+  gboolean level_key_is_locked = context->mask & HILDON_IM_LEVEL_LOCK_MASK;
+  gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
+
+  gboolean enter_key_is_down = event->keyval == GDK_Return   ||
+                               event->keyval == GDK_KP_Enter ||
+                               event->keyval == GDK_ISO_Enter;
+
+  gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
+
+  gboolean tab_key_is_down = event->keyval == GDK_Tab;
+
+  is_suggesting_autocompleted_word = commit_mode == HILDON_IM_COMMIT_PREEDIT &&
+                                     context->preedit_buffer != NULL &&
+                                     context->preedit_buffer->len != 0;
+
+  if (event->keyval == COMPOSE_KEY)
+    context->mask |= HILDON_IM_COMPOSE_MASK;
+
+  if (ctrl_key_is_down)
+  {
+    hildon_im_context_send_key_event(context, event->type, event->state,
+                                    event->keyval, event->hardware_keycode);
+    return FALSE;
+  }
+
+  /* word completion manipulation */
+  if (is_suggesting_autocompleted_word)
+  {
+    if (event->keyval == GDK_Right)
+    {
+      hildon_im_context_commit_preedit_data(context);
+      return TRUE;
+    }
+    else if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+    {
+      set_preedit_buffer(context, NULL);
+      return TRUE;
+    }
+  }
+
+  /* The IM determines the action for the return and enter keys */
+  if (enter_key_is_down)
+    return process_enter_key (context, event);
+
+  if (tab_key_is_down && GTK_IS_ENTRY (context->client_gtk_widget))
+  {
+    hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
+                                         ctrl_key_is_down ? GTK_DIR_TAB_FORWARD :
+                                                            GTK_DIR_TAB_BACKWARD);
+    return TRUE;
+  }
+
+#ifdef MAEMO_CHANGES
+  g_object_get(context, "hildon-input-mode", &input_mode, NULL);
+
+  /* Hardware keyboard autocapitalization  */
+  if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
+  {
+    if (shift_key_is_down)
+      event->keyval = gdk_keyval_to_lower(event->keyval);
+    else
+      event->keyval = gdk_keyval_to_upper(event->keyval);
+  }
+#endif
+
+  /* Shift lock or holding the shift down forces uppercase,
+   * ignoring autocap */
+  if (shift_key_is_locked || shift_key_is_down)
+    event->keyval = gdk_keyval_to_upper (event->keyval);
+  else if (shift_key_is_sticky)
+    perform_shift_translation (event);
+
+  /* When the level key is in sticky or locked state, translate the
+   * keyboard state as if that level key was being held down. */
+  if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
+  {
+    perform_level_translation (event);
+
+    if (event->keyval == COMPOSE_KEY)
+      context->mask |= HILDON_IM_COMPOSE_MASK;
+  }
+#ifdef MAEMO_CHANGES
+  /* If the input mode is strictly numeric and the digits are level
+   * shifted on the layout, it's not necessary for the level key to
+   * be pressed at all. */
+  else if (context->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
+          (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
+  {
+    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
+                                                                 event,
+                                                                 NUMERIC_LEVEL);
+  }
+#endif
+  /* The input is forced to a predetermined level */
+  else if (context->options & HILDON_IM_LOCK_LEVEL)
+  {
+    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
+                                                                 event,
+                                                                 LOCKABLE_LEVEL);
+  }
+
+  reset_shift_and_level_keys_if_needed (context, event);
+
+  /* A dead key will not be immediately commited, but combined with the
+   * next key */
+  if (dead_key_to_unicode_combining_character (event->keyval))
+  {
+    context->mask |= HILDON_IM_DEAD_KEY_MASK;
+
+    if (context->combining_char == 0)
+    {
+      context->combining_char = dead_key_to_unicode_combining_character(event->keyval);
+      return TRUE;
+    }
+  }
+  else
+  {
+    context->mask &= ~HILDON_IM_DEAD_KEY_MASK;
+  }
+
+  /* If a dead key was pressed twice, or once and followed by a space,
+   * inputs the dead key's character representation */
+  if ((context->mask & HILDON_IM_DEAD_KEY_MASK || event->keyval == GDK_space) &&
+      context->combining_char)
+  {
+    c = get_representation_for_dead_character (event, context->combining_char);
+    context->combining_char = 0;
+  }
+  else if (context->mask & HILDON_IM_COMPOSE_MASK)
+  {
+    hildon_im_context_send_key_event(context, event->type,
+                                     event->state, event->keyval,
+                                     event->hardware_keycode);
+    return TRUE;
+  }
+  else
+  {
+    c = gdk_keyval_to_unicode (event->keyval);
+  }
+
+  if (c)
+  {
+    gchar utf8[10];
+
+    /* Entering a new character cleans the preedit buffer */
+    set_preedit_buffer (context, NULL);
+
+    /* Pressing a dead key followed by a regular key combines to form
+     * an accented character */
+    if (context->combining_char)
+      c = compose_character (context, c, context->combining_char);
+
+    utf8[g_unichar_to_utf8 (c, utf8)] = '\0';
+
+    hildon_im_context_send_key_event(context, event->type, event->state,
+                                     gdk_unicode_to_keyval(c),
+                                     event->hardware_keycode);
+    context->last_internal_change = TRUE;
+    context->auto_upper = FALSE;
+
+    commit_text (context, utf8);
+
+    return TRUE;
+  }
+  else
+  {
+    if (level_key_is_sticky || level_key_is_locked)
+      event->state = LEVEL_KEY_MOD_MASK;
+
+    hildon_im_context_send_key_event(context, event->type,
+                                     event->state, event->keyval,
+                                     event->hardware_keycode);
+
+    /* Non-printable characters invalidate any previous dead keys */
+    if (event->keyval != GDK_Shift_L &&
+        event->keyval != GDK_Shift_R &&
+        event->keyval != LEVEL_KEY)
+    {
+      context->combining_char = 0;
+    }
+  }
+
+  if (event->keyval == GDK_BackSpace)
+    context->last_internal_change = TRUE;
+
+  return FALSE;
+}
+
 /* Filter for key events received by the client widget. */
 static gboolean
 hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
 {
   HildonIMContext *self;
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-#endif
-  guint32 c = 0;
+
   guint last_keyval = 0;
 
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
   self = HILDON_IM_CONTEXT(context);
 
+  /* When the widget isn't yet fully initialized, keys shouldn't
+   * be processed in order to avoid eventual X errors. */
   if (!self->has_focus)
-  {
-    /* we received a keypress before we are focused. happens only when
-       pressing keys while the widget isn't itself yet fully initialized
-       itself. ignore this because our old client window can be set wrong,
-       and trying to use it could cause X errors. */
     return FALSE;
-  }
 
   /* Ignore already filtered events. Possible causes include derived
-     widgets where both child and parent keypress handlers are called
-     when the context itself doesn't consume the event. */
+   * widgets where both child and parent keypress handlers are called
+   * when the context itself doesn't consume the event. */
   if (self->last_key_event)
   {
     /* The EventKey struct can be reused by GDK with different values
-       filled in during one main loop iteration, so we do this lame comparison */
+     * filled in during one main loop iteration, so we do this lame
+     * comparison */
     if (event->type == self->last_key_event->type &&
         event->time == self->last_key_event->time &&
         event->keyval == self->last_key_event->keyval)
@@ -1743,334 +2110,11 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   }
   self->last_key_event = (GdkEventKey*) gdk_event_copy((GdkEvent*)event);
 
-  /* Pressing any key while the compose key is pressed will keep that
-     character from being directly submitted to the application. This
-     allows the IM process to override the interpretation of the key */
-  if (event->keyval == COMPOSE_KEY)
-  {
-    if (event->type == GDK_KEY_PRESS)
-      self->mask |= HILDON_IM_COMPOSE_MASK;
-    else
-      self->mask &= ~HILDON_IM_COMPOSE_MASK;
-  }
-
-  /* Sticky and locking keys initialization */
   if (event->type == GDK_KEY_RELEASE)
-  {
-    if (event->keyval == GDK_Shift_L || event->keyval == GDK_Shift_R)
-    {
-      hildon_im_context_set_mask_state(self,
-                                       &self->mask,
-                                       HILDON_IM_SHIFT_LOCK_MASK,
-                                       HILDON_IM_SHIFT_STICKY_MASK,
-                                       last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
-    }
-    else if (event->keyval == LEVEL_KEY)
-    {
-      hildon_im_context_set_mask_state(self,
-                                       &self->mask,
-                                       HILDON_IM_LEVEL_LOCK_MASK,
-                                       HILDON_IM_LEVEL_STICKY_MASK,
-                                       last_keyval == LEVEL_KEY);
-    }
-  }
+    return key_released (self, event, last_keyval);
 
-  /* The IM determines the action for the return and enter keys */
-  if (event->keyval == GDK_Return ||
-      event->keyval == GDK_KP_Enter ||
-      event->keyval == GDK_ISO_Enter)
-  {
-    hildon_im_context_send_key_event(self, event->type, event->state,
-                                     event->keyval, event->hardware_keycode);
-
-    /* Enter advances focus as if tab was pressed */
-    if (event->keyval == GDK_KP_Enter || event->keyval == GDK_ISO_Enter)
-    {
-      if (g_signal_handler_find(self->client_gtk_widget,
-                                G_SIGNAL_MATCH_ID,
-                                g_signal_lookup("activate", GTK_TYPE_ENTRY),
-                                0, NULL, NULL, NULL))
-        return FALSE;
-
-      if (event->type == GDK_KEY_PRESS &&
-          GTK_IS_ENTRY(self->client_gtk_widget) &&
-          !gtk_entry_get_activates_default(GTK_ENTRY(self->client_gtk_widget)))
-      {
-        hildon_im_gtk_focus_next_text_widget(self->client_gtk_widget,
-                                             GTK_DIR_TAB_FORWARD);
-        return TRUE;
-      }
-
-      return FALSE;
-    }
-
-    /* Stop both press and release events so they aren't sent to the application. */
-    return TRUE;
-  }
-  else if (event->keyval == GDK_Tab &&
-           GTK_IS_ENTRY(self->client_gtk_widget))
-  {
-    if (event->type == GDK_KEY_PRESS)
-    {
-      if ((event->state & GDK_CONTROL_MASK) == 0)
-        hildon_im_gtk_focus_next_text_widget(self->client_gtk_widget,
-                                             GTK_DIR_TAB_FORWARD);
-      else
-        hildon_im_gtk_focus_next_text_widget(self->client_gtk_widget,
-                                             GTK_DIR_TAB_BACKWARD);
-    }
-    return TRUE;
-  }
-
-#ifdef MAEMO_CHANGES
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-#endif
-
-#ifdef MAEMO_CHANGES
-  /* Hardware keyboard autocapitalization  */
-  if (self->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
-  {
-    if (event->state & GDK_SHIFT_MASK)
-    {
-      event->keyval = gdk_keyval_to_lower(event->keyval);
-    }
-    else
-    {
-      event->keyval = gdk_keyval_to_upper(event->keyval);
-    }
-  }
-#endif
-
-  /* Shift lock or holding the shift down forces uppercase, ignoring autocap */
-  if (self->mask & HILDON_IM_SHIFT_LOCK_MASK ||
-      event->state & GDK_SHIFT_MASK)
-  {
-    event->keyval = gdk_keyval_to_upper(event->keyval);
-  }
-  else if (self->mask & HILDON_IM_SHIFT_STICKY_MASK)
-  {
-    guint lower, upper;
-
-    gdk_keyval_convert_case(event->keyval, &lower, &upper);
-    /* Simulate shift key being held down in sticky state for non-printables  */
-    if (lower == upper)
-    {
-      gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
-                                          event->hardware_keycode,
-                                          GDK_SHIFT_MASK,
-                                          event->group,
-                                          &event->keyval,
-                                          NULL, NULL, NULL);
-    }
-    /* For printable characters sticky shift negates the case,
-       including any autocapitalization changes */
-    else
-    {
-      if (gdk_keyval_is_upper(event->keyval))
-        event->keyval = lower;
-      else
-        event->keyval = upper;
-    }
-  }
-
-  /* When the level key is in sticky or locked state, translate the
-     keyboard state as if that level key was being held down. */
-  if ((self->mask & (HILDON_IM_LEVEL_STICKY_MASK | HILDON_IM_LEVEL_LOCK_MASK)) ||
-      event->state == LEVEL_KEY_MOD_MASK)
-  {
-    guint translated_keyval;
-
-    gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
-                                        event->hardware_keycode,
-                                        LEVEL_KEY_MOD_MASK,
-                                        event->group,
-                                        &translated_keyval,
-                                        NULL, NULL, NULL);
-    event->keyval = translated_keyval;
-
-    if (event->keyval == COMPOSE_KEY)
-    {
-      if (event->type == GDK_KEY_PRESS) 
-        self->mask |= HILDON_IM_COMPOSE_MASK;
-      else 
-        self->mask &= ~HILDON_IM_COMPOSE_MASK;
-    }
-  }
-#ifdef MAEMO_CHANGES
-  /* If the input mode is strictly numeric and the digits are level
-     shifted on the layout, it's not necessary for the level key to
-     be pressed at all. */
-  else if (self->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
-           (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
-                                                                 event,
-                                                                 NUMERIC_LEVEL);
-  }
-#endif
-  /* The input is forced to a predetermined level */
-  else if (self->options & HILDON_IM_LOCK_LEVEL)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(self,
-                                                                 event,
-                                                                 LOCKABLE_LEVEL);
-  }
-
-  /* word completion manipulation */
-  if (event->type == GDK_KEY_PRESS
-      && commit_mode == HILDON_IM_COMMIT_PREEDIT
-      && self->preedit_buffer != NULL
-      && self->preedit_buffer->len != 0)
-  {
-    if (event->keyval == GDK_Right)
-    {
-      hildon_im_context_commit_preedit_data(self);
-      return TRUE;
-    }
-    else if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
-    {
-      set_preedit_buffer(self, NULL);
-      return TRUE;
-    }
-  }
-
-  /* Sticky and lock state reset */
   if (event->type == GDK_KEY_PRESS)
-  {
-    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
-        event->is_modifier == FALSE)
-
-    {
-      /* If not locked, pressing any character resets shift state */
-      if ((self->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
-      {
-        self->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
-      }
-    }
-    if (event->keyval != LEVEL_KEY &&
-        event->is_modifier == FALSE)
-    {
-      /* If not locked, pressing any character resets level state */
-      if ((self->mask & HILDON_IM_LEVEL_LOCK_MASK) == 0)
-      {
-        self->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
-      }
-    }
-  }
-
-  /* A dead key will not be immediately commited, but combined with the next key */
-  if (event->type == GDK_KEY_PRESS)
-  {
-    if (dead_key_to_unicode_combining_character (event->keyval))
-      self->mask |= HILDON_IM_DEAD_KEY_MASK;
-    else
-      self->mask &= ~HILDON_IM_DEAD_KEY_MASK;
-
-    if (self->mask & HILDON_IM_DEAD_KEY_MASK && self->combining_char == 0)
-    {
-      self->combining_char = dead_key_to_unicode_combining_character(event->keyval);
-      return TRUE;
-    }
-  }
-
-  if (event->type == GDK_KEY_RELEASE ||
-      event->state & GDK_CONTROL_MASK)
-  {
-    hildon_im_context_send_key_event(self, event->type, event->state, event->keyval, event->hardware_keycode);
-    return FALSE;
-  }
-
-  /* Pressing a dead key twice, or if followed by a space, inputs
-     the dead key's character representation */
-  if ((self->mask & HILDON_IM_DEAD_KEY_MASK || event->keyval == GDK_space) &&
-      self->combining_char)
-  {
-    gint32 last;
-    last = dead_key_to_unicode_combining_character (event->keyval);
-    if ((last == self->combining_char) || event->keyval == GDK_space)
-    {
-      c = combining_character_to_unicode (self->combining_char);
-    } else
-      c = gdk_keyval_to_unicode (event->keyval);
-
-    self->combining_char = 0;
-  }
-  /* Regular keypress */
-  else
-  {
-    if (self->mask & HILDON_IM_COMPOSE_MASK)
-    {
-      hildon_im_context_send_key_event(self, event->type,
-                                       event->state, event->keyval,
-                                       event->hardware_keycode);
-      return TRUE;
-    }
-    else
-    {
-      c = gdk_keyval_to_unicode (event->keyval);
-    }
-  }
-
-  if (c)
-  {
-    gchar utf8[10];
-
-    /* entering a new character cleans the preedit buffer */
-    set_preedit_buffer (self, NULL);
-
-    /* Pressing a dead key followed by a regular key combines to form
-       an accented character */
-    if (self->combining_char)
-    {
-      gchar combined[12], *composed;
-      gint base_length, combinator_length;
-
-      base_length = g_unichar_to_utf8(c, combined);
-      combinator_length = g_unichar_to_utf8(self->combining_char, &combined[base_length]);
-
-      composed = g_utf8_normalize(combined,
-                                  base_length + combinator_length,
-                                  G_NORMALIZE_DEFAULT_COMPOSE);
-
-      /* Prevent composing of characters that are valid, but not
-         available in the font used */
-      if (hildon_im_context_font_has_char(self, g_utf8_get_char(composed)))
-      {
-        c = g_utf8_get_char(composed);
-      }
-
-      g_free(composed);
-      self->combining_char = 0;
-    }
-
-    utf8[g_unichar_to_utf8 (c, utf8)] = '\0';
-
-    hildon_im_context_send_key_event(self, event->type, event->state,
-                                     gdk_unicode_to_keyval(c),
-                                     event->hardware_keycode);
-    self->last_internal_change = TRUE;
-    self->auto_upper = FALSE;
-    commit_text (self, utf8);
-
-    return TRUE;
-  }
-  else
-  {
-    if (self->mask & (HILDON_IM_LEVEL_STICKY_MASK | HILDON_IM_LEVEL_LOCK_MASK))
-      event->state = LEVEL_KEY_MOD_MASK;
-
-    hildon_im_context_send_key_event(self, event->type,
-                                     event->state, event->keyval,
-                                     event->hardware_keycode);
-
-    /* Non-printable characters invalidate any previous dead keys */
-    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
-        event->keyval != LEVEL_KEY)
-      self->combining_char = 0;
-  }
-
-  if (event->keyval == GDK_BackSpace)
-    self->last_internal_change = TRUE;
+    return key_pressed (self, event);
 
   return FALSE;
 }

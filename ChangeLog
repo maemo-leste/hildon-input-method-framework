@@ -1,3 +1,8 @@
+2009-05-13  Joaquim Rocha <jrocha@maemo.org>
+
+	* hildon-im-context.c : Refactored the filter_keypress function so it would
+	  be more easy to understand.
+
 2009-05-12  Joaquim Rocha <jrocha@maemo.org>
 
 	* hildon-im-context.c : Removed setting preedit as null since by then the
