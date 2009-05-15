@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.21-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.21-1) unstable; urgency=low
 
-  * Version 1:2.1.21-1~unreleased
+  * Version 1:2.1.21-1
   * Fixes: NB#114961 Capital letter comes up when a new line is inserted after a space.
   * Fixes: NB#93437 2n+1 capitalized characters occurs after n smiley icons
   * Fixes: NB#99972 Up/down arrow keys(fn layer) doesn't work in all the Hardware layouts(except english).
@@ -8,7 +8,7 @@ hildon-input-method-framework (1:2.1.21-1~unreleased) unstable; urgency=low
     `GTK_IS_TEXT_LAYOUT (layout)' failed
   * Fixed: NB#101069 Function key single press+ accentuation key " à "/" ` "  is not working properly
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 12 May 2009 08:48:04 +0300
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 14 May 2009 08:48:04 +0300
 
 hildon-input-method-framework (1:2.1.20-1) unstable; urgency=low
 
