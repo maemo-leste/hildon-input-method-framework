@@ -1952,13 +1952,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   }
 #endif
 
-  /* Shift lock or holding the shift down forces uppercase,
-   * ignoring autocap */
-  if (shift_key_is_locked || shift_key_is_down)
-    event->keyval = gdk_keyval_to_upper (event->keyval);
-  else if (shift_key_is_sticky)
-    perform_shift_translation (event);
-
   /* When the level key is in sticky or locked state, translate the
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
@@ -1987,6 +1980,18 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
                                                                  event,
                                                                  LOCKABLE_LEVEL);
   }
+
+  /* Shift lock or holding the shift down forces uppercase,
+   * ignoring autocap */
+  if (shift_key_is_locked ||
+      shift_key_is_down   ||
+      (shift_key_is_sticky &&
+      (level_key_is_sticky || level_key_is_locked || level_key_is_down)))
+  {
+    event->keyval = gdk_keyval_to_upper (event->keyval);
+  }
+  else if (shift_key_is_sticky)
+    perform_shift_translation (event);
 
   reset_shift_and_level_keys_if_needed (context, event);
 

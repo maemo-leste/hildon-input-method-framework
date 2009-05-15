@@ -1,3 +1,10 @@
+2009-05-15  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.22-1~unreleased
+	* hildon-im-context.c : Changed the Shift key processing to be done after
+	  the level processing and set it so that it will raise the character's
+	  case also if the Shift key is sticky and the level layer is active.
+
 2009-05-14  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.21-1.
