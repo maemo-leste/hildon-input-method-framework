@@ -3,6 +3,7 @@
 	* hildon-im-context.c (hildon_im_context_get_surrounding) : Check the case
 	when the client widget is a HildonEntry.
 	* Fixes: NB#93219.
+	* Version 1:2.1.22-1
 
 2009-05-15  Joaquim Rocha <jrocha@maemo.org>
 
