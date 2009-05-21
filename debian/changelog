@@ -1,8 +1,9 @@
 hildon-input-method-framework (1:2.1.22-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.22-1~unreleased
+  * Fixes: NB#93219 Place holder values like 'Title...', 'Description...' are sometimes shown in text input field of FKB
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 15 May 2009 08:48:04 +0300
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 21 May 2009 08:48:04 +0300
 
 hildon-input-method-framework (1:2.1.21-1) unstable; urgency=low
 

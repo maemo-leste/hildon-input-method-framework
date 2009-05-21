@@ -899,6 +899,15 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
                                       text,
                                       cursor_index);
   }
+  else if (HILDON_IS_ENTRY(self->client_gtk_widget))
+  {
+    *text = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
+    result = (*text != NULL);    
+    if (g_utf8_strlen(*text, 2) == 0)
+      *cursor_index = 0;
+    else
+      *cursor_index = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
+  }
   else
   {
     gchar *local_text = NULL;
