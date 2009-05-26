@@ -1,3 +1,10 @@
+2009-05-26  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.23-1~unreleased
+	* hildon-im-context.c : Check if the IM context is Hildon before trying to
+	  hide it.
+	* Fixes: NB#104945
+
 2009-05-21  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (hildon_im_context_get_surrounding) : Check the case

@@ -374,7 +374,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
          !is_combo_box_entry &&
          !is_inside_completion_popup))
     {
-      if (context != NULL)
+      if (context != NULL && HILDON_IS_IM_CONTEXT (context))
       {
         hildon_im_context_hide(context);
       }
