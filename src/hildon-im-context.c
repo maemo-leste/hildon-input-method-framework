@@ -2943,13 +2943,14 @@ hildon_im_context_show_real(GtkIMContext *context)
 
 #ifdef MAEMO_CHANGES
 /* Exposed to applications through hildon_gtk_im_context_show.
- * Assumes the application wants to show the default stylus IM UI, in
- * lack of a better API. Inside the framework, use the _real variant.
+ * We use the "unknown" trigger and the HIM UI will try to use the best plugin
+ * taking into account the state of the keyboard and other things.
+ * Inside the framework, use the _real variant.
  */
 static void
 hildon_im_context_show(GtkIMContext *context)
 {
-  trigger = HILDON_IM_TRIGGER_KEYBOARD;
+  trigger = HILDON_IM_TRIGGER_UNKNOWN;
 
   hildon_im_context_show_real(context);
 }

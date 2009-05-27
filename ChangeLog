@@ -1,3 +1,10 @@
+2009-05-27  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (hildon_im_context_show) : Use the trigger type
+	HILDON_IM_TRIGGER_UNKNOWN, so the HIM UI will try to use the best plugin
+	taking into account the state of the keyboard and other things.
+	* hildon-im-protocol.h : Added UNKNOWN to HildonIMTrigger.
+
 2009-05-26  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.23-1~unreleased
