@@ -1,3 +1,9 @@
+2009-05-28  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (process_enter_key) : check that the type has been
+	loaded in order to avoid a warning.
+	* Fixes: NB#96197.
+
 2009-05-27  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (hildon_im_context_show) : Use the trigger type
