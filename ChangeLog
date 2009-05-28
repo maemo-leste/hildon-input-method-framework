@@ -3,6 +3,7 @@
 	* hildon-im-context.c (process_enter_key) : check that the type has been
 	loaded in order to avoid a warning.
 	* Fixes: NB#96197.
+	* Version 1:2.1.23-1
 
 2009-05-27  Felipe Erias Morandeira <femorandeira@maemo.org>
 

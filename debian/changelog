@@ -1,10 +1,10 @@
-hildon-input-method-framework (1:2.1.23-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.23-1) unstable; urgency=low
 
-  * Version 1:2.1.23-1~unreleased
+  * Version 1:2.1.23-1
   * Fixes: NB#104945 glib-critical when GtkEntry loses focus
   * Fixes: NB#96197 Warning: unable to lookup signal "activate" of unloaded type `GtkEntry'
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 26 May 2009 08:48:04 +0300
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 28 May 2009 08:48:04 +0300
 
 hildon-input-method-framework (1:2.1.22-1) unstable; urgency=low
 
