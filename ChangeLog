@@ -1,3 +1,9 @@
+2009-06-04  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 1:2.1.25-1
+	* hildon-im-context.c : implemented switch space and punctuation after
+	autocompletion
+
 2009-05-28  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (process_enter_key) : check that the type has been

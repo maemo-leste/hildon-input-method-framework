@@ -115,6 +115,7 @@ struct _HildonIMContext
   gboolean auto_upper;
   gboolean has_focus;
   gboolean is_url_entry;
+  gboolean committed_preedit;
 
   /* Keep track on cursor position to prevent unnecessary calls */
   gint prev_cursor_x;
@@ -617,6 +618,38 @@ hildon_im_context_init(HildonIMContext *self)
 #endif
 }
 
+/* gets the character with relation to the cursor
+ * offset : -1 for previous char, 0 for char at cursor 
+ * returns 0x0 if there was an error */
+static gunichar
+get_unichar_by_offset_from_cursor (HildonIMContext *self,
+                                   gint desired_offset)
+{
+  gchar *surrounding = NULL;
+  gchar *character = NULL;
+  gunichar unicharacter = 0x0;
+  gint offset = 0;
+  
+  hildon_im_context_get_surrounding (GTK_IM_CONTEXT(self), &surrounding, &offset);
+  
+  if (surrounding != NULL)
+  {
+    character = g_utf8_offset_to_pointer (surrounding, (glong)(offset+desired_offset));
+    
+    if (character != NULL)
+    {
+      unicharacter = g_utf8_get_char_validated(character, -1);
+    }
+  }
+  
+  g_free(surrounding);
+  
+  if (unicharacter == (gunichar)-1 || unicharacter == (gunichar)-2)
+    unicharacter = 0x0;
+  
+  return unicharacter;
+}
+
 static gboolean
 commit_text (HildonIMContext *self, const gchar* s)
 {
@@ -725,7 +758,16 @@ hildon_im_context_commit_preedit_data(HildonIMContext *self)
     
     if (self->space_after_commit)
     {
-      g_string_append(self->preedit_buffer, " ");
+      gunichar next_char = get_unichar_by_offset_from_cursor(self, 0);
+      
+      if (next_char == 0x0 
+          || (g_unichar_type(next_char) !=  G_UNICODE_SPACE_SEPARATOR
+              && (next_char != 0x09)
+              && !g_unichar_ispunct(next_char)))
+      {
+        g_string_append(self->preedit_buffer, " ");
+        self->committed_preedit = TRUE;
+      }
     }
     
     if (commit_text(self, self->preedit_buffer->str))
@@ -1410,6 +1452,7 @@ hildon_im_context_set_client_window(GtkIMContext *context,
   }
 
   self->is_url_entry = FALSE;
+  self->committed_preedit = FALSE;
   self->client_gdk_window = window;
   self->client_gtk_widget = NULL;
   self->text_view_preedit_mark = NULL;
@@ -1844,6 +1887,37 @@ process_enter_key (HildonIMContext *context, GdkEventKey *event)
   return TRUE;
 }
 
+static gboolean
+insert_text (HildonIMContext *context, gchar *text, gint offset)
+{
+  if (text == NULL || !strlen (text))
+    return FALSE;
+
+  if (GTK_IS_ENTRY (context->client_gtk_widget))
+  {
+    gint cursor = gtk_editable_get_position (GTK_EDITABLE (context->client_gtk_widget));
+    cursor += offset;
+    gtk_editable_insert_text (GTK_EDITABLE (context->client_gtk_widget),
+                              text,
+                              -1,
+                              &cursor);
+  }
+  else if (GTK_IS_TEXT_VIEW (context->client_gtk_widget))
+  {
+    GtkTextIter iter;
+    GtkTextBuffer *buffer = get_buffer(context->client_gtk_widget);
+    if (buffer == NULL)
+      return FALSE;
+    gtk_text_buffer_get_iter_at_mark (buffer,
+                                      &iter,
+                                      gtk_text_buffer_get_insert(buffer));
+    gtk_text_iter_forward_chars (&iter, offset);
+    gtk_text_buffer_insert (buffer, &iter, text, -1);
+  }
+
+  return TRUE;
+}
+
 static guint32
 compose_character (HildonIMContext *context, guint32 character, guint32 combining_character)
 {
@@ -1935,19 +2009,24 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     else if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
     {
       set_preedit_buffer(context, NULL);
+      context->committed_preedit = FALSE;
       return TRUE;
     }
   }
 
   /* The IM determines the action for the return and enter keys */
   if (enter_key_is_down)
+  {
+    context->committed_preedit = FALSE;
     return process_enter_key (context, event);
+  }
 
   if (tab_key_is_down && GTK_IS_ENTRY (context->client_gtk_widget))
   {
     hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
                                          ctrl_key_is_down ? GTK_DIR_TAB_FORWARD :
                                                             GTK_DIR_TAB_BACKWARD);
+    context->committed_preedit = FALSE;
     return TRUE;
   }
 
@@ -2064,7 +2143,17 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     context->last_internal_change = TRUE;
     context->auto_upper = FALSE;
 
-    commit_text (context, utf8);
+    gboolean inserted_text = FALSE;
+
+    if (context->committed_preedit &&
+        hildon_im_common_should_be_appended_after_letter (utf8))
+    {
+      inserted_text = insert_text (context, utf8, -1);
+    }
+    if (!inserted_text)
+      commit_text (context, utf8);
+
+    context->committed_preedit = FALSE;
 
     return TRUE;
   }
@@ -2083,11 +2172,14 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
         event->keyval != LEVEL_KEY)
     {
       context->combining_char = 0;
+      context->committed_preedit = FALSE;
     }
   }
 
   if (event->keyval == GDK_BackSpace)
+  {
     context->last_internal_change = TRUE;
+  }
 
   return FALSE;
 }
@@ -2153,6 +2245,8 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
 
   if (event->type == GDK_BUTTON_PRESS)
   {
+    self->committed_preedit = FALSE;
+
     trigger = HILDON_IM_TRIGGER_FINGER;
     /* In Diablo, it would be a finger event if 
      *         gdk_event_get_axis ((GdkEvent*)event, GDK_AXIS_PRESSURE, &pressure)

@@ -82,3 +82,18 @@ hildon_im_autocorrection_check_character (const gchar *text)
   }
   return retval;
 }
+
+gboolean
+hildon_im_common_should_be_appended_after_letter (const gchar *chr)
+{
+  gunichar uni;
+
+  if (chr == NULL)
+  {
+    return FALSE;
+  }
+
+  uni = g_utf8_get_char(chr);
+  return (uni == '.' || uni == ',' || uni == '?' || uni == '!' || uni == '"' ||
+          uni == '\'');
+}

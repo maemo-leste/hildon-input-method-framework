@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 
 gboolean hildon_im_common_changes_case(const gchar *chr);
 gint hildon_im_autocorrection_check_character (const gchar *);
+gboolean hildon_im_common_should_be_appended_after_letter (const gchar *chr);
 
 G_END_DECLS
 
