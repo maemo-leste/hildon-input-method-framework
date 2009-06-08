@@ -2,8 +2,11 @@
 
 	* Version 1:2.1.26-1~unreleased
 	* hildon-im-context.c : Changed a block of code inside key_pressed in order
-	  to switch the keys' case after processing their layout
+	  to switch the keys' case after processing their layout ;
+	  Set end index of the preedit attribute to be the length of the provided
+	  string and not a fixed size integer.
 	* Fixes: NB#121214
+	* Fixes: NB#118513
 
 2009-06-04  Felipe Erias Morandeira <femorandeira@maemo.org>
 
