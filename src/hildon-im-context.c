@@ -2032,15 +2032,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
 #ifdef MAEMO_CHANGES
   g_object_get(context, "hildon-input-mode", &input_mode, NULL);
-
-  /* Hardware keyboard autocapitalization  */
-  if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
-  {
-    if (shift_key_is_down)
-      event->keyval = gdk_keyval_to_lower(event->keyval);
-    else
-      event->keyval = gdk_keyval_to_upper(event->keyval);
-  }
 #endif
 
   /* When the level key is in sticky or locked state, translate the
@@ -2071,6 +2062,17 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
                                                                  event,
                                                                  LOCKABLE_LEVEL);
   }
+
+#ifdef MAEMO_CHANGES
+  /* Hardware keyboard autocapitalization  */
+  if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
+  {
+    if (shift_key_is_down)
+      event->keyval = gdk_keyval_to_lower(event->keyval);
+    else
+      event->keyval = gdk_keyval_to_upper(event->keyval);
+  }
+#endif
 
   /* Shift lock or holding the shift down forces uppercase,
    * ignoring autocap */

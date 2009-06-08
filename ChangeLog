@@ -1,3 +1,10 @@
+2009-06-08  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.26-1~unreleased
+	* hildon-im-context.c : Changed a block of code inside key_pressed in order
+	  to switch the keys' case after processing their layout
+	* Fixes: NB#121214
+
 2009-06-04  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.25-1
