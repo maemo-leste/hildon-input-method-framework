@@ -1054,17 +1054,17 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
     
     attr1 = pango_attr_underline_new (PANGO_UNDERLINE_SINGLE);
     attr1->start_index = 0;
-    attr1->end_index = G_MAXINT;
+    attr1->end_index = g_utf8_strlen (*str, -1);
     attr2 = pango_attr_background_new (style->bg[GTK_STATE_SELECTED].red,
                                        style->bg[GTK_STATE_SELECTED].green,
                                        style->bg[GTK_STATE_SELECTED].blue);
     attr2->start_index = 0;
-    attr2->end_index = G_MAXINT;
+    attr2->end_index = g_utf8_strlen (*str, -1);
     attr3 = pango_attr_foreground_new (style->fg[GTK_STATE_SELECTED].red,
                                        style->fg[GTK_STATE_SELECTED].green,
                                        style->fg[GTK_STATE_SELECTED].blue);
     attr3->start_index = 0;
-    attr3->end_index = G_MAXINT;
+    attr3->end_index = g_utf8_strlen (*str, -1);
 
     *attrs = pango_attr_list_new ();
     pango_attr_list_insert (*attrs, attr1);
