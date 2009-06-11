@@ -192,8 +192,10 @@ typedef struct
   HildonIMCommand cmd;
 #ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode;
+  /* HildonGtkInputMode default_input_mode;  TODO the message has to be <= 20 bytes*/
 #else
   gint input_mode;
+  /* gint default_input_mode;                the message has to be <= 20 bytes*/
 #endif
   HildonIMTrigger trigger;
 } HildonIMActivateMessage;

@@ -66,7 +66,7 @@ static gulong grab_focus_hook_id = 0;
 static gulong unmap_hook_id = 0;
 static guint launch_delay_timeout_id = 0;
 static guint launch_delay = HILDON_IM_DEFAULT_LAUNCH_DELAY;
-static HildonIMTrigger trigger = 0;
+static HildonIMTrigger trigger = HILDON_IM_TRIGGER_UNKNOWN;
 static HildonIMCommitMode commit_mode = 0;
 static gboolean internal_reset = FALSE;
 static gboolean enter_on_focus_pending = FALSE;
@@ -2568,9 +2568,11 @@ hildon_im_context_send_command(HildonIMContext *self,
   gint xerror;
   HildonIMActivateMessage *msg;
 #ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
+  HildonGtkInputMode input_mode = 0;
+  HildonGtkInputMode default_input_mode = 0;
 #else
   gint input_mode = 0;
+  gint default_input_mode = 0;
 #endif
   Window im_window;
   GdkWindow *input_window = NULL;
@@ -2588,6 +2590,7 @@ hildon_im_context_send_command(HildonIMContext *self,
 
 #ifdef MAEMO_CHANGES
   g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+  g_object_get(self, "hildon-input-default", &default_input_mode, NULL);
 #endif
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
@@ -2633,6 +2636,8 @@ hildon_im_context_send_command(HildonIMContext *self,
 
   msg->cmd = cmd;
   msg->input_mode = input_mode;
+  /* msg->default_input_mode = default_input_mode; 
+   * TODO This won't work because the message can not be bigger than 20 bytes :-( */
   msg->trigger = trigger;
 
   /*trap X errors.  We need this, because if the IM window is destroyed for some
