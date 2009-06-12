@@ -54,6 +54,9 @@
 #define SURROUNDING_CHARS_BEFORE_CURSOR 30
 #define SURROUNDING_CHARS_AFTER_CURSOR  10
 
+/* Maximum distance that can be dragged in order to show the IM */
+#define SHOW_CONTEXT_MAX_DISTANCE 25
+
 /* Special cased widgets */
 #define HILDON_IM_INTERNAL_TEXTVIEW "him-textview"
 #define HILDON_ENTRY_COMPLETION_POPUP "hildon-completion-window"
@@ -124,6 +127,9 @@ struct _HildonIMContext
   gchar *surrounding;
   guint  prev_surrounding_hash;
   guint  prev_surrounding_cursor_pos;
+
+  gdouble button_press_x;
+  gdouble button_press_y;
 };
 
 /* Initialisation/finalisation functions */
@@ -611,6 +617,9 @@ hildon_im_context_init(HildonIMContext *self)
   self->show_preedit = FALSE;
   self->space_after_commit = FALSE;
   self->is_internal_widget = FALSE;
+
+  self->button_press_x = -1.0;
+  self->button_press_y = -1.0;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -1888,6 +1897,23 @@ process_enter_key (HildonIMContext *context, GdkEventKey *event)
 }
 
 static gboolean
+client_has_selection (HildonIMContext *context)
+{
+  if (GTK_IS_TEXT_VIEW (context->client_gtk_widget))
+  {
+    GtkTextBuffer *buffer;
+    buffer = get_buffer (context->client_gtk_widget);
+    return gtk_text_buffer_get_has_selection (buffer);
+  }
+  if (GTK_IS_EDITABLE (context->client_gtk_widget))
+  {
+    return gtk_editable_get_selection_bounds (GTK_EDITABLE (context->client_gtk_widget),
+                                              NULL, NULL);
+  }
+  return FALSE;
+}
+
+static gboolean
 insert_text (HildonIMContext *context, gchar *text, gint offset)
 {
   if (text == NULL || !strlen (text))
@@ -2245,9 +2271,14 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(context), FALSE);
   self = HILDON_IM_CONTEXT(context);
 
+  GdkEventButton *button_event = (GdkEventButton*) event;
+
   if (event->type == GDK_BUTTON_PRESS)
   {
     self->committed_preedit = FALSE;
+
+    self->button_press_x = button_event->x_root;
+    self->button_press_y = button_event->y_root;
 
     trigger = HILDON_IM_TRIGGER_FINGER;
     /* In Diablo, it would be a finger event if 
@@ -2273,10 +2304,28 @@ hildon_im_context_filter_event(GtkIMContext *context, GdkEvent *event)
   {
     trigger = HILDON_IM_TRIGGER_FINGER;
 
-    if (self->has_focus)
+    gboolean should_show = FALSE;
+
+    if (self->button_press_x == -1.0 && self->button_press_y == -1.0)
     {
-      hildon_im_context_show_real(context);
+      should_show = TRUE;
     }
+    else if (!client_has_selection (self))
+    {
+      gdouble x = ABS (button_event->x_root - self->button_press_x);
+      gdouble y = ABS (button_event->y_root - self->button_press_y);
+
+      if (x < SHOW_CONTEXT_MAX_DISTANCE &&
+          y < SHOW_CONTEXT_MAX_DISTANCE)
+      {
+        should_show = TRUE;
+      }
+      self->button_press_x = -1.0;
+      self->button_press_y = -1.0;
+    }
+
+    if (should_show && self->has_focus)
+      hildon_im_context_show_real(context);
   }
 
   return FALSE;

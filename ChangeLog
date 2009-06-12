@@ -1,3 +1,9 @@
+2009-06-12  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	*  hildon-im-context.c (hildon_im_context_filter_event) : Don't show the IM
+	on swipes, only on taps. This lets us support panning and text selection,
+	and improves the usability with the FKB.
+
 2009-06-11  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-protocol.h (HildonIMActivateMessage): The field 
