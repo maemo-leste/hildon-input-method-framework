@@ -2188,7 +2188,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   else
   {
     if (level_key_is_sticky || level_key_is_locked)
-      event->state = LEVEL_KEY_MOD_MASK;
+      event->state |= LEVEL_KEY_MOD_MASK;
 
     hildon_im_context_send_key_event(context, event->type,
                                      event->state, event->keyval,

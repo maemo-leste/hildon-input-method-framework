@@ -1,3 +1,11 @@
+2009-06-16  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.27-1~unreleased
+	* hildon-im-context.c : Corrected assignment of event->state. It was
+	  assigning it to a new state instead of joining the new state with
+	  the existing one.
+	* Fixes: NB#119947
+
 2009-06-12  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	*  hildon-im-context.c (hildon_im_context_filter_event) : Don't show the IM
