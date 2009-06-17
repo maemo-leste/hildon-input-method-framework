@@ -705,17 +705,32 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
   if (self->client_gtk_widget == NULL
       || !GTK_WIDGET_REALIZED(self->client_gtk_widget))
     return;
-  
-  if (self->preedit_buffer != NULL
-      && !(s == NULL && self->preedit_buffer->len == 0))
+
+  if (s != NULL)
   {
     GtkTextIter cursor;
     GtkTextBuffer *buffer;
-
-    if (s == NULL)
-      g_string_truncate(self->preedit_buffer, 0);
+    gchar *up_string = NULL;
+    gchar *string;
+    
+    if (self->mask & HILDON_IM_SHIFT_LOCK_MASK)
+    {
+      up_string = g_utf8_strup(s, -1);
+      string = up_string;
+    }
     else
-      g_string_append(self->preedit_buffer, s);
+    {
+      string = (gchar*)s;
+    }
+    
+    if (self->preedit_buffer == NULL)
+    {
+      self->preedit_buffer = g_string_new (string);
+    }
+    else
+    {
+      g_string_append(self->preedit_buffer, string);
+    }
 
     if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
     {
@@ -729,14 +744,21 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
       self->editable_preedit_position =
         gtk_editable_get_position(GTK_EDITABLE(self->client_gtk_widget));
     }
+    
     self->show_preedit = TRUE;
     g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
+    
+    g_free(up_string);
   }
   else
   {
-    self->preedit_buffer = g_string_new ("");
     self->show_preedit = FALSE;
-    g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
+    
+    if (self->preedit_buffer != NULL && self->preedit_buffer->len != 0)
+    {
+      g_string_truncate(self->preedit_buffer, 0);
+      g_signal_emit_by_name(self, "preedit-changed", self->preedit_buffer->str);
+    }
   }
 }
 
@@ -1026,7 +1048,6 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
                                       PangoAttrList **attrs,
                                       gint *cursor_pos)
 {
-  /* TODO this should be enough to show a preview of the predicted text */
   HildonIMContext *self;
   GtkStyle *style = NULL;
   PangoAttribute *attr1, *attr2, *attr3;
@@ -1183,7 +1204,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
       hildon_im_context_insert_utf8( self, msg->msg_flag, msg->utf8_str );
       result = GDK_FILTER_REMOVE;
     }
-    if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_COM)
+    else if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_COM)
         && cme->format == HILDON_IM_COM_FORMAT)
     {
       HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
@@ -1197,7 +1218,6 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_change_set_mask_for_input_mode (self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_ENTER:
-          /* TODO this might be not working */
           hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
           hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
           break;
@@ -1311,7 +1331,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
       }
       result = GDK_FILTER_REMOVE;
     }
-    if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_SURROUNDING_CONTENT)
+    else if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_SURROUNDING_CONTENT)
         && cme->format == HILDON_IM_SURROUNDING_CONTENT_FORMAT)
     {
       HildonIMSurroundingContentMessage *msg =
@@ -1327,23 +1347,20 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
       if (msg->msg_flag == HILDON_IM_MSG_END && self->surrounding)
       {
         hildon_im_context_commit_surrounding(self);
-        return GDK_FILTER_REMOVE;
+        result = GDK_FILTER_REMOVE;
       }
-
-      new_surrounding = g_strconcat(self->surrounding,
-                                    msg->surrounding,
-                                    NULL);
-
-      if (self->surrounding)
+      else
       {
+        new_surrounding = g_strconcat(self->surrounding,
+                                      msg->surrounding, NULL);
+        
         g_free(self->surrounding);
+        self->surrounding = new_surrounding;
+
+        result = GDK_FILTER_REMOVE;
       }
-
-      self->surrounding = new_surrounding;
-
-      result = GDK_FILTER_REMOVE;
     }
-    if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_SURROUNDING)
+    else if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_SURROUNDING)
         && cme->format == HILDON_IM_SURROUNDING_FORMAT)
     {
       HildonIMSurroundingMessage *msg =
@@ -1356,6 +1373,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
 
     }
   }
+  
   return result;
 }
 /* Virtual functions */
@@ -2032,11 +2050,15 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
       hildon_im_context_commit_preedit_data(context);
       return TRUE;
     }
-    else if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+    else
     {
       set_preedit_buffer(context, NULL);
       context->committed_preedit = FALSE;
-      return TRUE;
+      
+      if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+      {
+        return TRUE;
+      }
     }
   }
 
@@ -2217,6 +2239,7 @@ static gboolean
 hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
 {
   HildonIMContext *self;
+  gboolean result = FALSE;
 
   guint last_keyval = 0;
 
@@ -2247,13 +2270,16 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   }
   self->last_key_event = (GdkEventKey*) gdk_event_copy((GdkEvent*)event);
 
-  if (event->type == GDK_KEY_RELEASE)
-    return key_released (self, event, last_keyval);
-
   if (event->type == GDK_KEY_PRESS)
-    return key_pressed (self, event);
+  {
+    result = key_pressed (self, event);
+  }
+  else if (event->type == GDK_KEY_RELEASE)
+  {
+    result = key_released (self, event, last_keyval);
+  }
 
-  return FALSE;
+  return result;
 }
 
 /* Filter for events (currently only button events) received by the client widget.
@@ -3133,10 +3159,6 @@ hildon_im_context_reset_real(GtkIMContext *context)
    */   
   self->show_preedit = FALSE;
   
-  /* TODO This emission has to be removed, it causes problems because it emits too many signals 
-    g_signal_emit_by_name(self, "preedit-changed", "");
-   */
-
   hildon_im_context_send_command(self, HILDON_IM_CLEAR);
 }
 

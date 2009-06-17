@@ -1,3 +1,11 @@
+2009-06-17  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	*  hildon-im-context.c (set_preedit_buffer) : Make the preedit uppercase if
+	Shift is locked. Corrected a leak.
+	(key_pressed) : Pressing any key other than GDK_Right removes the preedit.
+	This prevents strange effects with Ctrl-A, for example.
+	Some code cleaning.
+
 2009-06-16  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.27-1~unreleased
