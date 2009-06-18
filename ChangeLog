@@ -1,3 +1,9 @@
+2009-06-18  Joaquim Rocha <jrocha@maemo.org>
+
+	* hildon-im-context.c : Set indexes of the preedit attibutes as the length
+	  of the preedit string in bytes instead of chars.
+	* Fixes: NB#122653
+	
 2009-06-17  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	*  hildon-im-context.c (set_preedit_buffer) : Make the preedit uppercase if
