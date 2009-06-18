@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.27-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.27-1) unstable; urgency=low
 
-  * Version 1:2.1.27-1~unreleased
+  * Version 1:2.1.27-1
   * Don't show the IM on swipes, only on taps.
   * Fixes: NB#119947 HKB function Shift + arrows does not work in input field when FN is locked
   * Fixes: NB#122653 Best candidates from russian dictionary are not shown properly.
