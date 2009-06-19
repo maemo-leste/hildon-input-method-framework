@@ -1,3 +1,15 @@
+2009-06-19  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.28-1~unreleased
+	* hildon-im-context.c 
+	(hildon_im_context_send_surrounding) : Extracted functionality to two new
+	functions:  get_full_line and get_short_surrounding.
+	(get_full_line) : Return the text of the current line, as a response to
+	REQUEST_SURROUNDING_FULL. This is the one used by the FKB.
+	(get_short_surrounding) : Return the two words before the cursor and the
+	work after it. This is the one used by the keyboard assistant, and improves
+	a lot the performance in some cases (NB#107805, NB#114779).
+
 2009-06-18  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.27-1

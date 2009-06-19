@@ -51,8 +51,8 @@
 
 /* if we don't use gtk_im_context_get_surrounding or a text buffer to get the
  * surrounding, this is the fixed size that will be used */
-#define SURROUNDING_CHARS_BEFORE_CURSOR 30
-#define SURROUNDING_CHARS_AFTER_CURSOR  10
+#define SURROUNDING_CHARS_BEFORE_CURSOR 48
+#define SURROUNDING_CHARS_AFTER_CURSOR  16
 
 /* Maximum distance that can be dragged in order to show the IM */
 #define SHOW_CONTEXT_MAX_DISTANCE 25
@@ -184,7 +184,7 @@ static void       hildon_im_context_check_sentence_start(HildonIMContext*
 static void       hildon_im_context_send_surrounding    (HildonIMContext*
                                                          self,
                                                          gboolean
-                                                         send_all_contents);
+                                                         send_full_line);
 static void       hildon_im_context_send_committed_preedit(HildonIMContext *self,
                                                            gchar* committed_preedit);
 static void       hildon_im_context_send_key_event      (HildonIMContext *self,
@@ -2796,6 +2796,144 @@ hildon_im_context_send_event(Window window, XEvent *event)
   }
 }
 
+static gchar*
+get_full_line (HildonIMContext *self, gint *offset)
+{
+  /* TODO gtk_im_context_get_surrounding doesn't work well with multiple lines
+   * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
+  gchar *surrounding = NULL;
+  gboolean multiline = FALSE;
+
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+  multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0;
+#else
+  /* TODO add other multiline widgets */
+  multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget);
+#endif
+  
+  if (HILDON_IS_ENTRY(self->client_gtk_widget))
+  {
+    surrounding = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
+    if (g_utf8_strlen(surrounding, 2) == 0)
+      *offset = 0;
+    else
+      *offset = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
+  }
+  else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+  {
+    surrounding = 
+      gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);
+    *offset = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
+  }
+  else if (GTK_IS_TEXT_VIEW(self->client_gtk_widget))
+  {
+    GtkTextMark *insert_mark;
+    GtkTextBuffer *buffer;
+    GtkTextIter insert_i, start_i, end_i;
+
+    buffer = get_buffer(self->client_gtk_widget);
+    insert_mark = gtk_text_buffer_get_insert(buffer);
+    gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
+
+    start_i = insert_i;
+    end_i = insert_i;
+
+    if (gtk_text_iter_get_line_offset (&start_i) != 0)
+    {
+      gtk_text_iter_set_line_offset (&start_i, 0);
+    }
+    else
+    {
+      gtk_text_iter_backward_line (&start_i);
+    }
+    gtk_text_iter_forward_to_line_end (&end_i);
+
+    surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
+
+    *offset = gtk_text_iter_get_offset(&insert_i) - gtk_text_iter_get_offset(&start_i);
+  }
+  else
+  {
+    gint byte_offset = 0;
+    
+    gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
+                                   &surrounding, &byte_offset);
+    /* The following is needed since the value assigned to offset is
+     * the byte position, not the real cursor position in the text */
+    if (surrounding != NULL)
+    {
+      gchar *str_pos = surrounding + byte_offset;
+      *offset = g_utf8_pointer_to_offset (surrounding, str_pos);
+    }
+  }
+  
+  return surrounding;
+}
+
+static gchar*
+get_short_surrounding (HildonIMContext *self, gint *offset)
+{
+  /* Ideally, we should only return the two words before and the word after */
+  gchar* long_surrounding = NULL;
+  gchar* cursor_position = NULL;
+  gchar* prev_char = NULL;
+  gchar* short_surrounding = NULL;
+  gchar* short_surrounding_start = NULL;
+  gchar* short_surrounding_end = NULL;
+  gchar* next_char = NULL;
+  gint long_offset = 0;
+  gint off_start = 0;
+  gint off_end = 0;
+  
+  long_surrounding = get_full_line (self, &long_offset);
+  
+  cursor_position = g_utf8_offset_to_pointer(long_surrounding, long_offset);
+  prev_char = g_utf8_find_prev_char(long_surrounding, cursor_position);
+  next_char = cursor_position;
+  
+  /* move to the previous word start */
+  while (prev_char != NULL && !g_unichar_isspace (g_utf8_get_char(prev_char)))
+  {
+    short_surrounding_start = prev_char; 
+    prev_char = g_utf8_find_prev_char(long_surrounding, prev_char);
+  }
+  
+  /* and now the first word before that */
+  while (prev_char != NULL && g_unichar_isspace (g_utf8_get_char(prev_char)))
+  {
+    short_surrounding_start = prev_char;
+    prev_char = g_utf8_find_prev_char(long_surrounding, prev_char);
+  }
+
+  /* and now to its start */
+  while (prev_char != NULL && !g_unichar_isspace (g_utf8_get_char(prev_char)))
+  {
+    short_surrounding_start = prev_char;
+    prev_char = g_utf8_find_prev_char(long_surrounding, prev_char);
+  }
+  
+  /* now, let's move forward */
+  do
+  {
+    short_surrounding_end = next_char;
+    next_char = g_utf8_find_next_char(next_char, NULL);
+  }
+  while (next_char != NULL && next_char[0] != '\0'
+         && !g_unichar_isspace (g_utf8_get_char(next_char)));
+  
+  off_start = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_start);
+  off_end = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_end);
+  
+  *offset = long_offset - off_start;
+  short_surrounding = g_strndup(short_surrounding_start, off_end - off_start);
+
+  g_free(long_surrounding);
+  
+  return short_surrounding;
+}
+
 static void
 hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
 {
@@ -2821,7 +2959,7 @@ hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
 /* Send the text of the client widget surrounding the active cursor position,
    as well as the the cursor's position in the surrounding, to the IM */
 static void
-hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_contents)
+hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_line)
 {
   HildonIMSurroundingContentMessage *surrounding_content_msg=NULL;
   Window im_window;
@@ -2829,7 +2967,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
   gint flag;
   gchar *surrounding = NULL;
   gchar *str;
-  gint cpos = 0;
+  gint offset = 0;
 
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
@@ -2842,102 +2980,13 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
     return;
   }
 
-  /* For the textview we force a larger surrounding than the one provided
-   * through the GTK IM context */
-  if (send_all_contents)
+  if (send_full_line)
   {
-    if (HILDON_IS_ENTRY(self->client_gtk_widget))
-    {
-      surrounding = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
-      if (g_utf8_strlen(surrounding, 2) == 0)
-        cpos = 0;
-      else
-        cpos = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
-    }
-    else if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
-    {
-      GtkTextMark *insert_mark;
-      GtkTextBuffer *buffer;
-      GtkTextIter insert_i, start_i, end_i;
-
-      buffer = get_buffer(self->client_gtk_widget);
-      insert_mark = gtk_text_buffer_get_insert(buffer);
-      gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
-
-      gtk_text_buffer_get_bounds(buffer, &start_i, &end_i);
-      surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
-
-      cpos = gtk_text_iter_get_offset(&insert_i);
-    }
-    else if (GTK_IS_EDITABLE (self->client_gtk_widget))
-    {
-      surrounding = 
-        gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);
-      cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
-    }
+    surrounding = get_full_line (self, &offset);
   }
   else
   {
-    /* TODO gtk_im_context_get_surrounding doesn't work well with multiple lines
-     * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
-    gboolean multiline = FALSE;
-#ifdef MAEMO_CHANGES
-    HildonGtkInputMode input_mode;
-    g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-    multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0;
-#else
-    /* TODO add other multiline widgets */
-    multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget);
-#endif
-
-    if (multiline && GTK_IS_EDITABLE(self->client_gtk_widget))
-    {
-      cpos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
-
-      surrounding = 
-        gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget),
-                               MAX(cpos - SURROUNDING_CHARS_BEFORE_CURSOR, 0),
-                               cpos + SURROUNDING_CHARS_AFTER_CURSOR);
-    }
-    else if (multiline && GTK_IS_TEXT_VIEW(self->client_gtk_widget))
-    {
-      GtkTextMark *insert_mark;
-      GtkTextBuffer *buffer;
-      GtkTextIter insert_i, start_i, end_i;
-
-      buffer = get_buffer(self->client_gtk_widget);
-      insert_mark = gtk_text_buffer_get_insert(buffer);
-      gtk_text_buffer_get_iter_at_mark(buffer, &insert_i, insert_mark);
-
-      start_i = insert_i;
-      end_i = insert_i;
-
-      if (gtk_text_iter_get_line_offset (&start_i) != 0)
-      {
-        gtk_text_iter_set_line_offset (&start_i, 0);
-      }
-      else
-      {
-        gtk_text_iter_backward_line (&start_i);
-      }
-      gtk_text_iter_forward_to_line_end (&end_i);
-
-      surrounding = gtk_text_buffer_get_slice(buffer, &start_i, &end_i, FALSE);
-
-      cpos = gtk_text_iter_get_offset(&insert_i) - gtk_text_iter_get_offset(&start_i);
-    }
-    else
-    {
-      gtk_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                     &surrounding, &cpos);
-      /* The following is needed since the value assigned to cpos is
-       * the byte position, not the real cursor position in the text */
-      if (surrounding != NULL)
-      {
-        gchar *str_pos = surrounding + cpos;
-        cpos = g_utf8_pointer_to_offset (surrounding, str_pos);
-      }
-    }
+    surrounding = get_short_surrounding (self, &offset);
   }
 
   if (surrounding == NULL)
@@ -2973,7 +3022,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_all_cont
     flag = HILDON_IM_MSG_CONTINUE;
   } while (*str);
 
-  hildon_im_context_send_surrounding_header(self, cpos);
+  hildon_im_context_send_surrounding_header(self, offset);
 
   g_free(surrounding);
 }
