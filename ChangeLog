@@ -1,3 +1,7 @@
+2009-06-22  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (get_short_surrounding) : Fixed a crash. 
+
 2009-06-19  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.28-1~unreleased

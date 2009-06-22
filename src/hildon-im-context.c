@@ -2891,6 +2891,10 @@ get_short_surrounding (HildonIMContext *self, gint *offset)
   
   cursor_position = g_utf8_offset_to_pointer(long_surrounding, long_offset);
   prev_char = g_utf8_find_prev_char(long_surrounding, cursor_position);
+  if (prev_char == NULL)
+  {
+    prev_char = cursor_position;
+  }
   next_char = cursor_position;
   
   /* move to the previous word start */
