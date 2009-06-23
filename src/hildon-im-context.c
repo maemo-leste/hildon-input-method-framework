@@ -175,6 +175,7 @@ static void       hildon_im_context_reset_real          (GtkIMContext *context);
 static void       hildon_im_context_insert_utf8         (HildonIMContext *self,
                                                          gint flag,
                                                          const char *text);
+static void       hildon_im_context_send_input_mode     (HildonIMContext *self);
 static void       hildon_im_context_send_command        (HildonIMContext *self,
                                                          HildonIMCommand cmd);
 static void       hildon_im_context_check_commit_mode   (HildonIMContext*
@@ -222,6 +223,8 @@ static void hildon_im_context_set_mask_state (HildonIMContext *self,
                                               gboolean was_press_and_release);
 
 static void hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self);
+
+static void hildon_im_context_send_event(Window window, XEvent *event);
 
 static void
 hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
@@ -587,7 +590,7 @@ hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
   
   /* Notify IM of any input mode changes in cases where the UI is
      already visible. */
-  hildon_im_context_send_command(self, HILDON_IM_MODE);
+  hildon_im_context_send_input_mode(self);
 }
 #endif
 
@@ -2634,6 +2637,47 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   }
 }
 
+static void
+hildon_im_context_send_input_mode (HildonIMContext *self)
+{
+  XEvent event;
+  Window window;
+  HildonIMInputModeMessage *msg;
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode = 0;
+  HildonGtkInputMode default_input_mode = 0;
+#else
+  gint input_mode = 0;
+  guint default_input_mode = 0;
+#endif
+
+  window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+
+  if (window == None)
+  {
+    g_warning("hildon_im_context_send_input_mode: Could not get the window id.\n");
+    return;
+  }
+
+#ifdef MAEMO_CHANGES
+  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
+  g_object_get (self, "hildon-input-default", &default_input_mode, NULL);
+#endif
+
+  memset(&event, 0, sizeof(XEvent));
+  event.xclient.type = ClientMessage;
+  event.xclient.window = window;
+  event.xclient.message_type =
+          hildon_im_protocol_get_atom (HILDON_IM_INPUT_MODE);
+  event.xclient.format = HILDON_IM_INPUT_MODE_FORMAT;
+
+  msg = (HildonIMInputModeMessage *) &event.xclient.data;
+  msg->input_mode = input_mode;
+  msg->default_input_mode = default_input_mode;
+
+  hildon_im_context_send_event (window, &event);
+}
+
 /* Sends a client message with the specified command to the IM window */
 static void
 hildon_im_context_send_command(HildonIMContext *self,
@@ -2642,13 +2686,6 @@ hildon_im_context_send_command(HildonIMContext *self,
   XEvent event;
   gint xerror;
   HildonIMActivateMessage *msg;
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode = 0;
-  HildonGtkInputMode default_input_mode = 0;
-#else
-  gint input_mode = 0;
-  gint default_input_mode = 0;
-#endif
   Window im_window;
   GdkWindow *input_window = NULL;
 
@@ -2662,11 +2699,6 @@ hildon_im_context_send_command(HildonIMContext *self,
   {
     return;
   }
-
-#ifdef MAEMO_CHANGES
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-  g_object_get(self, "hildon-input-default", &default_input_mode, NULL);
-#endif
 
   im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
@@ -2686,6 +2718,8 @@ hildon_im_context_send_command(HildonIMContext *self,
   msg = (HildonIMActivateMessage *) &event.xclient.data;
   if (cmd != HILDON_IM_HIDE)
   {
+    hildon_im_context_send_input_mode (self);
+
     msg->input_window = GDK_WINDOW_XID(input_window);
 
     /* When the client widget is a child of GtkPlug, the application can
@@ -2710,9 +2744,6 @@ hildon_im_context_send_command(HildonIMContext *self,
   }
 
   msg->cmd = cmd;
-  msg->input_mode = input_mode;
-  /* msg->default_input_mode = default_input_mode; 
-   * TODO This won't work because the message can not be bigger than 20 bytes :-( */
   msg->trigger = trigger;
 
   /*trap X errors.  We need this, because if the IM window is destroyed for some

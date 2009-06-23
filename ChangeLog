@@ -1,3 +1,11 @@
+2009-06-23  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c
+	(hildon_im_context_send_input_mode) : Send a HildonIMInputModeMessage
+	with the current input mode and default input mode. This is used when the
+	HIM UI is activated and when the input mode of the widget changes.
+	* hildon-im-protocol.c : Added HildonIMInputModeMessage.
+
 2009-06-22  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (get_short_surrounding) : Fixed a crash. 

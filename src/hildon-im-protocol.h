@@ -37,6 +37,7 @@ typedef enum
 {
   HILDON_IM_WINDOW,
   HILDON_IM_ACTIVATE,
+  HILDON_IM_INPUT_MODE,
   HILDON_IM_INSERT_UTF8,
   HILDON_IM_SURROUNDING,
   HILDON_IM_SURROUNDING_CONTENT,
@@ -58,6 +59,7 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 /* IM atom names */
 #define HILDON_IM_WINDOW_NAME                    "_HILDON_IM_WINDOW"
 #define HILDON_IM_ACTIVATE_NAME                  "_HILDON_IM_ACTIVATE"
+#define HILDON_IM_INPUT_MODE_NAME                "_HILDON_IM_INPUT_MODE"
 #define HILDON_IM_SURROUNDING_NAME               "_HILDON_IM_SURROUNDING"
 #define HILDON_IM_SURROUNDING_CONTENT_NAME       "_HILDON_IM_SURROUNDING_CONTENT"
 #define HILDON_IM_KEY_EVENT_NAME                 "_HILDON_IM_KEY_EVENT"
@@ -72,6 +74,7 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 /* IM ClientMessage formats */
 #define HILDON_IM_WINDOW_ID_FORMAT 32
 #define HILDON_IM_ACTIVATE_FORMAT 8
+#define HILDON_IM_INPUT_MODE_FORMAT 8
 #define HILDON_IM_SURROUNDING_FORMAT 8
 #define HILDON_IM_SURROUNDING_CONTENT_FORMAT 8
 #define HILDON_IM_KEY_EVENT_FORMAT 8
@@ -190,15 +193,19 @@ typedef struct
   Window input_window;
   Window app_window;
   HildonIMCommand cmd;
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-  /* HildonGtkInputMode default_input_mode;  TODO the message has to be <= 20 bytes*/
-#else
-  gint input_mode;
-  /* gint default_input_mode;                the message has to be <= 20 bytes*/
-#endif
   HildonIMTrigger trigger;
 } HildonIMActivateMessage;
+
+typedef struct
+{
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+  HildonGtkInputMode default_input_mode;
+#else
+  gint input_mode;
+  guint default_input_mode;
+#endif
+} HildonIMInputModeMessage;
 
 /* event.xclient.data may not exceed 20 bytes -> HildonIMInsertUtf8Message
    may not exceed 20 bytes. So the maximum size of message buffer is
