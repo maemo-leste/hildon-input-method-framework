@@ -95,6 +95,8 @@ struct _HildonIMContext
   GdkWindow *client_gdk_window;
   GtkWidget *client_gtk_widget;
   gboolean is_internal_widget;
+  
+  Window im_window;
 
   GString *preedit_buffer;
   /* keep the preedit's position on GtkTextView or GtkEditable */
@@ -224,7 +226,7 @@ static void hildon_im_context_set_mask_state (HildonIMContext *self,
 
 static void hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self);
 
-static void hildon_im_context_send_event(Window window, XEvent *event);
+static void hildon_im_context_send_event(HildonIMContext *self, XEvent *event);
 
 static void
 hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
@@ -620,7 +622,8 @@ hildon_im_context_init(HildonIMContext *self)
   self->show_preedit = FALSE;
   self->space_after_commit = FALSE;
   self->is_internal_widget = FALSE;
-
+  self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+  
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
 
@@ -820,34 +823,25 @@ hildon_im_clipboard_copied(HildonIMContext *self)
 {
   XEvent ev;
   gint xerror;
-  Window im_window;
-
-  im_window = get_window_id(
-          hildon_im_protocol_get_atom(HILDON_IM_WINDOW) );
   
-  if (im_window == None)
-  {
-    g_warning("hildon_im_clipboard_copied: Could not get the window id.\n");
-    return;
-  }
-
   memset(&ev, 0, sizeof(ev));
   ev.xclient.type = ClientMessage;
-  ev.xclient.window = im_window;
+  ev.xclient.window = self->im_window;
   ev.xclient.message_type =
     hildon_im_protocol_get_atom( HILDON_IM_CLIPBOARD_COPIED );
   ev.xclient.format = HILDON_IM_CLIPBOARD_FORMAT;
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), im_window, False, 0, &ev);
-  XSync(GDK_DISPLAY(), False);
+  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
   {
     if (xerror == BadWindow)
     {
-      /* The IM window is gone, ignore */
+      self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+      ev.xclient.window = self->im_window;
+      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -861,20 +855,10 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 {
   XEvent ev;
   gint xerror;
-  Window im_window;
-
-  im_window = get_window_id(
-          hildon_im_protocol_get_atom(HILDON_IM_WINDOW) );
-
-  if (im_window == None)
-  {
-    g_warning("hildon_im_clipboard_selection_query: Could not get the window id.\n");
-    return;
-  }
-
+  
   memset(&ev, 0, sizeof(ev));
   ev.xclient.type = ClientMessage;
-  ev.xclient.window = im_window;
+  ev.xclient.window = self->im_window;
   ev.xclient.message_type =
     hildon_im_protocol_get_atom( HILDON_IM_CLIPBOARD_SELECTION_REPLY );
   ev.xclient.format = HILDON_IM_CLIPBOARD_SELECTION_REPLY_FORMAT;
@@ -883,15 +867,16 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 #endif
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), im_window, False, 0, &ev);
-  XSync(GDK_DISPLAY(), False);
+  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
   {
     if (xerror == BadWindow)
     {
-      /* The IM window is gone, ignore */
+      self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+      ev.xclient.window = self->im_window;
+      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -2281,6 +2266,13 @@ hildon_im_context_filter_keypress(GtkIMContext *context, GdkEventKey *event)
   {
     result = key_released (self, event, last_keyval);
   }
+  
+  /* check here if we should change the autocaps state */
+  if (g_unichar_isspace(gdk_keyval_to_unicode (event->keyval)))
+  {
+    hildon_im_context_check_sentence_start(self);
+  }
+    
 
   return result;
 }
@@ -2437,7 +2429,8 @@ hildon_im_context_check_commit_mode (HildonIMContext *self)
   }
 }
 
-/* Updates the IM with the autocap state at the active cursor position */
+/* Updates the IM with the autocap state at the active cursor position 
+ * TODO this can be optimized a lot */
 static void
 hildon_im_context_check_sentence_start (HildonIMContext *self)
 {
@@ -2471,35 +2464,9 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   }
 #endif
 
-  if (GTK_IS_ENTRY (self->client_gtk_widget))
-  {
-    if (!gtk_editable_get_selection_bounds (GTK_EDITABLE (self->client_gtk_widget),
-                                            &cpos, NULL))
-    {
-      cpos = gtk_editable_get_position(GTK_EDITABLE (self->client_gtk_widget));
-    }
-                                        
-    if (HILDON_IS_ENTRY (self->client_gtk_widget))
-        surrounding = g_strdup (hildon_entry_get_text (HILDON_ENTRY (self->client_gtk_widget)));
-    else
-        surrounding = g_strdup (gtk_entry_get_text (GTK_ENTRY (self->client_gtk_widget)));
 
-    has_surrounding = (surrounding != NULL) && (strlen(surrounding) > 0);
-  }
-  else if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
-  {
-      GtkTextIter iter;
-      GtkTextBuffer *buffer;
-      buffer = get_buffer(self->client_gtk_widget);
-      gtk_text_buffer_get_selection_bounds (buffer, &iter, NULL);
-      has_surrounding = get_textview_surrounding(GTK_TEXT_VIEW(self->client_gtk_widget),
-                                                &iter, &surrounding, &cpos);
-  }
-  else
-  {
-    has_surrounding = hildon_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                                        &surrounding, &cpos);
-  }
+  has_surrounding = hildon_im_context_get_surrounding(GTK_IM_CONTEXT(self),
+                                                      &surrounding, &cpos);
 
   if (!has_surrounding)
   {
@@ -2675,7 +2642,7 @@ hildon_im_context_send_input_mode (HildonIMContext *self)
   msg->input_mode = input_mode;
   msg->default_input_mode = default_input_mode;
 
-  hildon_im_context_send_event (window, &event);
+  hildon_im_context_send_event (self, &event);
 }
 
 /* Sends a client message with the specified command to the IM window */
@@ -2686,7 +2653,6 @@ hildon_im_context_send_command(HildonIMContext *self,
   XEvent event;
   gint xerror;
   HildonIMActivateMessage *msg;
-  Window im_window;
   GdkWindow *input_window = NULL;
 
   g_return_if_fail (self != NULL);
@@ -2700,17 +2666,9 @@ hildon_im_context_send_command(HildonIMContext *self,
     return;
   }
 
-  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
-
-  if (im_window == None)
-  {
-    g_warning("hildon_im_context_send_command: Could not get the window id.\n");
-    return;
-  }
-  
   memset(&event, 0, sizeof(XEvent));
   event.xclient.type = ClientMessage;
-  event.xclient.window = im_window;
+  event.xclient.window = self->im_window;
   event.xclient.message_type =
           hildon_im_protocol_get_atom(HILDON_IM_ACTIVATE);
   event.xclient.format = HILDON_IM_ACTIVATE_FORMAT;
@@ -2752,17 +2710,17 @@ hildon_im_context_send_command(HildonIMContext *self,
    */
   gdk_error_trap_push();
 
-  XSendEvent(GDK_DISPLAY(), im_window, False, 0, &event);
+  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
   /* TODO this call can cause a hang, see NB#97380 */
-  XSync(GDK_DISPLAY(), False);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
   {
     if (xerror == BadWindow)
     {
-      /*Note, we don't reset the IM window id, otherwise we would
-       *have a potential race condition if the IM was restarted*/
+      self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+      event.xclient.window = self->im_window;
+      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
     }
     else
     {
@@ -2793,31 +2751,32 @@ get_next_packet_start(char *str)
 }
 
 static void
-hildon_im_context_send_event(Window window, XEvent *event)
+hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
 {
   gint xerror;
 
   g_return_if_fail(event);
 
-  if(window != None )
+  if(self->im_window != None )
   {
     event->xclient.type = ClientMessage;
-    event->xclient.window = window;
+    event->xclient.window = self->im_window;
 
     /* trap X errors. Sometimes we recieve a badwindow error,
      * because the input_window id is wrong.
      */
     gdk_error_trap_push();
 
-    XSendEvent(GDK_DISPLAY(), window, False, 0, event);
-    XSync( GDK_DISPLAY(), False );
+    XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
 
     xerror = gdk_error_trap_pop();
     if( xerror )
     {
       if( xerror == BadWindow )
       {
-        /* Here we prevent the im context from crashing */
+        self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+        event->xclient.window = self->im_window;
+        XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
       }
       else
       {
@@ -2973,12 +2932,9 @@ static void
 hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
 {
   HildonIMSurroundingMessage *surrounding_msg=NULL;
-  Window im_window;
   XEvent event;
 
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
-
-  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
   /* Send the cursor offset in the surrounding */
   memset( &event, 0, sizeof(XEvent) );
@@ -2988,17 +2944,42 @@ hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
   surrounding_msg = (HildonIMSurroundingMessage *) &event.xclient.data;
   surrounding_msg->commit_mode = commit_mode;
   surrounding_msg->cursor_offset = offset;
-  hildon_im_context_send_event(im_window, &event);
+  hildon_im_context_send_event(self, &event);
 }
 
+static Bool
+is_request_for_surrounding(Display *display,
+                           XEvent *event,
+                           XPointer arg)
+{
+  if (event->type == ClientMessage)
+  {
+    XClientMessageEvent *cme = (XClientMessageEvent *)event;
+
+    if (cme->message_type == hildon_im_protocol_get_atom(HILDON_IM_COM)
+        && cme->format == HILDON_IM_COM_FORMAT)
+    {
+      HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
+
+      if (msg->type == HILDON_IM_CONTEXT_REQUEST_SURROUNDING
+          || msg->type == HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL)
+      {
+        return True;
+      }
+    }
+  }
+
+  return False;
+}
 /* Send the text of the client widget surrounding the active cursor position,
    as well as the the cursor's position in the surrounding, to the IM */
 static void
 hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_line)
 {
   HildonIMSurroundingContentMessage *surrounding_content_msg=NULL;
-  Window im_window;
   XEvent event;
+  XEvent next_request_event;
+  Bool go_on = False;
   gint flag;
   gchar *surrounding = NULL;
   gchar *str;
@@ -3007,14 +2988,23 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_lin
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   flag = HILDON_IM_MSG_START;
-  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
-  if (im_window == None)
+  do
   {
-    g_warning("hildon_im_context_send_surrounding: Could not get the window id.\n");
-    return;
-  }
+    go_on = XCheckIfEvent(gdk_x11_get_default_xdisplay(),
+                          &next_request_event,
+                          is_request_for_surrounding,
+                          (XPointer)self);
 
+
+    XClientMessageEvent *cme = (XClientMessageEvent *) &next_request_event;
+    HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
+
+    send_full_line = (msg->type == HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL);
+    /* TODO free the event? */
+  }  
+  while (go_on == True);
+  
   if (send_full_line)
   {
     surrounding = get_full_line (self, &offset);
@@ -3051,7 +3041,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_lin
     surrounding_content_msg->msg_flag = flag;
     memcpy(surrounding_content_msg->surrounding, str, len);
 
-    hildon_im_context_send_event(im_window, &event);
+    hildon_im_context_send_event(self, &event);
 
     str = next_start;
     flag = HILDON_IM_MSG_CONTINUE;
@@ -3069,7 +3059,6 @@ hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed
 {
   HildonIMPreeditCommittedMessage *preedit_comm_msg = NULL;
   HildonIMPreeditCommittedContentMessage *preedit_comm_content_msg = NULL;
-  Window im_window;
   XEvent event;
   gint flag;
   gchar *surrounding = NULL;
@@ -3078,13 +3067,6 @@ hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   flag = HILDON_IM_MSG_START;
-  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
-
-  if (im_window == None)
-  {
-    g_warning("hildon_im_context_send_surrounding: Could not get the window id.\n");
-    return;
-  }
 
   str = committed_preedit;
   do
@@ -3104,7 +3086,7 @@ hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed
     preedit_comm_content_msg->msg_flag = flag;
     memcpy(preedit_comm_content_msg->committed_preedit, str, len);
 
-    hildon_im_context_send_event(im_window, &event);
+    hildon_im_context_send_event(self, &event);
 
     str = next_start;
     flag = HILDON_IM_MSG_CONTINUE;
@@ -3120,7 +3102,7 @@ hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed
 
   preedit_comm_msg = (HildonIMPreeditCommittedMessage *) &event.xclient.data;
   preedit_comm_msg->commit_mode = commit_mode;
-  hildon_im_context_send_event(im_window, &event);
+  hildon_im_context_send_event(self, &event);
 
   g_free(surrounding);
 }
@@ -3135,21 +3117,12 @@ hildon_im_context_send_key_event(HildonIMContext *self,
                                  guint16 hardware_keycode)
 {
   HildonIMKeyEventMessage *key_event_msg=NULL;
-  Window im_window;
   XEvent event;
 
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
   if (self->is_internal_widget)
     return;
-
-  im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
-  
-  if (im_window == None)
-  {
-    g_warning("hildon_im_context_send_key_event: Could not get the window id.\n");
-    return;
-  }
   
   memset(&event, 0, sizeof(XEvent));
   event.xclient.message_type = hildon_im_protocol_get_atom(HILDON_IM_KEY_EVENT);
@@ -3162,7 +3135,7 @@ hildon_im_context_send_key_event(HildonIMContext *self,
   key_event_msg->keyval = keyval;
   key_event_msg->hardware_keycode = hardware_keycode;
 
-  hildon_im_context_send_event(im_window, &event);
+  hildon_im_context_send_event(self, &event);
 }
 
 static gboolean
