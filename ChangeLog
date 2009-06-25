@@ -1,3 +1,7 @@
+2009-06-25  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.28-1
+
 2009-06-24  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c : Many optimizations.

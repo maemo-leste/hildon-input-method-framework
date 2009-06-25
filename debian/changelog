@@ -1,10 +1,10 @@
-hildon-input-method-framework (1:2.1.28-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.28-1) unstable; urgency=low
 
-  * Version 1:2.1.28-1~unreleased
+  * Version 1:2.1.28-1
   * Send a smaller surrounding text on REQUEST_SURROUNDING.
   * Fixes: NB#107805 Long pressing of any character is displaying the character only after releasing the key press .
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Fri, 19 Jun 2009 08:48:04 +0300
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 25 Jun 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.27-1) unstable; urgency=low
 
