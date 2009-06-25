@@ -5,6 +5,7 @@
 	Check autocaps if the user enters a space.
 	Cache the ID of the HIM window.
 	Discard enqueued requests for the surrounding. We send it just once.
+	* Fixes: NB#107805.
 
 2009-06-23  Felipe Erias Morandeira <femorandeira@maemo.org>
 
