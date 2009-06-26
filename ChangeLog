@@ -1,3 +1,14 @@
+2009-06-26  Murray Cumming  <murrayc@murrayc.com>
+
+	* src/hildon-im-protocol.h: HildonIMCommitMode enum: Remove a trailing comma 
+	to avoid a compiler warning.
+	* src/hildon-im-context.c: Likewise for HildonIMInternalModifierMask.
+	https://bugs.maemo.org/show_bug.cgi?id=4728
+
+2009-06-26  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 2.1.29-1~unreleased
+
 2009-06-25  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 2.1.28-1

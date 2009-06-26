@@ -80,7 +80,7 @@ typedef enum {
   HILDON_IM_LEVEL_STICKY_MASK     = 1 << 2,
   HILDON_IM_LEVEL_LOCK_MASK       = 1 << 3,
   HILDON_IM_COMPOSE_MASK          = 1 << 4,
-  HILDON_IM_DEAD_KEY_MASK         = 1 << 5,
+  HILDON_IM_DEAD_KEY_MASK         = 1 << 5
 } HildonIMInternalModifierMask;
 
 typedef struct _HildonIMContext HildonIMContext;
