@@ -1,3 +1,8 @@
+2009-06-29  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c : send the input modes when "hildon-input-default"
+	changes. Send fewer messages in hildon_im_context_send_command.
+
 2009-06-26  Murray Cumming  <murrayc@murrayc.com>
 
 	* src/hildon-im-protocol.h: HildonIMCommitMode enum: Remove a trailing comma 

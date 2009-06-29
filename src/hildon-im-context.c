@@ -630,6 +630,8 @@ hildon_im_context_init(HildonIMContext *self)
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
     G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
+  g_signal_connect(self, "notify::hildon-input-default",
+      G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
 #endif
 }
 
@@ -2674,10 +2676,14 @@ hildon_im_context_send_command(HildonIMContext *self,
   event.xclient.format = HILDON_IM_ACTIVATE_FORMAT;
 
   msg = (HildonIMActivateMessage *) &event.xclient.data;
-  if (cmd != HILDON_IM_HIDE)
+
+  if (cmd == HILDON_IM_SETCLIENT || cmd == HILDON_IM_SETNSHOW)
   {
     hildon_im_context_send_input_mode (self);
+  }
 
+  if (cmd != HILDON_IM_HIDE)
+  {
     msg->input_window = GDK_WINDOW_XID(input_window);
 
     /* When the client widget is a child of GtkPlug, the application can
