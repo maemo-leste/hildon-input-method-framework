@@ -974,7 +974,7 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
   else
   {
     gchar *local_text = NULL;
-    gint local_index;
+    gint local_index = 0;
 
     result = parent_class->get_surrounding(context,
                                            text ? text : &local_text,
@@ -2799,6 +2799,8 @@ get_full_line (HildonIMContext *self, gint *offset)
    * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
   gchar *surrounding = NULL;
   gboolean multiline = FALSE;
+  
+  *offset = 0;
 
 #ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode;
@@ -2863,6 +2865,10 @@ get_full_line (HildonIMContext *self, gint *offset)
       gchar *str_pos = surrounding + byte_offset;
       *offset = g_utf8_pointer_to_offset (surrounding, str_pos);
     }
+    else
+    {
+      *offset = 0;
+    }
   }
   
   return surrounding;
@@ -2884,6 +2890,11 @@ get_short_surrounding (HildonIMContext *self, gint *offset)
   gint off_end = 0;
   
   long_surrounding = get_full_line (self, &long_offset);
+  
+  if (long_surrounding == NULL)
+  {
+    return NULL;
+  }
   
   cursor_position = g_utf8_offset_to_pointer(long_surrounding, long_offset);
   prev_char = g_utf8_find_prev_char(long_surrounding, cursor_position);
@@ -2993,6 +3004,11 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_lin
 
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
+  if (self->client_gtk_widget == NULL)
+  {
+    return;
+  }
+  
   flag = HILDON_IM_MSG_START;
 
   do
