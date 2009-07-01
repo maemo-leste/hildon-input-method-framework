@@ -46,7 +46,8 @@
 #define LEVEL_KEY GDK_ISO_Level3_Shift
 #define LEVEL_KEY_MOD_MASK GDK_MOD5_MASK
 
-#define NUMERIC_LEVEL 2
+#define BASE_LEVEL     0
+#define NUMERIC_LEVEL  2
 #define LOCKABLE_LEVEL 4
 
 /* if we don't use gtk_im_context_get_surrounding or a text buffer to get the
@@ -223,8 +224,6 @@ static void hildon_im_context_set_mask_state (HildonIMContext *self,
                                               HildonIMInternalModifierMask lock_mask,
                                               HildonIMInternalModifierMask sticky_mask,
                                               gboolean was_press_and_release);
-
-static void hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self);
 
 static void hildon_im_context_send_event(HildonIMContext *self, XEvent *event);
 
@@ -1205,7 +1204,6 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
       {
         case HILDON_IM_CONTEXT_WIDGET_CHANGED:
           self->mask = 0;
-          hildon_im_context_change_set_mask_for_input_mode (self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_ENTER:
           hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
@@ -1537,9 +1535,6 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 
       gtk_widget_set_extension_events(self->client_gtk_widget,
                                       GDK_EXTENSION_EVENTS_ALL);
-      
-      /* if (GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget)) */
-      hildon_im_context_change_set_mask_for_input_mode (self);
     }
   }
 }
@@ -1552,8 +1547,6 @@ hildon_im_context_focus_in(GtkIMContext *context)
   self = HILDON_IM_CONTEXT(context);
 
   self->has_focus = TRUE;
-  
-  hildon_im_context_change_set_mask_for_input_mode (self);
 
   if (self->is_internal_widget)
   {
@@ -1721,6 +1714,35 @@ hildon_im_context_set_mask_state(HildonIMContext *self,
                                  HildonIMInternalModifierMask sticky_mask,
                                  gboolean was_press_and_release)
 {
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+
+  /* Locking Fn is disabled in TELE and NUMERIC */
+  if (!(input_mode & HILDON_GTK_INPUT_MODE_ALPHA) &&
+      !(input_mode & HILDON_GTK_INPUT_MODE_HEXA)  &&
+      ((input_mode & HILDON_GTK_INPUT_MODE_TELE) || 
+       (input_mode & HILDON_GTK_INPUT_MODE_NUMERIC)))
+  {
+    if (*mask & lock_mask)
+    {
+      /* already locked, remove lock and set it to sticky */
+      *mask &= ~(lock_mask | sticky_mask);
+      *mask |= sticky_mask;
+    }
+    else if (*mask & sticky_mask)
+    {
+      /* the key is already sticky, it's fine */
+    }
+    else if (was_press_and_release)
+    {
+      /* Pressing the key for the first time stickies the key for one character,
+       * but only if no characters were entered while holding the key down */
+      *mask |= sticky_mask;
+    }
+    return;
+  }
+#endif
   if (*mask & lock_mask)
   {
     /* Pressing the key while already locked clears the state */
@@ -1748,27 +1770,6 @@ hildon_im_context_set_mask_state(HildonIMContext *self,
     *mask |= sticky_mask;
   }
   
-}
-
-static void
-hildon_im_context_change_set_mask_for_input_mode (HildonIMContext *self)
-{
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-
-  g_return_if_fail (self != NULL);
-
-  /* Numeric and Telephone fields require the Fn key to be sticky */
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-
-  if ((input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
-      (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
-      ( (input_mode & HILDON_GTK_INPUT_MODE_NUMERIC) != 0 ||
-        (input_mode & HILDON_GTK_INPUT_MODE_TELE)    != 0))
-  {
-    self->mask = HILDON_IM_LEVEL_LOCK_MASK | HILDON_IM_LEVEL_STICKY_MASK;
-  }
-#endif
 }
 
 static void
@@ -2018,6 +2019,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean tab_key_is_down = event->keyval == GDK_Tab;
 
+  gboolean invert_level_behavior = FALSE;
+  
   is_suggesting_autocompleted_word = commit_mode == HILDON_IM_COMMIT_PREEDIT &&
                                      context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
@@ -2070,35 +2073,55 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
 #ifdef MAEMO_CHANGES
   g_object_get(context, "hildon-input-mode", &input_mode, NULL);
+  /* If the input mode is TELE, the behavior of the level key is inverted */
+  gboolean should_invert = (input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
+                           (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
+                           ((input_mode & HILDON_GTK_INPUT_MODE_TELE) ||
+                            (input_mode & HILDON_GTK_INPUT_MODE_SPECIAL));
+  if ((context->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
+      (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
+      || should_invert)
+  {
+    invert_level_behavior = TRUE;
+  }
 #endif
 
   /* When the level key is in sticky or locked state, translate the
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
   {
-    perform_level_translation (event);
+    /* When the level key is in sticky or locked state,  and we're not
+     * in numeric/tele mode, translate the keyboard state as if that
+     * level key was being held down. */
+    if (!invert_level_behavior)
+    {
+      perform_level_translation (event);
+    }
+    else if (level_key_is_down)
+    {
+      /* this fixes the case of pressing Fn+key at the same time:
+       * X gives us the translated value, so as the LEVEL behaviour should be
+       * inverted we use this to translate that numeric/special value to alpha;
+       * we get the translated value, and have to translate it back */
+      event->keyval = hildon_im_context_get_event_keyval_for_level(context,
+                                                                   event,
+                                                                   BASE_LEVEL);
+    }
 
     if (event->keyval == COMPOSE_KEY)
       context->mask |= HILDON_IM_COMPOSE_MASK;
   }
-#ifdef MAEMO_CHANGES
-  /* If the input mode is strictly numeric and the digits are level
-   * shifted on the layout, it's not necessary for the level key to
-   * be pressed at all. */
-  else if (context->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
-          (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
-                                                                 event,
-                                                                 NUMERIC_LEVEL);
-  }
-#endif
+
   /* The input is forced to a predetermined level */
   else if (context->options & HILDON_IM_LOCK_LEVEL)
   {
     event->keyval = hildon_im_context_get_event_keyval_for_level(context,
                                                                  event,
                                                                  LOCKABLE_LEVEL);
+  }
+  else if (invert_level_behavior)
+  {
+    perform_level_translation (event);
   }
 
 #ifdef MAEMO_CHANGES
@@ -2617,7 +2640,7 @@ hildon_im_context_send_input_mode (HildonIMContext *self)
   HildonGtkInputMode default_input_mode = 0;
 #else
   gint input_mode = 0;
-  guint default_input_mode = 0;
+  gint default_input_mode = 0;
 #endif
 
   window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));

@@ -1,3 +1,13 @@
+2009-07-01  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c
+	(key_pressed) : Correctly invert key values between normal and "level"
+	layouts when in TELE and SPECIAL modes.
+	(hildon_im_context_set_mask_state) : Disable Fn and Shift locking in TELE
+	and NUMERIC.
+	(hildon_im_context_change_set_mask_for_input_mode) : Removed.
+	* Fixes: NB#108649.
+
 2009-06-30  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* hildon-im-context.c (get_short_surrounding) : Handle NULL surroundings.
