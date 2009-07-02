@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.29-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.29-1) unstable; urgency=low
 
-  * Version 1:2.1.29-1~unreleased
+  * Version 1:2.1.29-1
   * Fixes: NB#125530 Applications crashes when trying to enter text using slide-out keyboard.
   * Fixes: NB#108649 Behavioural change, among which using the delete key make the Fn key mandatory to enter subsequent digits.
 
