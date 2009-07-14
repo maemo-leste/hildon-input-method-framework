@@ -548,13 +548,15 @@ get_window_id(Atom window_atom)
     unsigned char *val;
   } value;
 
+  gdk_error_trap_push();
   status = XGetWindowProperty(GDK_DISPLAY(), GDK_ROOT_WINDOW(),
                               window_atom, 0L, 4L, 0,
                               XA_WINDOW, &realType, &format,
                               &n, &extra, (unsigned char **) &value.val);
 
-  if (status == Success && realType == XA_WINDOW
-      && format == HILDON_IM_WINDOW_ID_FORMAT && n == 1 && value.win != None)
+  if (gdk_error_trap_pop() == 0 &&
+      (status == Success && realType == XA_WINDOW
+      && format == HILDON_IM_WINDOW_ID_FORMAT && n == 1 && value.win != None))
   {
     result = value.win[0];
     XFree(value.val);
