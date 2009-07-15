@@ -1,3 +1,11 @@
+2009-07-15  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* hildon-im-context.c (get_short_surrounding) : Use the correct length in
+	bytes to get the substring.
+	(hildon_im_context_send_surrounding) : send the full surrounding if there is
+	one enqueued message that requests it.
+	* Fixes: NB#127337.
+
 2009-07-14  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.30-1~unreleased

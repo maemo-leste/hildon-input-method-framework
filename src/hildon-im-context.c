@@ -2963,7 +2963,8 @@ get_short_surrounding (HildonIMContext *self, gint *offset)
   off_end = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_end);
   
   *offset = long_offset - off_start;
-  short_surrounding = g_strndup(short_surrounding_start, off_end - off_start);
+  short_surrounding = g_strndup(short_surrounding_start,
+                                short_surrounding_end - short_surrounding_start);
 
   g_free(long_surrounding);
   
@@ -3044,10 +3045,13 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_lin
                           (XPointer)self);
 
 
-    XClientMessageEvent *cme = (XClientMessageEvent *) &next_request_event;
-    HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
+    if (go_on == True && &next_request_event != NULL)
+    {
+      XClientMessageEvent *cme = (XClientMessageEvent *) &next_request_event;
+      HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
 
-    send_full_line = (msg->type == HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL);
+      send_full_line = send_full_line || (msg->type == HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL);
+    }
     /* TODO free the event? */
   }  
   while (go_on == True);

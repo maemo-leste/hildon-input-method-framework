@@ -2,6 +2,7 @@ hildon-input-method-framework (1:2.1.30-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.30-1~unreleased
   * Fixes: NB#127483 Two core file in corematic with out bug id.
+  * Fixes: NB#127337 The last letter of the entry gets deleted when FKB comes up.
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Tue, 14 Jun 2009 12:00:00 +0100
 
