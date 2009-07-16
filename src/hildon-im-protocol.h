@@ -32,7 +32,12 @@
 
 G_BEGIN_DECLS
 
-/* IM atoms for each message type */
+/**
+ * HildonIMAtom:
+ *
+ * IM atoms for each message type
+ *
+ */
 typedef enum
 {
   HILDON_IM_WINDOW,
@@ -85,19 +90,39 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_PREEDIT_COMMITTED_FORMAT 8
 #define HILDON_IM_PREEDIT_COMMITTED_CONTENT_FORMAT 8
 
-/* IM commands and notifications, from context to IM process */
+/**
+ * HildonIMCommand:
+ * @HILDON_IM_MODE: Update the hildon-input-mode property
+ * @HILDON_IM_SHOW: Show the IM UI
+ * @HILDON_IM_HIDE: Hide the IM UI
+ * @HILDON_IM_UPP: Set the auto-capitalization as uppercase at cursor
+ * @HILDON_IM_LOW: Set the auto-capitalization as lowercase at cursor
+ * @HILDON_IM_DESTROY: (Deprecated) Destroy the IM UI
+ * @HILDON_IM_CLEAR: Clear the IM UI state
+ * @HILDON_IM_SETCLIENT: Set the client widget
+ * @HILDON_IM_SETNSHOW: Set the client widget and show the IM window
+ * @HILDON_IM_SELECT_ALL: Select the text in the plugin
+ * @HILDON_IM_SHIFT_LOCKED: Lock shift key
+ * @HILDON_IM_SHIFT_UNLOCKED: Unlock shift key
+ * @HILDON_IM_MOD_LOCKED: Lock mod key
+ * @HILDON_IM_MOD_UNLOCKED: Unlock mod key
+ * @HILDON_IM_NUM_COMMANDS: The number of defined commands
+ *
+ * IM commands and notifications, from context to the IM process
+ *
+ */
 typedef enum
 {
-  HILDON_IM_MODE,        /* Update the hildon-input-mode property */
-  HILDON_IM_SHOW,        /* Show the IM UI */
-  HILDON_IM_HIDE,        /* Hide the IM UI */
-  HILDON_IM_UPP,         /* Uppercase autocap state at cursor */
-  HILDON_IM_LOW,         /* Lowercase autocap state at cursor */
-  HILDON_IM_DESTROY,     /* DEPRECATED */
-  HILDON_IM_CLEAR,       /* Clear the IM UI state */
-  HILDON_IM_SETCLIENT,   /* Set the client window */
-  HILDON_IM_SETNSHOW,    /* Set the client and show the IM window */
-  HILDON_IM_SELECT_ALL,  /* Select the text in the plugin */
+  HILDON_IM_MODE,
+  HILDON_IM_SHOW,
+  HILDON_IM_HIDE,
+  HILDON_IM_UPP,
+  HILDON_IM_LOW,
+  HILDON_IM_DESTROY,
+  HILDON_IM_CLEAR,
+  HILDON_IM_SETCLIENT,
+  HILDON_IM_SETNSHOW,
+  HILDON_IM_SELECT_ALL,
 
   HILDON_IM_SHIFT_LOCKED,
   HILDON_IM_SHIFT_UNLOCKED,
@@ -108,76 +133,126 @@ typedef enum
   HILDON_IM_NUM_COMMANDS
 } HildonIMCommand;
 
-/* IM communications, from IM process to context */
+/**
+ * HildonIMCommunication:
+ * @HILDON_IM_CONTEXT_HANDLE_ENTER: Virtual enter key activated
+ * @HILDON_IM_CONTEXT_HANDLE_TAB: Virtual tab key activated
+ * @HILDON_IM_CONTEXT_HANDLE_BACKSPACE: Virtual backspace key activated
+ * @HILDON_IM_CONTEXT_HANDLE_SPACE: Virtual space key activated
+ * @HILDON_IM_CONTEXT_CONFIRM_SENTENCE_START: Check the auto-capitalization state at cursor
+ * @HILDON_IM_CONTEXT_FLUSH_PREEDIT: Apply the preedit to the client widget
+ * @HILDON_IM_CONTEXT_CANCEL_PREEDIT: Clear the preedit buffer
+ * @HILDON_IM_CONTEXT_BUFFERED_MODE: #HILDON_IM_CONTEXT_BUFFERED_MODE
+ * @HILDON_IM_CONTEXT_DIRECT_MODE: #HILDON_IM_CONTEXT_DIRECT_MODE
+ * @HILDON_IM_CONTEXT_REDIRECT_MODE: #HILDON_IM_CONTEXT_REDIRECT_MODE
+ * @HILDON_IM_CONTEXT_SURROUNDING_MODE: #HILDON_IM_CONTEXT_SURROUNDING_MODE
+ * @HILDON_IM_CONTEXT_PREEDIT_MODE: #HILDON_IM_CONTEXT_PREEDIT_MODE
+ * @HILDON_IM_CONTEXT_CLIPBOARD_COPY: Copy client selection to clipboard
+ * @HILDON_IM_CONTEXT_CLIPBOARD_CUT: Cut client selection to clipboard
+ * @HILDON_IM_CONTEXT_CLIPBOARD_PASTE: Paste clipboard contents to client
+ * @HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY: Query if the client has an active selection
+ * @HILDON_IM_CONTEXT_REQUEST_SURROUNDING: Request the content surrounding the cursor
+ * @HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL: Request the contents of the text widget
+ * @HILDON_IM_CONTEXT_WIDGET_CHANGED: The client widget has changed
+ * @HILDON_IM_CONTEXT_OPTION_CHANGED: The OptionMask for the active context has changed
+ * @HILDON_IM_CONTEXT_CLEAR_STICKY: Clear the sticky keys state
+ * @HILDON_IM_CONTEXT_ENTER_ON_FOCUS: Generate a virtual enter key event the next time
+ * the client widget is focused
+ * @HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT: Append a space when the preedit text is committed
+ * @HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT: Do not append said space
+ * @HILDON_IM_CONTEXT_NUM_COM: The number of defined commands
+ *
+ * IM communications, from IM process to context.
+ *
+ */
 typedef enum
 {
-  HILDON_IM_CONTEXT_HANDLE_ENTER,           /* Virtual enter activated */
-  HILDON_IM_CONTEXT_HANDLE_TAB,             /* Virtual tab activated */
-  HILDON_IM_CONTEXT_HANDLE_BACKSPACE,       /* Virtual backspace activated */
-  HILDON_IM_CONTEXT_HANDLE_SPACE,           /* Virtual space activated */
-  HILDON_IM_CONTEXT_CONFIRM_SENTENCE_START, /* Query the autocap state at cursor */
-  HILDON_IM_CONTEXT_FLUSH_PREEDIT,          /* Finalize the preedit to the client widget */
-  HILDON_IM_CONTEXT_CANCEL_PREEDIT,          /* Clean the preedit buffer */
+  HILDON_IM_CONTEXT_HANDLE_ENTER,
+  HILDON_IM_CONTEXT_HANDLE_TAB,
+  HILDON_IM_CONTEXT_HANDLE_BACKSPACE,
+  HILDON_IM_CONTEXT_HANDLE_SPACE,
+  HILDON_IM_CONTEXT_CONFIRM_SENTENCE_START,
+  HILDON_IM_CONTEXT_FLUSH_PREEDIT,
+  HILDON_IM_CONTEXT_CANCEL_PREEDIT,
 
-  /* See HildonIMCommitMode for a description of the commit modes */
   HILDON_IM_CONTEXT_BUFFERED_MODE,
   HILDON_IM_CONTEXT_DIRECT_MODE,
   HILDON_IM_CONTEXT_REDIRECT_MODE,
   HILDON_IM_CONTEXT_SURROUNDING_MODE,
   HILDON_IM_CONTEXT_PREEDIT_MODE,
 
-  HILDON_IM_CONTEXT_CLIPBOARD_COPY,            /* Copy client selection to clipboard */
-  HILDON_IM_CONTEXT_CLIPBOARD_CUT,             /* Cut client selection to clipboard */
-  HILDON_IM_CONTEXT_CLIPBOARD_PASTE,           /* Paste clipboard selection to client */
-  HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY, /* Query if the client has an active selection */
-  HILDON_IM_CONTEXT_REQUEST_SURROUNDING,       /* Request the content surrounding the cursor */
-  HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL,  /* Request the contents of the text widget */
-  HILDON_IM_CONTEXT_WIDGET_CHANGED,            /* IM detected that the client widget changed */
-  HILDON_IM_CONTEXT_OPTION_CHANGED,            /* The OptionMask for the active context is updated */
-  HILDON_IM_CONTEXT_CLEAR_STICKY,              /* Clear the sticky key state */
-  HILDON_IM_CONTEXT_ENTER_ON_FOCUS,            /* Generate a virtual enter key event on focus in */
+  HILDON_IM_CONTEXT_CLIPBOARD_COPY,
+  HILDON_IM_CONTEXT_CLIPBOARD_CUT,
+  HILDON_IM_CONTEXT_CLIPBOARD_PASTE,
+  HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY,
+  HILDON_IM_CONTEXT_REQUEST_SURROUNDING,
+  HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL,
+  HILDON_IM_CONTEXT_WIDGET_CHANGED,
+  HILDON_IM_CONTEXT_OPTION_CHANGED,
+  HILDON_IM_CONTEXT_CLEAR_STICKY,
+  HILDON_IM_CONTEXT_ENTER_ON_FOCUS,
   
-  HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT,        /* Append a space when the preedit text is committed */
-  HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT,     /* Do not append said space */
+  HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT,
+  HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT,
 
   /* always last */
   HILDON_IM_CONTEXT_NUM_COM
 } HildonIMCommunication;
 
-/* IM context toggle options */
+/**
+ * HildonIMOptionMask:
+ * @HILDON_IM_AUTOCASE: Suggest case based on the cursor's position in sentence
+ * @HILDON_IM_AUTOCORRECT: Limited automatic error correction of commits
+ * @HILDON_IM_AUTOLEVEL_NUMERIC: Default to appropriate key-level in numeric-only clients
+ * @HILDON_IM_LOCK_LEVEL: Lock the effective key-level at pre-determined value
+ *
+ * IM context toggle options.
+ *
+ */
 typedef enum {
-  HILDON_IM_AUTOCASE          = 1 << 0, /* Suggest case based on cursor's position in sentence */
-  HILDON_IM_AUTOCORRECT       = 1 << 1, /* Limited automatic error correction of commits */
-  HILDON_IM_AUTOLEVEL_NUMERIC = 1 << 2, /* Default to appropriate key-level in numeric-only clients */
-  HILDON_IM_LOCK_LEVEL        = 1 << 3, /* Lock the effective key-level at pre-determined value */
+  HILDON_IM_AUTOCASE          = 1 << 0,
+  HILDON_IM_AUTOCORRECT       = 1 << 1,
+  HILDON_IM_AUTOLEVEL_NUMERIC = 1 << 2,
+  HILDON_IM_LOCK_LEVEL        = 1 << 3,
 } HildonIMOptionMask;
 
-/* IM trigger types, i.e. what is causing the IM plugin to active */
+
+/**
+ * HildonIMTrigger:
+ * @HILDON_IM_TRIGGER_NONE: Reserved for non-UI plugins not requiring activation
+ * @HILDON_IM_TRIGGER_STYLUS: The user touched the screen with the stylus; not used in Fremantle
+ * @HILDON_IM_TRIGGER_FINGER: The user touched the screen with his finger
+ * @HILDON_IM_TRIGGER_KEYBOARD: The user pressed a key
+ * @HILDON_IM_TRIGGER_UNKNOWN: The user input type couldn't be determined
+ *
+ * IM trigger types, i.e. what is causing the IM plugin to active.
+ *
+ */
 typedef enum
 {
-  HILDON_IM_TRIGGER_NONE = -1, /* Reserved for non-UI plugins not requiring activation */
-  HILDON_IM_TRIGGER_STYLUS,    /* The user poked the screen with the stylus; not used in Fremantle */
-  HILDON_IM_TRIGGER_FINGER,    /* The user poked the screen with his finger */
-  HILDON_IM_TRIGGER_KEYBOARD,   /* The user pressed a key */
+  HILDON_IM_TRIGGER_NONE = -1,
+  HILDON_IM_TRIGGER_STYLUS,
+  HILDON_IM_TRIGGER_FINGER,
+  HILDON_IM_TRIGGER_KEYBOARD,
   HILDON_IM_TRIGGER_UNKNOWN
 } HildonIMTrigger;
 
-/* Commit modes
-   Determines how text is inserted into the client widget
-
-   Buffered mode:  Each new commit replaces any previous commit to the
-   client widget until FLUSH_PREEDIT is called.
-
-   Direct mode (default): Each commit is immediately appended to the
-   client widget at the cursor position.
-
-   Redirect mode: Proxies input and cursor movement from one text widget
-   into another (potentially off-screen) widget. Used when implementing
-   fullscreen IM plugins for widgets that contain text formatting.
-
-   Surrounding mode: Each commit replaces the current text surrounding
-   the cursor position (see gtk_im_context_get_surrounding).
-*/
+/**
+ * HildonIMCommitMode:
+ * @HILDON_IM_COMMIT_DIRECT: Each commit is inserted directly on the current cursor's
+ * position.
+ * @HILDON_IM_COMMIT_REDIRECT: Proxies input and cursor movement from one text widget
+ * into another (potentially off-screen) widget. Used when implementing fullscreen IM
+ * plugins for widgets that contain text formatting.
+ * @HILDON_IM_COMMIT_SURROUNDING: Each commit replaces the current text surrounding
+ * the cursor position (see gtk_im_context_get_surrounding).
+ * @HILDON_IM_COMMIT_BUFFERED: Each new commit replaces any previous commit to the
+ * client widget until FLUSH_PREEDIT is called.
+ * @HILDON_IM_COMMIT_PREEDIT: Each commit replaces the preedit buffer.
+ *
+ * The mode to determine how and where the text is committed.
+ *
+ */
 typedef enum
 {
   HILDON_IM_COMMIT_DIRECT,

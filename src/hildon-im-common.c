@@ -49,14 +49,6 @@ hildon_im_common_changes_case(const gchar *chr)
           || uni == 0x00bf); /* inverted question mark */
 }
 
-/*
- * hildon_im_keyboard_autocorrection_check_character
- *
- * @text: A string to inspect
- * @returns: Whether auto correction should be made.
- * 
- * To check whether auto correction should be made for the text.
- */
 gint
 hildon_im_autocorrection_check_character (const gchar *text)
 {

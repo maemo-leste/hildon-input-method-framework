@@ -518,13 +518,6 @@ hildon_im_context_class_finalize(HildonIMContextClass *im_context_class)
   g_signal_remove_emission_hook(signal_id, unmap_hook_id);
 }
 
-/**
- * hildon_im_context_new:
- *
- * @Returns: a pointer to a newly allocated #GtkIMContext object
- *
- * Creates and returns a #GtkIMContext object.
- */
 GtkIMContext *
 hildon_im_context_new(void)
 {

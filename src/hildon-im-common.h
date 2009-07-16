@@ -31,8 +31,34 @@
 
 G_BEGIN_DECLS
 
+/**
+ * hildon_im_common_changes_case:
+ * @chr: a UTF-8 character
+ *
+ * Whether the given character should change the case of those
+ * that are inputted afterwards.
+ *
+ * Returns: a boolean.
+ */
 gboolean hildon_im_common_changes_case(const gchar *chr);
-gint hildon_im_autocorrection_check_character (const gchar *);
+/**
+ * hildon_im_autocorrection_check_character:
+ * @chr: a UTF-8 character
+ *
+ * Whether auto correction should be made for the given character.
+ *
+ * Returns: an integer.
+ */
+gint hildon_im_autocorrection_check_character (const gchar *chr);
+/**
+ * hildon_im_common_should_be_appended_after_letter:
+ * @chr: a UTF-8 character
+ *
+ * Whether the given character should be appended after a letter
+ * (ie. should not normally have a space preceding it).
+ *
+ * Returns: a boolean.
+ */
 gboolean hildon_im_common_should_be_appended_after_letter (const gchar *chr);
 
 G_END_DECLS

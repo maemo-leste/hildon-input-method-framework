@@ -3,7 +3,9 @@
 # Copyright (C) 2005-2007 Nokia Corporation.
 #
 # Contact: Mohammad Anwari <Mohammad.Anwari@nokia.com>
-SUBDIRS = src 
+SUBDIRS = src docs
+
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = hildon-input-method-framework-3.0.pc 

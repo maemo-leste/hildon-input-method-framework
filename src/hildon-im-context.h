@@ -49,6 +49,14 @@ struct _HildonIMContextClass
 };
 
 void hildon_im_context_register_type (GTypeModule *module);
+
+/**
+ * hildon_im_context_new:
+ *
+ * Creates new instance of #GtkIMContext.
+ *
+ * Returns: a pointer to a newly allocated #GtkIMContext object
+ */
 GtkIMContext* hildon_im_context_new(void);
 
 G_END_DECLS

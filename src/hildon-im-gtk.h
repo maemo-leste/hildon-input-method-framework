@@ -31,6 +31,17 @@
 
 #include <gtk/gtk.h>
 
+/**
+ * hildon_im_gtk_focus_next_text_widget:
+ *
+ * @current_focus: the widget currently focused
+ * @direction: the direction in which to look for the next text widget
+ *
+ * Moves the focus to the next text input widget within the @current_focus
+ * ancestor. If the given @direction is GTK_DIR_TAB_BACKWARD, it will look
+ * for the widget backwards in the list of the widgets to look up.
+ *
+ */
 void
 hildon_im_gtk_focus_next_text_widget(GtkWidget *current_focus,
                                      GtkDirectionType direction);

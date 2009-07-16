@@ -32,6 +32,9 @@ AC_PROG_LIBTOOL
 
 AC_HEADER_STDC
 
+GTK_DOC_CHECK(1.9)
+
+
 if test foobar${hildon_use_debug} = foobaryes
 then
 	CFLAGS="$CFLAGS -DDEBUG"
@@ -106,6 +109,7 @@ AC_SUBST(initdir)
 AC_OUTPUT([Makefile \
 	hildon-input-method-framework-3.0.pc \
 	src/Makefile \
+	docs/Makefile \
 	debian/hildon-input-method-framework.install \
 	debian/hildon-input-method-framework.postinst \
 	debian/hildon-input-method-framework.postrm \
