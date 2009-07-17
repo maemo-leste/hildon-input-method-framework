@@ -46,11 +46,11 @@ config.status: configure
 
 configure:
 	libtoolize --automake
-	aclocal-1.7 || aclocal
+	aclocal
+	gtkdocize || exit 1
 	autoconf
 	autoheader
-	automake-1.7 --add-missing --foreign || automake --add-missing> --foreign
-
+	automake --add-missing --foreign
 
 build: build-stamp
 build-stamp:  config.status
