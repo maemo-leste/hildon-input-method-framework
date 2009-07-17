@@ -2,7 +2,7 @@ Source: hildon-input-method-framework
 Section: x11
 Priority: optional
 Maintainer: Richard Sun <Richard.Sun@nokia.com>
-Build-Depends: debhelper (>= 4.0.0), pkg-config, libgtk2.0-dev (>= 2:2.6.10-1.osso15), libosso-dev (>=0.9.10-2), x11proto-xext-dev, libhildon1-dev, libpango1.0-dev (>= 1.16.0), libxi-dev
+Build-Depends: debhelper (>= 4.0.0), pkg-config, libgtk2.0-dev (>= 2:2.6.10-1.osso15), libosso-dev (>=0.9.10-2), x11proto-xext-dev, libhildon1-dev, libpango1.0-dev (>= 1.16.0), libxi-dev, gtk-doc-tools
 Standards-Version: 3.6.0
 
 Package: hildon-input-method-framework
