@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.31-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.31-1) unstable; urgency=low
 
-  * Version 1:2.1.31-1~unreleased
+  * Version 1:2.1.31-1
   * Fixes: NB#106177 No API to enable alphanumeric input mode with numeric mode as default
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Mon, 10 Ago 2009 12:00:00 +0100
