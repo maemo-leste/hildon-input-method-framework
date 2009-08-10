@@ -1991,7 +1991,7 @@ static gboolean
 key_pressed (HildonIMContext *context, GdkEventKey *event)
 {
 #ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
+  HildonGtkInputMode input_mode, default_input_mode;
 #endif
 
   guint32 c = 0;
@@ -2068,11 +2068,16 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
 #ifdef MAEMO_CHANGES
   g_object_get(context, "hildon-input-mode", &input_mode, NULL);
+  g_object_get(context, "hildon-input-default", &default_input_mode, NULL);
   /* If the input mode is TELE, the behavior of the level key is inverted */
-  gboolean should_invert = (input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
-                           (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
-                           ((input_mode & HILDON_GTK_INPUT_MODE_TELE) ||
-                            (input_mode & HILDON_GTK_INPUT_MODE_SPECIAL));
+  gboolean should_invert = default_input_mode == HILDON_GTK_INPUT_MODE_NUMERIC;
+  if (!should_invert)
+  {
+    should_invert = (input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
+                    (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
+                    ((input_mode & HILDON_GTK_INPUT_MODE_TELE) ||
+                    (input_mode & HILDON_GTK_INPUT_MODE_SPECIAL));
+  }
   if ((context->options & HILDON_IM_AUTOLEVEL_NUMERIC &&
       (input_mode & HILDON_GTK_INPUT_MODE_FULL) == HILDON_GTK_INPUT_MODE_NUMERIC)
       || should_invert)

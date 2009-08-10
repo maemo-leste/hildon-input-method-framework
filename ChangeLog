@@ -1,3 +1,9 @@
+2009-08-10  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.31-1~unreleased
+	* hildon-im-context.c: Level mode now honors default hildon mode.
+	* Fixes: NB#106177
+
 2009-07-17  Richard Sun  <richard.sun@nokia.com>
 
 	* debian/rules: sync with autogen
