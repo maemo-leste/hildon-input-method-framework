@@ -240,14 +240,14 @@ typedef enum
 /**
  * HildonIMCommitMode:
  * @HILDON_IM_COMMIT_DIRECT: Each commit is inserted directly on the current cursor's
- * position.
+ * position (never used).
  * @HILDON_IM_COMMIT_REDIRECT: Proxies input and cursor movement from one text widget
  * into another (potentially off-screen) widget. Used when implementing fullscreen IM
  * plugins for widgets that contain text formatting.
  * @HILDON_IM_COMMIT_SURROUNDING: Each commit replaces the current text surrounding
  * the cursor position (see gtk_im_context_get_surrounding).
  * @HILDON_IM_COMMIT_BUFFERED: Each new commit replaces any previous commit to the
- * client widget until FLUSH_PREEDIT is called.
+ * client widget until FLUSH_PREEDIT is called (never used).
  * @HILDON_IM_COMMIT_PREEDIT: Each commit replaces the preedit buffer.
  *
  * The mode to determine how and where the text is committed.

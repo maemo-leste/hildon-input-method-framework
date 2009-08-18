@@ -71,7 +71,6 @@ static gulong unmap_hook_id = 0;
 static guint launch_delay_timeout_id = 0;
 static guint launch_delay = HILDON_IM_DEFAULT_LAUNCH_DELAY;
 static HildonIMTrigger trigger = HILDON_IM_TRIGGER_UNKNOWN;
-static HildonIMCommitMode commit_mode = 0;
 static gboolean internal_reset = FALSE;
 static gboolean enter_on_focus_pending = FALSE;
 
@@ -98,6 +97,8 @@ struct _HildonIMContext
   gboolean is_internal_widget;
   
   Window im_window;
+
+  HildonIMCommitMode commit_mode;
 
   GString *preedit_buffer;
   /* keep the preedit's position on GtkTextView or GtkEditable */
@@ -181,8 +182,6 @@ static void       hildon_im_context_insert_utf8         (HildonIMContext *self,
 static void       hildon_im_context_send_input_mode     (HildonIMContext *self);
 static void       hildon_im_context_send_command        (HildonIMContext *self,
                                                          HildonIMCommand cmd);
-static void       hildon_im_context_check_commit_mode   (HildonIMContext*
-                                                         self);
 static void       hildon_im_context_check_sentence_start(HildonIMContext*
                                                          self);
 static void       hildon_im_context_send_surrounding    (HildonIMContext*
@@ -617,6 +616,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->space_after_commit = FALSE;
   self->is_internal_widget = FALSE;
   self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
+  self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
   
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
@@ -1110,7 +1110,15 @@ hildon_im_context_set_client_cursor_location(HildonIMContext *self,
   {
     if (GTK_IS_EDITABLE(widget))
     {
-      gtk_editable_set_position(GTK_EDITABLE(widget), offset);
+      if (is_relative)
+      {
+        gtk_editable_set_position(GTK_EDITABLE(widget), 
+                                  gtk_editable_get_position(GTK_EDITABLE(widget)) + offset);
+      }
+      else
+      {
+        gtk_editable_set_position(GTK_EDITABLE(widget), offset);
+      }
     }
     else if (GTK_IS_TEXT_VIEW(widget))
     {
@@ -1215,16 +1223,23 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_send_fake_key(GDK_Tab, FALSE);
           break;
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
-          if (commit_mode == HILDON_IM_COMMIT_REDIRECT
-              && GTK_IS_TEXT_VIEW(self->client_gtk_widget))
+          if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
+              GTK_IS_TEXT_VIEW(self->client_gtk_widget))
           {
             GtkTextBuffer *buffer;
             GtkTextIter iter;
- 
+
             buffer = get_buffer(self->client_gtk_widget);
             gtk_text_buffer_get_iter_at_mark(buffer, &iter,
                                              gtk_text_buffer_get_insert(buffer));
             gtk_text_buffer_backspace(buffer, &iter, TRUE, TRUE);
+          }
+          else if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
+                   GTK_IS_EDITABLE(self->client_gtk_widget))
+          {
+            gint position = gtk_editable_get_position(GTK_EDITABLE(self->client_gtk_widget));
+            gtk_editable_delete_text(GTK_EDITABLE(self->client_gtk_widget),
+                                     position - 1, position);
           }
           else
           {
@@ -1237,28 +1252,26 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_BUFFERED_MODE:
           set_preedit_buffer (self, NULL);
-          commit_mode = HILDON_IM_COMMIT_BUFFERED;
+          self->commit_mode = HILDON_IM_COMMIT_BUFFERED;
           break;
         case HILDON_IM_CONTEXT_DIRECT_MODE:
           set_preedit_buffer (self, NULL);
-          commit_mode = HILDON_IM_COMMIT_DIRECT;
+          self->commit_mode = HILDON_IM_COMMIT_DIRECT;
           break;
         case HILDON_IM_CONTEXT_REDIRECT_MODE:
           set_preedit_buffer (self, NULL);
-          commit_mode = HILDON_IM_COMMIT_REDIRECT;
-          hildon_im_context_check_commit_mode(self);
+          self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
           hildon_im_context_clear_selection(self);
           break;
         case HILDON_IM_CONTEXT_SURROUNDING_MODE:
           set_preedit_buffer (self, NULL);
-          commit_mode = HILDON_IM_COMMIT_SURROUNDING;
+          self->commit_mode = HILDON_IM_COMMIT_SURROUNDING;
           break;
         case HILDON_IM_CONTEXT_PREEDIT_MODE:
           set_preedit_buffer (self, NULL);
-          commit_mode = HILDON_IM_COMMIT_PREEDIT;
+          self->commit_mode = HILDON_IM_COMMIT_PREEDIT;
           break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING:
-          hildon_im_context_check_commit_mode(self);
           hildon_im_context_send_surrounding(self, FALSE);
           if (self->is_url_entry)
           {
@@ -1266,7 +1279,6 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           }
           break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL:
-          hildon_im_context_check_commit_mode(self);
           hildon_im_context_send_surrounding(self, TRUE);
           if (self->is_url_entry)
           {
@@ -1503,6 +1515,19 @@ hildon_im_context_set_client_window(GtkIMContext *context,
           self->text_view_preedit_mark = gtk_text_buffer_create_mark (
                                 get_buffer(widget),
                                 "preedit", &start, FALSE);
+        }
+
+        /* The commit mode depends on the type of widget */
+        if (GTK_IS_TEXT_VIEW(self->client_gtk_widget) ||
+            GTK_IS_EDITABLE(self->client_gtk_widget))
+        {
+          self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
+        }
+        else
+        {
+          /* Other widgets (direct IM implementations like browsers)
+               are edited in the fullscreen mode and then commited all at once */
+          self->commit_mode = HILDON_IM_COMMIT_SURROUNDING;
         }
 
 #ifndef MAEMO_CHANGES
@@ -1923,7 +1948,7 @@ insert_text (HildonIMContext *context, gchar *text, gint offset)
   if (text == NULL || !strlen (text))
     return FALSE;
 
-  if (GTK_IS_ENTRY (context->client_gtk_widget))
+  if (GTK_IS_EDITABLE (context->client_gtk_widget))
   {
     gint cursor = gtk_editable_get_position (GTK_EDITABLE (context->client_gtk_widget));
     cursor += offset;
@@ -2016,7 +2041,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean invert_level_behavior = FALSE;
   
-  is_suggesting_autocompleted_word = commit_mode == HILDON_IM_COMMIT_PREEDIT &&
+  is_suggesting_autocompleted_word = context->commit_mode == HILDON_IM_COMMIT_PREEDIT &&
                                      context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
 
@@ -2432,28 +2457,6 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
   self->prev_cursor_x = area->x;
 }
 
-static void
-hildon_im_context_check_commit_mode (HildonIMContext *self)
-{
-  /* GtkTextView is a special case that is directly changed by the
-     fullscreen plugins so as to preserve the formatting and
-     currently the only client of the REDIRECT mode.
-
-     In the future it would be nice if we could just serialize
-     the contents, formatting and all, and send it as an surrounding
-     message. Alternatively, let the IM know the client widget type
-     so the plugin can request the correct mode in the first place. */
-  if (commit_mode == HILDON_IM_COMMIT_REDIRECT)
-  {
-    if (GTK_IS_TEXT_VIEW(self->client_gtk_widget) == FALSE)
-    {
-      /* GtkEntries and misc. widgets (direct IM implementations like browsers)
-         are edited in the fullscreen mode and then commited all at once */
-      commit_mode = HILDON_IM_COMMIT_SURROUNDING;
-    }
-  }
-}
-
 /* Updates the IM with the autocap state at the active cursor position 
  * TODO this can be optimized a lot */
 static void
@@ -2562,7 +2565,7 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
   g_return_if_fail( HILDON_IS_IM_CONTEXT(self) );
   
   /* in PREEDIT mode, the text is used as the predicted suffix */
-  if (commit_mode == HILDON_IM_COMMIT_PREEDIT)
+  if (self->commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
     set_preedit_buffer (self, text_clean);
     return;
@@ -2983,7 +2986,7 @@ hildon_im_context_send_surrounding_header(HildonIMContext *self, gint offset)
   event.xclient.format = HILDON_IM_SURROUNDING_FORMAT;
 
   surrounding_msg = (HildonIMSurroundingMessage *) &event.xclient.data;
-  surrounding_msg->commit_mode = commit_mode;
+  surrounding_msg->commit_mode = self->commit_mode;
   surrounding_msg->cursor_offset = offset;
   hildon_im_context_send_event(self, &event);
 }
@@ -3150,7 +3153,7 @@ hildon_im_context_send_committed_preedit(HildonIMContext *self, gchar* committed
   event.xclient.format = HILDON_IM_PREEDIT_COMMITTED_FORMAT;
 
   preedit_comm_msg = (HildonIMPreeditCommittedMessage *) &event.xclient.data;
-  preedit_comm_msg->commit_mode = commit_mode;
+  preedit_comm_msg->commit_mode = self->commit_mode;
   hildon_im_context_send_event(self, &event);
 
   g_free(surrounding);

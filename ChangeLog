@@ -1,3 +1,14 @@
+2009-08-18  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 1:2.1.32-1~unreleased
+	* hildon-im-context.c: substitute the global "input_mode" variable with one
+	for each instance, that depends on the kind of client widget.
+	GtkTextViews and GtkEditables get COMMIT_REDIRECT mode, and the rest get
+	COMMIT_SURROUNDING. In addition to this...
+	(hildon_im_context_set_client_cursor_location) : Treat GtkEditable correctly
+	(hildon_im_context_check_commit_mode) : Removed.
+	* Fixes: NB#131073.
+
 2009-08-10  Felipe Erias Morandeira <femorandeira@maemo.org>
 
 	* Version 1:2.1.31-1
