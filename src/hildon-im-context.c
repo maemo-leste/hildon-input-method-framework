@@ -371,8 +371,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
     is_editable_text_view = GTK_IS_TEXT_VIEW (focus_widget) &&
       gtk_text_view_get_editable (GTK_TEXT_VIEW (focus_widget));
     is_inside_completion_popup =
-      strncmp(gtk_widget_get_name(toplevel), HILDON_ENTRY_COMPLETION_POPUP,
-             sizeof(HILDON_ENTRY_COMPLETION_POPUP)) == 0;
+      g_strcmp0(gtk_widget_get_name(toplevel), HILDON_ENTRY_COMPLETION_POPUP) == 0;
 
     if (focus_widget == NULL ||
         (!is_editable_entry &&
@@ -1538,11 +1537,11 @@ hildon_im_context_set_client_window(GtkIMContext *context,
 #endif
       }
 
-      if (strncmp(gtk_widget_get_name(widget), HILDON_IM_INTERNAL_TEXTVIEW, sizeof(HILDON_IM_INTERNAL_TEXTVIEW)) == 0)
+      if (g_strcmp0(gtk_widget_get_name(widget), HILDON_IM_INTERNAL_TEXTVIEW) == 0)
       {
         self->is_internal_widget = TRUE;
       }
-      else if (strncmp (gtk_widget_get_name(widget), MAEMO_BROWSER_URL_ENTRY, sizeof(MAEMO_BROWSER_URL_ENTRY)) == 0)
+      else if (g_strcmp0 (gtk_widget_get_name(widget), MAEMO_BROWSER_URL_ENTRY) == 0)
       {
         self->is_url_entry = TRUE;
       }
@@ -2796,6 +2795,8 @@ hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
 
     /* trap X errors. Sometimes we recieve a badwindow error,
      * because the input_window id is wrong.
+     * 
+     * TODO this code is replicated in too many places in this file
      */
     gdk_error_trap_push();
 
