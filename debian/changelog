@@ -3,14 +3,14 @@ hildon-input-method-framework (1:2.1.32-1) unstable; urgency=low
   * Version 1:2.1.32-1
   * Fixes: NB#131073 Unnecessary banner shown if enter on VKB is tapped after submitting correct WEP key or WPA password
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 20 Ago 2009 12:00:00 +0100
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 20 Aug 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.31-1) unstable; urgency=low
 
   * Version 1:2.1.31-1
   * Fixes: NB#106177 No API to enable alphanumeric input mode with numeric mode as default
 
- -- Felipe Erias Morandeira <femorandeira@maemo.org>  Mon, 10 Ago 2009 12:00:00 +0100
+ -- Felipe Erias Morandeira <femorandeira@maemo.org>  Mon, 10 Aug 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.30-1) unstable; urgency=low
 
