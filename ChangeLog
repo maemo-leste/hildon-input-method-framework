@@ -1,3 +1,8 @@
+2009-08-20  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 1:2.1.32-1
+	* hildon-im-context.c (client_message_filter) : handle DestroyNotify events
+
 2009-08-20  Joaquim Rocha <jrocha@maemo.org>
 
 	* hildon-im-context.c: Made the check for the lock level of the context options

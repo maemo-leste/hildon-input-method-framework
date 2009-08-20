@@ -1183,7 +1183,12 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
 
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), GDK_FILTER_CONTINUE);
 
-  if (xe->type == ClientMessage)
+
+  if (xe->type == DestroyNotify)
+  { 
+    self->client_gdk_window = NULL;
+  }
+  else if (xe->type == ClientMessage)
   {
     XClientMessageEvent *cme = xevent;
 
