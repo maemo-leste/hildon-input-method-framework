@@ -2110,6 +2110,13 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   }
 #endif
 
+  if (context->options & HILDON_IM_LOCK_LEVEL)
+  {
+    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
+                                                                 event,
+                                                                 LOCKABLE_LEVEL);
+  }
+
   /* When the level key is in sticky or locked state, translate the
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
@@ -2123,27 +2130,24 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     }
     else if (level_key_is_down)
     {
+      gboolean lock_level = context->options & HILDON_IM_LOCK_LEVEL;
       /* this fixes the case of pressing Fn+key at the same time:
        * X gives us the translated value, so as the LEVEL behaviour should be
        * inverted we use this to translate that numeric/special value to alpha;
        * we get the translated value, and have to translate it back */
       event->keyval = hildon_im_context_get_event_keyval_for_level(context,
                                                                    event,
+                                                                   lock_level ? LOCKABLE_LEVEL:
                                                                    BASE_LEVEL);
     }
 
     if (event->keyval == COMPOSE_KEY)
       context->mask |= HILDON_IM_COMPOSE_MASK;
+
+    invert_level_behavior = FALSE;
   }
 
-  /* The input is forced to a predetermined level */
-  else if (context->options & HILDON_IM_LOCK_LEVEL)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
-                                                                 event,
-                                                                 LOCKABLE_LEVEL);
-  }
-  else if (invert_level_behavior)
+  if (invert_level_behavior)
   {
     perform_level_translation (event);
   }
