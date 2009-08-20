@@ -99,6 +99,7 @@ struct _HildonIMContext
   Window im_window;
 
   HildonIMCommitMode commit_mode;
+  HildonIMCommitMode previous_commit_mode;
 
   GString *preedit_buffer;
   /* keep the preedit's position on GtkTextView or GtkEditable */
@@ -616,6 +617,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->is_internal_widget = FALSE;
   self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
   self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
+  self->previous_commit_mode = self->commit_mode;
   
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
@@ -1273,6 +1275,10 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_PREEDIT_MODE:
           set_preedit_buffer (self, NULL);
+          /* Preedit is a temporary mode that will be reset after
+           * the next text has been received.
+           */
+          self->previous_commit_mode = self->commit_mode;
           self->commit_mode = HILDON_IM_COMMIT_PREEDIT;
           break;
         case HILDON_IM_CONTEXT_REQUEST_SURROUNDING:
@@ -2045,8 +2051,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean invert_level_behavior = FALSE;
   
-  is_suggesting_autocompleted_word = context->commit_mode == HILDON_IM_COMMIT_PREEDIT &&
-                                     context->preedit_buffer != NULL &&
+  is_suggesting_autocompleted_word = context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
 
   if (event->keyval == COMPOSE_KEY)
@@ -2572,10 +2577,12 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
 
   g_return_if_fail( HILDON_IS_IM_CONTEXT(self) );
   
-  /* in PREEDIT mode, the text is used as the predicted suffix */
+  /* In PREEDIT mode, the text is used as the predicted suffix.
+   * After this text has been received, the commit mode is reset. */
   if (self->commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
     set_preedit_buffer (self, text_clean);
+    self->commit_mode = self->previous_commit_mode;
     return;
   }
   else

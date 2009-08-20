@@ -248,7 +248,11 @@ typedef enum
  * the cursor position (see gtk_im_context_get_surrounding).
  * @HILDON_IM_COMMIT_BUFFERED: Each new commit replaces any previous commit to the
  * client widget until FLUSH_PREEDIT is called (never used).
- * @HILDON_IM_COMMIT_PREEDIT: Each commit replaces the preedit buffer.
+ * @HILDON_IM_COMMIT_PREEDIT: Each commit replaces the preedit buffer. This
+ * works as a temporary mode, so the commit mode will be reset to its old value
+ * after the preedit text has been set. Remember to send a
+ * @HILDON_IM_CONTEXT_PREEDIT_MODE message before using @hildon_im_ui_send_utf8
+ * to set the preedit, each time.
  *
  * The mode to determine how and where the text is committed.
  *

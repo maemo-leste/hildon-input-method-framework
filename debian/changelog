@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.32-1) unstable; urgency=low
+hildon-input-method-framework (1:2.1.32-2) unstable; urgency=low
 
-  * Version 1:2.1.32-1
+  * Version 1:2.1.32-2
   * Fixes: NB#131073 Unnecessary banner shown if enter on VKB is tapped after submitting correct WEP key or WPA password
 
  -- Felipe Erias Morandeira <femorandeira@maemo.org>  Thu, 20 Aug 2009 12:00:00 +0100

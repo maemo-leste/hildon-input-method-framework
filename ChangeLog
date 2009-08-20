@@ -3,6 +3,16 @@
 	* Version 1:2.1.32-1
 	* hildon-im-context.c (client_message_filter) : handle DestroyNotify events
 
+	* Version 1:2.1.32-2
+	* hildon-im-context.c (previous_commit_mode) : stores the previous commit
+	mode when it is changed to PREEDIT_MODE, so it can be reset when the new
+	preedit text is received in hildon_im_context_insert_utf8().
+	* hildon-im-protocol.h : describe the temporary nature of the PREEDIT mode.
+	It works as a temporary mode, so the commit mode will be reset to its old
+	value right after the preedit text has been set. A 
+	HILDON_IM_CONTEXT_PREEDIT_MODE message must be send before using 
+	hildon_im_ui_send_utf8() to set the preedit, each time.
+
 2009-08-20  Joaquim Rocha <jrocha@maemo.org>
 
 	* hildon-im-context.c: Made the check for the lock level of the context options
