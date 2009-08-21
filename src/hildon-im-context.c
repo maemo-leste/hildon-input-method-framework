@@ -102,6 +102,8 @@ struct _HildonIMContext
   HildonIMCommitMode previous_commit_mode;
 
   GString *preedit_buffer;
+  /* we need the incoming preedit buffer because the message might be split */
+  GString *incoming_preedit_buffer;
   /* keep the preedit's position on GtkTextView or GtkEditable */
   GtkTextMark *text_view_preedit_mark;
   gint editable_preedit_position;
@@ -618,6 +620,7 @@ hildon_im_context_init(HildonIMContext *self)
   self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
   self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
   self->previous_commit_mode = self->commit_mode;
+  self->incoming_preedit_buffer = g_string_new ("");
   
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
@@ -2457,9 +2460,13 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
          self->prev_surrounding_hash == 0)
        )
     {
-      /* Moved, clear IM. */
-      hildon_im_context_check_sentence_start(self);
-      hildon_im_context_reset_real(context);
+      /* it might have moved if we are showing the preedit text */
+      if ( !(self->preedit_buffer != NULL && self->preedit_buffer->len != 0))
+      {
+        /* Moved, clear IM. */
+        hildon_im_context_check_sentence_start(self);
+        hildon_im_context_reset_real(context);
+      }
     }
 
     self->prev_surrounding_hash = hash;
@@ -2581,8 +2588,22 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
    * After this text has been received, the commit mode is reset. */
   if (self->commit_mode == HILDON_IM_COMMIT_PREEDIT)
   {
-    set_preedit_buffer (self, text_clean);
-    self->commit_mode = self->previous_commit_mode;
+    switch(flag)
+    {
+    case HILDON_IM_MSG_START:
+      g_string_truncate(self->incoming_preedit_buffer, 0);
+      g_string_append(self->incoming_preedit_buffer, text);
+      break;
+    case HILDON_IM_MSG_CONTINUE:
+      g_string_append(self->incoming_preedit_buffer, text);
+      break;
+    case HILDON_IM_MSG_END:
+      g_string_append(self->incoming_preedit_buffer, text);
+      set_preedit_buffer (self, self->incoming_preedit_buffer->str);
+      g_string_truncate(self->incoming_preedit_buffer, 0);
+      self->commit_mode = self->previous_commit_mode;
+      break;
+    }
     return;
   }
   else
