@@ -2460,13 +2460,9 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
          self->prev_surrounding_hash == 0)
        )
     {
-      /* it might have moved if we are showing the preedit text */
-      if ( !(self->preedit_buffer != NULL && self->preedit_buffer->len != 0))
-      {
-        /* Moved, clear IM. */
-        hildon_im_context_check_sentence_start(self);
-        hildon_im_context_reset_real(context);
-      }
+      hildon_im_context_check_sentence_start(self);
+      hildon_im_context_reset_real(context);
+      set_preedit_buffer (self, NULL);
     }
 
     self->prev_surrounding_hash = hash;
@@ -2602,6 +2598,8 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
       set_preedit_buffer (self, self->incoming_preedit_buffer->str);
       g_string_truncate(self->incoming_preedit_buffer, 0);
       self->commit_mode = self->previous_commit_mode;
+      self->changed_count = 0;
+      self->last_internal_change = TRUE;
       break;
     }
     return;
@@ -2638,8 +2636,6 @@ hildon_im_context_insert_utf8(HildonIMContext *self, gint flag,
       g_free (surrounding);
     }
   }
-
-  self->last_internal_change = TRUE;
 
   /* This last "commit" signal adds the actual text. We're assuming it sends
      0 or 1 "changed" signals (we try to guarantee that by sending a "" commit
