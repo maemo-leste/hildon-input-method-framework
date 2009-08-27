@@ -2464,26 +2464,30 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
 }
 
 static gint
-hildon_im_context_get_insert (HildonIMContext *self)
+hildon_im_context_get_insert (HildonIMContext *self, gint cursor_position)
 {
   gint insert = -1;
 
   if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
   {
-    GtkTextIter line_start, insert_iter;
+    GtkTextIter selection_begin, cursor;
     GtkTextBuffer *buffer = NULL;
+    GtkTextMark *cursor_mark = NULL;
     gchar *slice = NULL;
 
     buffer = get_buffer (self->client_gtk_widget);
     if (buffer != NULL &&
-        gtk_text_buffer_get_selection_bounds (buffer, &insert_iter, NULL))
+        gtk_text_buffer_get_selection_bounds (buffer, &selection_begin, NULL))
     {
-      line_start = insert_iter;
-      gtk_text_iter_set_line_offset (&line_start, 0);
-      slice = gtk_text_iter_get_slice (&line_start, &insert_iter);
+      cursor_mark = gtk_text_buffer_get_insert (buffer);
+      gtk_text_buffer_get_iter_at_mark (buffer, &cursor, cursor_mark);
+      if (!gtk_text_iter_equal (&cursor, &selection_begin))
+      {
+        slice = gtk_text_iter_get_visible_slice (&selection_begin, &cursor);
 
-      if (slice != NULL)
-        insert = g_utf8_strlen (slice, -1);
+        if (slice != NULL)
+          insert = cursor_position - g_utf8_strlen (slice, -1);
+      }
     }
   }
   else if (GTK_IS_EDITABLE (self->client_gtk_widget))
@@ -2493,6 +2497,8 @@ hildon_im_context_get_insert (HildonIMContext *self)
                                        NULL);
   }
 
+  if (insert < 0)
+    return cursor_position;
   return insert;
 }
 
@@ -2507,7 +2513,6 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   gchar *surrounding = NULL;
   gchar *iter;
   gint cpos = 0;
-  gint insert_pos = -1;
   gboolean has_surrounding, space;
   gunichar ch;
 
@@ -2547,9 +2552,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
     return;
   }
 
-  insert_pos = hildon_im_context_get_insert (self);
-  if (insert_pos >= 0)
-    cpos = insert_pos;
+  cpos = hildon_im_context_get_insert (self, cpos);
   iter = g_utf8_offset_to_pointer (surrounding, cpos);
   space = FALSE;
 
