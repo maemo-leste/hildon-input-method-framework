@@ -2475,9 +2475,9 @@ hildon_im_context_get_insert (HildonIMContext *self)
     gchar *slice = NULL;
 
     buffer = get_buffer (self->client_gtk_widget);
-    if (buffer != NULL)
+    if (buffer != NULL &&
+        gtk_text_buffer_get_selection_bounds (buffer, &insert_iter, NULL))
     {
-      gtk_text_buffer_get_selection_bounds (buffer, &insert_iter, NULL);
       line_start = insert_iter;
       gtk_text_iter_set_line_offset (&line_start, 0);
       slice = gtk_text_iter_get_slice (&line_start, &insert_iter);
