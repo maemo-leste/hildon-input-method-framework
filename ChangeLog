@@ -3,7 +3,7 @@
 	* Version 1:2.1.35-1~unreleased
 	* hildon-im-context.c: Prevented setting the keyboard mask according to the
 	  input mode since it's not needed and interferes with the current input mode
-	  interpretation.
+	  interpretation; Corrected auto-capitalization when the text is selected;
 
 2009-08-27  Felipe Erias Morandeira <femorandeira@maemo.org>
 

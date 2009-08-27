@@ -1809,6 +1809,7 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   gboolean level_key_is_sticky = context->mask & HILDON_IM_LEVEL_STICKY_MASK;
   gboolean level_key_is_locked = context->mask & HILDON_IM_LEVEL_LOCK_MASK;
   gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
+  gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
 
   if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
@@ -1836,6 +1837,11 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 
     if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
+  }
+
+  if (ctrl_key_is_down)
+  {
+    hildon_im_context_check_sentence_start (context);
   }
 
   hildon_im_context_send_key_event(context, event->type, event->state,
@@ -2457,6 +2463,39 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
   self->prev_cursor_x = area->x;
 }
 
+static gint
+hildon_im_context_get_insert (HildonIMContext *self)
+{
+  gint insert = -1;
+
+  if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+  {
+    GtkTextIter line_start, insert_iter;
+    GtkTextBuffer *buffer = NULL;
+    gchar *slice = NULL;
+
+    buffer = get_buffer (self->client_gtk_widget);
+    if (buffer != NULL)
+    {
+      gtk_text_buffer_get_selection_bounds (buffer, &insert_iter, NULL);
+      line_start = insert_iter;
+      gtk_text_iter_set_line_offset (&line_start, 0);
+      slice = gtk_text_iter_get_slice (&line_start, &insert_iter);
+
+      if (slice != NULL)
+        insert = g_utf8_strlen (slice, -1);
+    }
+  }
+  else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+  {
+    gtk_editable_get_selection_bounds (GTK_EDITABLE (self->client_gtk_widget),
+                                       &insert,
+                                       NULL);
+  }
+
+  return insert;
+}
+
 /* Updates the IM with the autocap state at the active cursor position 
  * TODO this can be optimized a lot */
 static void
@@ -2468,6 +2507,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   gchar *surrounding = NULL;
   gchar *iter;
   gint cpos = 0;
+  gint insert_pos = -1;
   gboolean has_surrounding, space;
   gunichar ch;
 
@@ -2507,6 +2547,9 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
     return;
   }
 
+  insert_pos = hildon_im_context_get_insert (self);
+  if (insert_pos >= 0)
+    cpos = insert_pos;
   iter = g_utf8_offset_to_pointer (surrounding, cpos);
   space = FALSE;
 
