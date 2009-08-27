@@ -1014,6 +1014,51 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
   }
 }
 
+static GSList *
+get_pango_attribute_list_for_insert (GtkIMContext *context, gchar *str_to_apply_attr)
+{
+  GSList *attr_list = NULL, *insert_attr_list = NULL, *list;
+  GtkTextIter iter;
+  GtkTextMark *insert_mark;
+  GtkTextBuffer *buffer;
+  HildonIMContext *self;
+  
+  self = HILDON_IM_CONTEXT(context);
+
+  if (!GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+    return NULL;
+
+  buffer = get_buffer (self->client_gtk_widget);
+  if (buffer == NULL)
+    return NULL;
+
+  insert_mark = gtk_text_buffer_get_insert (buffer);
+  gtk_text_buffer_get_iter_at_mark (buffer, &iter, insert_mark);
+  /* We backward because we want the iter of the previous char */
+  gtk_text_iter_backward_char (&iter);
+  insert_attr_list = gtk_text_iter_get_tags (&iter);
+
+  list = insert_attr_list;
+  for (; list != NULL; list = g_slist_next (list))
+  {
+    PangoFontDescription *font_desc = NULL;
+    GtkTextTag *tag = GTK_TEXT_TAG (list->data);
+    g_object_get (tag, "font-desc", &font_desc, NULL);
+    if (font_desc != NULL)
+    {
+      PangoAttribute *attr;
+      attr = pango_attr_font_desc_new (font_desc);
+      attr->start_index = 0;
+      attr->end_index = strlen (str_to_apply_attr);
+
+      attr_list = g_slist_append (attr_list, attr);
+    }
+  }
+  g_slist_free (insert_attr_list);
+
+  return attr_list;
+}
+
 static void
 hildon_im_context_get_preedit_string (GtkIMContext *context,
                                       gchar **str,
@@ -1021,6 +1066,7 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
                                       gint *cursor_pos)
 {
   HildonIMContext *self;
+  GSList *insert_attr_list = NULL, *list;
   GtkStyle *style = NULL;
   PangoAttribute *attr1, *attr2, *attr3;
   
@@ -1067,11 +1113,18 @@ hildon_im_context_get_preedit_string (GtkIMContext *context,
                                        style->fg[GTK_STATE_SELECTED].blue);
     attr3->start_index = 0;
     attr3->end_index = strlen (*str);
-
+    
     *attrs = pango_attr_list_new ();
     pango_attr_list_insert (*attrs, attr1);
     pango_attr_list_insert (*attrs, attr2);
     pango_attr_list_insert (*attrs, attr3);
+
+    insert_attr_list = get_pango_attribute_list_for_insert (context, *str);
+    for (list = insert_attr_list; list != NULL; list = g_slist_next (list))
+    {
+      pango_attr_list_insert (*attrs, (PangoAttribute *) list->data);
+    }
+    g_slist_free (insert_attr_list);
   }
   
   return;
