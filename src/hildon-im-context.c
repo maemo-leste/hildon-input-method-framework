@@ -568,22 +568,6 @@ static void
 hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(object);
-  HildonGtkInputMode input_mode;
-
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-
-  if ((input_mode & HILDON_GTK_INPUT_MODE_ALPHA) == 0  &&
-      (input_mode & HILDON_GTK_INPUT_MODE_HEXA)  == 0  &&
-      ( (input_mode & HILDON_GTK_INPUT_MODE_NUMERIC) != 0 ||
-        (input_mode & HILDON_GTK_INPUT_MODE_TELE)    != 0))
-  {
-    self->mask = HILDON_IM_LEVEL_LOCK_MASK | HILDON_IM_LEVEL_STICKY_MASK;
-  }
-  else
-  {
-    self->mask &= ~HILDON_IM_LEVEL_LOCK_MASK;
-    self->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
-  }
   
   /* Notify IM of any input mode changes in cases where the UI is
      already visible. */
