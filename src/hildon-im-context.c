@@ -1856,6 +1856,25 @@ perform_level_translation (GdkEventKey *event)
   event->keyval = translated_keyval;
 }
 
+static void
+reset_shift_and_level_keys_if_needed (HildonIMContext *context, GdkEventKey *event)
+{
+  if (event->is_modifier)
+    return;
+
+  /* If not locked, pressing any character resets shift state */
+  if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
+      (context->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
+  {
+    context->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+  }
+  /* If not locked, pressing any character resets level state */
+  if (event->keyval != LEVEL_KEY && (context->mask & HILDON_IM_LEVEL_LOCK_MASK) == 0)
+  {
+    context->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
+  }
+}
+
 static gboolean
 key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 {
@@ -1900,26 +1919,9 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   hildon_im_context_send_key_event(context, event->type, event->state,
                                    event->keyval, event->hardware_keycode);
 
+  reset_shift_and_level_keys_if_needed (context, event);
+
   return FALSE;
-}
-
-static void
-reset_shift_and_level_keys_if_needed (HildonIMContext *context, GdkEventKey *event)
-{
-  if (event->is_modifier)
-    return;
-
-  /* If not locked, pressing any character resets shift state */
-  if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
-      (context->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
-  {
-    context->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
-  }
-  /* If not locked, pressing any character resets level state */
-  if (event->keyval != LEVEL_KEY && (context->mask & HILDON_IM_LEVEL_LOCK_MASK) == 0)
-  {
-    context->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
-  }
 }
 
 static void
@@ -2230,8 +2232,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   }
   else if (shift_key_is_sticky)
     perform_shift_translation (event);
-
-  reset_shift_and_level_keys_if_needed (context, event);
 
   /* A dead key will not be immediately commited, but combined with the
    * next key */

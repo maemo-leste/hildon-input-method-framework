@@ -1,3 +1,9 @@
+2009-09-03  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.36-1~unreleased
+	* hildon-im-context.c: Masks are now reset only on key release, not on keypress
+	* Fixes: NB#136433
+
 2009-08-27  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.35-1~unreleased
