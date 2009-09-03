@@ -2224,7 +2224,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   /* Shift lock or holding the shift down forces uppercase,
    * ignoring autocap */
   if (shift_key_is_locked ||
-      shift_key_is_down   ||
       (shift_key_is_sticky &&
       (level_key_is_sticky || level_key_is_locked || level_key_is_down)))
   {

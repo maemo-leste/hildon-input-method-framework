@@ -1,3 +1,9 @@
+2009-09-03  Felipe Erias Morandeira <femorandeira@maemo.org>
+
+	* Version 1:2.1.34-1
+	* hildon-im-context.c (key_pressed) : If Shift is pressed, then autocaps
+	will be reversed and the character will be entered in lower case.
+
 2009-09-03  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.36-1~unreleased
