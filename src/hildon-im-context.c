@@ -665,7 +665,7 @@ commit_text (HildonIMContext *self, const gchar* s)
 
   if (HILDON_IS_ENTRY(self->client_gtk_widget)
       && (hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)) == NULL
-          || g_utf8_strlen(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)), 2) <= 0))
+          || g_utf8_strlen(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)), -1) <= 0))
   {
     hildon_entry_set_text(HILDON_ENTRY(self->client_gtk_widget), s);
     gtk_editable_set_position (GTK_EDITABLE(self->client_gtk_widget),
