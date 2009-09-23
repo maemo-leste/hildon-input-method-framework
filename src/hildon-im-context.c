@@ -35,7 +35,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
-#include <hildon/hildon.h>
 #include "hildon-im-context.h"
 #include "hildon-im-gtk.h"
 #include "hildon-im-common.h"
@@ -298,11 +297,7 @@ hildon_im_context_finalize(GObject *obj)
 static GtkTextBuffer *
 get_buffer(GtkWidget *widget)
 {
-  if (HILDON_IS_TEXT_VIEW(widget))
-  {
-      return hildon_text_view_get_buffer(HILDON_TEXT_VIEW(widget));
-  }
-  else if (GTK_IS_TEXT_VIEW(widget))
+  if (GTK_IS_TEXT_VIEW (widget))
   {
     return gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
   }
@@ -665,35 +660,8 @@ commit_text (HildonIMContext *self, const gchar* s)
       || s == NULL)
     return FALSE;
 
-  /* This is a workaround to fix an issue with HildonEntry and HildonTextView.
-   * It seems that the "commit" signal from GtkIMContext ends up using the
-   * set_text functions from GtkEntry and GtkTextView, and this causes problems
-   * if the widget is empty because the new text is appended to the placeholder
-   * and not to the actual text. */
+  g_signal_emit_by_name(self, "commit", s);
 
-  if (HILDON_IS_ENTRY(self->client_gtk_widget)
-      && (hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)) == NULL
-          || g_utf8_strlen(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)), -1) <= 0))
-  {
-    hildon_entry_set_text(HILDON_ENTRY(self->client_gtk_widget), s);
-    gtk_editable_set_position (GTK_EDITABLE(self->client_gtk_widget),
-                               g_utf8_strlen(s, -1));
-  }
-  else if (HILDON_IS_TEXT_VIEW(self->client_gtk_widget)
-      && get_buffer(self->client_gtk_widget) != NULL
-      && gtk_text_buffer_get_char_count(get_buffer(self->client_gtk_widget)) <= 0)
-  {
-    GtkTextIter iter;
-    GtkTextBuffer *buffer = get_buffer(self->client_gtk_widget);
-    gtk_text_buffer_get_iter_at_mark(buffer,
-                                     &iter,
-                                     gtk_text_buffer_get_insert(buffer));
-    gtk_text_buffer_insert(buffer, &iter, s, -1);
-  }
-  else
-  {
-    g_signal_emit_by_name(self, "commit", s);
-  }
   return TRUE;
 }
 
@@ -951,15 +919,6 @@ hildon_im_context_get_surrounding(GtkIMContext *context,
                                       &cursor,
                                       text,
                                       cursor_index);
-  }
-  else if (HILDON_IS_ENTRY(self->client_gtk_widget))
-  {
-    *text = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
-    result = (*text != NULL);    
-    if (g_utf8_strlen(*text, 2) == 0)
-      *cursor_index = 0;
-    else
-      *cursor_index = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
   }
   else
   {
@@ -2978,15 +2937,7 @@ get_full_line (HildonIMContext *self, gint *offset)
   multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget);
 #endif
   
-  if (HILDON_IS_ENTRY(self->client_gtk_widget))
-  {
-    surrounding = g_strdup(hildon_entry_get_text(HILDON_ENTRY(self->client_gtk_widget)));
-    if (g_utf8_strlen(surrounding, 2) == 0)
-      *offset = 0;
-    else
-      *offset = gtk_editable_get_position (GTK_EDITABLE(self->client_gtk_widget));
-  }
-  else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+  if (GTK_IS_EDITABLE (self->client_gtk_widget))
   {
     surrounding = 
       gtk_editable_get_chars(GTK_EDITABLE(self->client_gtk_widget), 0, -1);

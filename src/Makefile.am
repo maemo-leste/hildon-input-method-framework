@@ -7,7 +7,6 @@
 
 INCLUDES = \
 	$(GTK_CFLAGS) \
-	$(HILDON_CFLAGS) \
 	$(HILDON_IM_CFLAGS)\
 	$(GCONF_CFLAGS)\
 	$(LIBOSSO_CFLAGS) \
@@ -36,7 +35,7 @@ hildon_im_module_la_SOURCES = \
 	hildon-im-gtk.h \
 	hildon-im-gtk.c
 hildon_im_module_la_LIBADD = \
-	$(GTK_LIBS) $(HILDON_LIBS) $(XEXTPROTO_LIBS) \
+	$(GTK_LIBS) $(XEXTPROTO_LIBS) \
 	-lhildon_im_common
 hildon_im_module_la_LDFLAGS = \
 	-rpath $(immoduledir) \

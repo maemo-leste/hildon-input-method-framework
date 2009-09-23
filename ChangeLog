@@ -1,9 +1,11 @@
 2009-12-14  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.43-1~unreleased
-	* src/hildon-im-context.c : Clears the client's selection when the received
-	  cursor offset is 0
+	* src/hildon-im-context.c (hildon_im_context_set_client_cursor_location) :
+	  Clears the client's selection when the received cursor offset is 0
+	* src/hildon-im-context.c : Removed use of Hildon functions
 	* Fixes: NB#148175
+	* Fixes: NB#139950
 
 2009-12-11  Joaquim Rocha <jrocha@maemo.org>
 

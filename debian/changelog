@@ -2,8 +2,9 @@ hildon-input-method-framework (1:2.1.43-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.43-1~unreleased
   * Fixes: NB#148175 FKB can undesirably overwrite a widget's contents
+  * Fixes: NB#139950 Hildon input method freezes plain Py/Gtk programs with 100% CPU usage
 
- -- Joaquim Rocha <jrocha@maemo.org>  Thu, 11 Dec 2009 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Mon, 14 Dec 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.42-1) unstable; urgency=low
 
