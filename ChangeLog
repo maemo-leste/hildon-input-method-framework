@@ -1,3 +1,9 @@
+2009-09-24  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.38-1
+	* hildon-im-context.c: Freed a GString to prevent a leak.
+	* Fixes: NB#138590
+
 2009-09-21  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.37-1

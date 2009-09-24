@@ -290,6 +290,7 @@ hildon_im_context_finalize(GObject *obj)
   }
 
   g_string_free (imc->preedit_buffer, TRUE);
+  g_string_free (imc->incoming_preedit_buffer, TRUE);
 
   G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
