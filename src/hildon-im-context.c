@@ -570,9 +570,12 @@ hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(object);
   
-  /* Notify IM of any input mode changes in cases where the UI is
-     already visible. */
-  hildon_im_context_send_input_mode(self);
+  if (self->client_gtk_widget != NULL && GTK_WIDGET_HAS_FOCUS (self->client_gtk_widget))
+  {
+    /* Notify IM of any input mode changes in cases where the UI is
+       already visible. */
+    hildon_im_context_send_input_mode(self);
+  }
 }
 #endif
 

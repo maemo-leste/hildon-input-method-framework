@@ -2,8 +2,9 @@ hildon-input-method-framework (1:2.1.39-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.39-1~unreleased
   * Fixes: NB#141221 Character cannot be inputted after Sym+key are pressed together
+  * Fixes: NB#140750 Word completion In email To field is not possible
 
- -- Joaquim Rocha <jrocha@maemo.org>  Mon, 13 Oct 2009 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Tue, 13 Oct 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.38-1) unstable; urgency=low
 

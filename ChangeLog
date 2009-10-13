@@ -2,8 +2,10 @@
 
 	* Version 1:2.1.39-1~unreleased
 	* hildon-im-context.c: Removed checking for the COMPOSITE_MASK as it would
-	  prevent character insertion in some cases
+	  prevent character insertion in some cases; Now input mode is only sent if
+	  the client widget isn't NULL and it is focused.
 	* Fixes: NB#141221
+	* Fixes: NB#140750
 
 2009-09-24  Joaquim Rocha <jrocha@maemo.org>
 
