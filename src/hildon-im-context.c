@@ -2258,13 +2258,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     c = get_representation_for_dead_character (event, context->combining_char);
     context->combining_char = 0;
   }
-  else if (context->mask & HILDON_IM_COMPOSE_MASK)
-  {
-    hildon_im_context_send_key_event(context, event->type,
-                                     event->state, event->keyval,
-                                     event->hardware_keycode);
-    return TRUE;
-  }
   else
   {
     c = gdk_keyval_to_unicode (event->keyval);
