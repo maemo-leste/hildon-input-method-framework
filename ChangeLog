@@ -1,3 +1,8 @@
+2009-12-11  Joaquim Rocha <jrocha@maemo.org>
+
+	* src/hildon-im-context.c : Made shift and fn actions consistent
+	* Fixes: NB#143481
+
 2009-12-09  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.42-1~unreleased

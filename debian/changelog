@@ -2,8 +2,9 @@ hildon-input-method-framework (1:2.1.42-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.42-1~unreleased
   * Fixes: NB#146228 Observed GLIB CRITICAL ** hildon-im-module - hildon_im_context_hide: assertion `HILDON_IS_IM_CONTEXT(context)' failed.
+  * Fixes: NB#143481 Not all combinations of shift+Fn are supported on layouts that need them
 
- -- Joaquim Rocha <jrocha@maemo.org>  Wed, 09 Dec 2009 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Thu, 11 Dec 2009 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.41-1) unstable; urgency=low
 

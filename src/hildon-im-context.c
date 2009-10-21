@@ -1933,6 +1933,23 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 }
 
 static void
+hildon_im_context_invert_case (GdkEventKey *event)
+{
+  guint lower, upper;
+
+  gdk_keyval_convert_case (event->keyval, &lower, &upper);
+
+  if (gdk_keyval_is_upper (event->keyval))
+  {
+    event->keyval = lower;
+  }
+  else
+  {
+    event->keyval = upper;
+  }
+}
+
+static void
 perform_shift_translation (GdkEventKey *event)
 {
   guint lower, upper;
@@ -1952,10 +1969,7 @@ perform_shift_translation (GdkEventKey *event)
      including any autocapitalization changes */
   else
   {
-    if (gdk_keyval_is_upper(event->keyval))
-      event->keyval = lower;
-    else
-      event->keyval = upper;
+    hildon_im_context_invert_case (event);
   }
 }
 
@@ -2086,6 +2100,11 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 #endif
 
   guint32 c = 0;
+
+  /* We manually lower the case because when shift is down
+   * the event will be upper case and that will be
+   * inconsistent with the rest of the shift states*/
+  event->keyval = gdk_keyval_to_lower (event->keyval);
 
   gboolean is_suggesting_autocompleted_word;
 
@@ -2222,23 +2241,26 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   /* Hardware keyboard autocapitalization  */
   if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
   {
-    if (shift_key_is_down)
-      event->keyval = gdk_keyval_to_lower(event->keyval);
-    else
-      event->keyval = gdk_keyval_to_upper(event->keyval);
+    event->keyval = gdk_keyval_to_upper(event->keyval);
   }
 #endif
 
   /* Shift lock or holding the shift down forces uppercase,
    * ignoring autocap */
-  if (shift_key_is_locked ||
-      (shift_key_is_sticky &&
-      (level_key_is_sticky || level_key_is_locked || level_key_is_down)))
+  if (shift_key_is_locked)
   {
     event->keyval = gdk_keyval_to_upper (event->keyval);
   }
-  else if (shift_key_is_sticky)
+
+  if (shift_key_is_sticky && !shift_key_is_locked)
+  {
+    /* Inverts the case or gets the character in the shift level */
     perform_shift_translation (event);
+  }
+  else if (shift_key_is_down)
+  {
+    hildon_im_context_invert_case (event);
+  }
 
   /* A dead key will not be immediately commited, but combined with the
    * next key */
