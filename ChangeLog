@@ -1,3 +1,10 @@
+2009-12-14 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* Version 1:2.1.44-1~unreleased
+	* src/hildon-im-context.c : Translating keys now honors the current state of
+	  the level and shift keys.
+	* Fixes: NB#143460
+
 2009-12-14  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.43-1

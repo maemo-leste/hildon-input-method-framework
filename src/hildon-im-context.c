@@ -1810,13 +1810,13 @@ hildon_im_context_set_mask_state(HildonIMContext *self,
 }
 
 static void
-perform_level_translation (GdkEventKey *event)
+perform_level_translation (GdkEventKey *event, GdkModifierType state)
 {
   guint translated_keyval;
 
   gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
                                       event->hardware_keycode,
-                                      LEVEL_KEY_MOD_MASK,
+                                      state,
                                       event->group,
                                       &translated_keyval,
                                       NULL, NULL, NULL);
@@ -1872,7 +1872,15 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
   {
-    perform_level_translation (event);
+    GdkModifierType state = LEVEL_KEY_MOD_MASK;
+
+    if ((context->mask & HILDON_IM_SHIFT_LOCK_MASK) != 0 ||
+        (context->mask & HILDON_IM_SHIFT_STICKY_MASK) != 0)
+    {
+      state |= GDK_SHIFT_MASK;
+    }
+
+    perform_level_translation (event, state);
 
     if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
@@ -2085,6 +2093,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean invert_level_behavior = FALSE;
   
+  GdkModifierType translation_state = LEVEL_KEY_MOD_MASK;
+
   is_suggesting_autocompleted_word = context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
 
@@ -2161,6 +2171,12 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
                                                                  LOCKABLE_LEVEL);
   }
 
+
+  if (shift_key_is_sticky || shift_key_is_locked || shift_key_is_down)
+  {
+    translation_state |= GDK_SHIFT_MASK;
+  }
+
   /* When the level key is in sticky or locked state, translate the
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
@@ -2170,7 +2186,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
      * level key was being held down. */
     if (!invert_level_behavior)
     {
-      perform_level_translation (event);
+      perform_level_translation (event, translation_state);
     }
     else if (level_key_is_down)
     {
@@ -2193,7 +2209,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   if (invert_level_behavior)
   {
-    perform_level_translation (event);
+    perform_level_translation (event, translation_state);
   }
 
 #ifdef MAEMO_CHANGES
