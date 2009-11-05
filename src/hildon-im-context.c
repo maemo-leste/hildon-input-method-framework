@@ -694,6 +694,16 @@ commit_text (HildonIMContext *self, const gchar* s)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
+#ifdef MAEMO_CHANGES
+  HildonGtkInputMode input_mode;
+  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
+
+  if ((input_mode & HILDON_GTK_INPUT_MODE_DICTIONARY) == 0 ||
+      (input_mode & HILDON_GTK_INPUT_MODE_INVISIBLE) != 0)
+  {
+    return;
+  }
+#endif
   if (self->client_gtk_widget == NULL
       || !GTK_WIDGET_REALIZED(self->client_gtk_widget))
     return;
