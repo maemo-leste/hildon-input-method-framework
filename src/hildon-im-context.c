@@ -1923,8 +1923,6 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   hildon_im_context_send_key_event(context, event->type, event->state,
                                    event->keyval, event->hardware_keycode);
 
-  reset_shift_and_level_keys_if_needed (context, event);
-
   return FALSE;
 }
 
@@ -2265,6 +2263,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   {
     c = gdk_keyval_to_unicode (event->keyval);
   }
+
+  reset_shift_and_level_keys_if_needed (context, event);
 
   if (c)
   {
