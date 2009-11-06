@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.40-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.40-1) unstable; urgency=low
 
-  * Version 1:2.1.40-1~unreleased
+  * Version 1:2.1.40-1
   * Fixes: NB#145043 Race condition with hardware shift key
 
  -- Joaquim Rocha <jrocha@maemo.org>  Fri, 06 Nov 2009 12:00:00 +0100

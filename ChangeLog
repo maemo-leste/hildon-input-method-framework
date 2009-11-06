@@ -1,6 +1,6 @@
 2009-11-06  Joaquim Rocha <jrocha@maemo.org>
 
-	* Version 1:2.1.40-1~unreleased
+	* Version 1:2.1.40-1
 	* hildon-im-context.c (key_released, key_pressed) : Resets shift and level
 	  keys in the end of the key press to avoid inputting shifted characters
 	  by pressing a key after another without releasing the first one.
