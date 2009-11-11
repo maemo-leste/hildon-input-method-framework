@@ -460,9 +460,13 @@ hildon_im_hook_unmap_handler(GSignalInvocationHint *ihint,
     else if (GTK_IS_TEXT_VIEW (widget))
       context = GTK_TEXT_VIEW (widget)->im_context;
     
-    if (context != NULL)
+    if (HILDON_IS_IM_CONTEXT (context))
     {
       hildon_im_context_hide(context);
+    }
+    else if (GTK_IS_IM_CONTEXT (context))
+    {
+      gtk_im_context_hide (context);
     }
   }
 
