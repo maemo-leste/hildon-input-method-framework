@@ -1,5 +1,6 @@
 2009-11-13  Joaquim Rocha <jrocha@maemo.org>
 
+	* Version 1:2.1.41-1
 	* src/hildon-im-context.c : Added the reset shift and level keys to the
 	  release event as well to work for non printed keys.
 	* Fixes: NB#101069

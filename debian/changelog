@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.41-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.41-1) unstable; urgency=low
 
-  * Version 1:2.1.41-1~unreleased
+  * Version 1:2.1.41-1
   * Fixes: NB#143460 Input method ignores the 4th (shift+Fn) Xkb symbol defined for a key
   * Fixes: NB#101069 Function key single press+ accentuation key " ^ "/" ` "  is not working properly
 
