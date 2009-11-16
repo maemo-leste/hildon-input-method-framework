@@ -3,7 +3,11 @@
 	* Version 1:2.1.44-1~unreleased
 	* src/hildon-im-context.c : Translating keys now honors the current state of
 	  the level and shift keys.
+	* src/hildon-im-context.c : Implements the long-press feature.
+	* src/hildon-im-protocol.h : Adds definitions for new X message to get
+	  long-press' feature setting notifications.
 	* Fixes: NB#143460
+	* Fixes: NB#146069
 
 2009-12-14  Joaquim Rocha <jrocha@maemo.org>
 

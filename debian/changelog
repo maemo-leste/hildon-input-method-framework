@@ -2,6 +2,7 @@ hildon-input-method-framework (1:2.1.44-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.44-1~unreleased
   * Fixes: NB#143460 Input method ignores the 4th (shift+Fn) Xkb symbol defined for a key
+  * Fixes: NB#146069 Long-pressing a key on the hardware keyboard should invert the layout
 
  -- Joaquim Rocha <jrocha@maemo.org>  Mon, 14 Dec 2009 12:00:00 +0100
 

@@ -62,6 +62,9 @@
 #define HILDON_ENTRY_COMPLETION_POPUP "hildon-completion-window"
 #define MAEMO_BROWSER_URL_ENTRY "maemo-browser-url-entry"
 
+/* Long-press feature */
+#define DEFAULT_LONG_PRESS_TIMEOUT 600
+
 static GtkIMContextClass *parent_class;
 static GType im_context_type = 0;
 
@@ -136,6 +139,13 @@ struct _HildonIMContext
 
   gdouble button_press_x;
   gdouble button_press_y;
+
+  /* used to implement long-press feature */
+  gboolean enable_long_press;
+  gboolean char_key_is_down;
+  guint long_press_timeout_src_id;
+  guint long_press_timeout;
+  GdkEventKey *long_press_last_key_event;
 };
 
 /* Initialisation/finalisation functions */
@@ -228,6 +238,10 @@ static void hildon_im_context_set_mask_state (HildonIMContext *self,
 
 static void hildon_im_context_send_event(HildonIMContext *self, XEvent *event);
 
+static gboolean key_pressed (HildonIMContext *context, GdkEventKey *event);
+
+static void hildon_im_context_abort_long_press (HildonIMContext *context);
+
 static void
 hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
 {
@@ -290,6 +304,12 @@ hildon_im_context_finalize(GObject *obj)
 
   g_string_free (imc->preedit_buffer, TRUE);
   g_string_free (imc->incoming_preedit_buffer, TRUE);
+
+  if (imc->long_press_last_key_event != NULL)
+  {
+    gdk_event_free ((GdkEvent *) imc->long_press_last_key_event);
+    imc->long_press_last_key_event = NULL;
+  }
 
   G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
@@ -611,6 +631,12 @@ hildon_im_context_init(HildonIMContext *self)
   
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
+
+  self->enable_long_press = TRUE;
+  self->char_key_is_down = FALSE;
+  self->long_press_timeout_src_id = 0;
+  self->long_press_timeout = DEFAULT_LONG_PRESS_TIMEOUT;
+  self->long_press_last_key_event = NULL;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -1182,6 +1208,34 @@ hildon_im_context_clear_selection(HildonIMContext *self)
   }
 }
 
+static void
+hildon_im_context_do_backspace (HildonIMContext *self)
+{
+  if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
+      GTK_IS_TEXT_VIEW(self->client_gtk_widget))
+  {
+    GtkTextBuffer *buffer;
+    GtkTextIter iter;
+
+    buffer = get_buffer(self->client_gtk_widget);
+    gtk_text_buffer_get_iter_at_mark(buffer, &iter,
+                                     gtk_text_buffer_get_insert(buffer));
+    gtk_text_buffer_backspace(buffer, &iter, TRUE, TRUE);
+  }
+  else if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
+           GTK_IS_EDITABLE(self->client_gtk_widget))
+  {
+    gint position = gtk_editable_get_position(GTK_EDITABLE(self->client_gtk_widget));
+    gtk_editable_delete_text(GTK_EDITABLE(self->client_gtk_widget),
+                             position - 1, position);
+  }
+  else
+  {
+    hildon_im_context_send_fake_key(GDK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key(GDK_BackSpace, FALSE);
+  }
+}
+
 /* Filter function to intercept and process XClientMessages */
 static GdkFilterReturn
 client_message_filter(GdkXEvent *xevent,GdkEvent *event,
@@ -1236,29 +1290,7 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_send_fake_key(GDK_Tab, FALSE);
           break;
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
-          if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
-              GTK_IS_TEXT_VIEW(self->client_gtk_widget))
-          {
-            GtkTextBuffer *buffer;
-            GtkTextIter iter;
-
-            buffer = get_buffer(self->client_gtk_widget);
-            gtk_text_buffer_get_iter_at_mark(buffer, &iter,
-                                             gtk_text_buffer_get_insert(buffer));
-            gtk_text_buffer_backspace(buffer, &iter, TRUE, TRUE);
-          }
-          else if (self->commit_mode == HILDON_IM_COMMIT_REDIRECT &&
-                   GTK_IS_EDITABLE(self->client_gtk_widget))
-          {
-            gint position = gtk_editable_get_position(GTK_EDITABLE(self->client_gtk_widget));
-            gtk_editable_delete_text(GTK_EDITABLE(self->client_gtk_widget),
-                                     position - 1, position);
-          }
-          else
-          {
-            hildon_im_context_send_fake_key(GDK_BackSpace, TRUE);
-            hildon_im_context_send_fake_key(GDK_BackSpace, FALSE);
-          }
+          hildon_im_context_do_backspace (self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_SPACE:
           hildon_im_context_insert_utf8(self, HILDON_IM_MSG_CONTINUE, " ");
@@ -1383,6 +1415,18 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
                                                    msg->cursor_offset);
       result = GDK_FILTER_REMOVE;
 
+    }
+    else if (cme->message_type ==
+             hildon_im_protocol_get_atom (HILDON_IM_LONG_PRESS_SETTINGS))
+    {
+      HildonIMLongPressSettingsMessage *msg =
+        (HildonIMLongPressSettingsMessage *) &cme->data;
+
+      self->enable_long_press = msg->enable_long_press;
+      self->long_press_timeout = (msg->long_press_timeout > 0)
+        ? msg->long_press_timeout : DEFAULT_LONG_PRESS_TIMEOUT;
+
+      result = GDK_FILTER_REMOVE;
     }
   }
   
@@ -1850,6 +1894,17 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
   gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
 
+  if ((context->long_press_last_key_event != NULL) &&
+      (event->hardware_keycode ==
+       context->long_press_last_key_event->hardware_keycode))
+  {
+    hildon_im_context_abort_long_press (context);
+    gdk_event_free ((GdkEvent *) context->long_press_last_key_event);
+    context->long_press_last_key_event = NULL;
+  }
+
+  reset_shift_and_level_keys_if_needed (context, event);
+
   if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
 
@@ -1893,8 +1948,6 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 
   hildon_im_context_send_key_event(context, event->type, event->state,
                                    event->keyval, event->hardware_keycode);
-
-  reset_shift_and_level_keys_if_needed (context, event);
 
   return FALSE;
 }
@@ -2060,6 +2113,57 @@ get_representation_for_dead_character (GdkEventKey *event, guint32 dead_characte
 }
 
 static gboolean
+hildon_im_context_on_long_press_timeout (gpointer user_data)
+{
+  HildonIMContext *self = HILDON_IM_CONTEXT (user_data);
+  HildonIMInternalModifierMask mask_backup;
+
+  mask_backup = self->mask;
+
+  hildon_im_context_do_backspace (self);
+
+  if ((self->mask & HILDON_IM_LEVEL_LOCK_MASK) != 0)
+  {
+    self->mask &= ~ (HILDON_IM_LEVEL_LOCK_MASK | HILDON_IM_LEVEL_STICKY_MASK);
+
+    if ( (self->mask & HILDON_IM_SHIFT_STICKY_MASK) != 0)
+    {
+      perform_level_translation (self->long_press_last_key_event,
+                                 GDK_SHIFT_MASK);
+      self->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+    }
+    else
+    {
+      perform_level_translation (self->long_press_last_key_event, 0);
+    }
+  }
+  else
+  {
+    self->mask |= HILDON_IM_LEVEL_STICKY_MASK;
+  }
+
+  self->enable_long_press = FALSE;
+  key_pressed (self, self->long_press_last_key_event);
+  self->enable_long_press = TRUE;
+
+  self->mask = mask_backup;
+
+  self->long_press_timeout_src_id = 0;
+
+  return FALSE;
+}
+
+static void
+hildon_im_context_abort_long_press (HildonIMContext *context)
+{
+  if (context->long_press_timeout_src_id != 0)
+  {
+    g_source_remove (context->long_press_timeout_src_id);
+    context->long_press_timeout_src_id = 0;
+  }
+}
+
+static gboolean
 key_pressed (HildonIMContext *context, GdkEventKey *event)
 {
 #ifdef MAEMO_CHANGES
@@ -2094,6 +2198,21 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   gboolean invert_level_behavior = FALSE;
   
   GdkModifierType translation_state = LEVEL_KEY_MOD_MASK;
+
+  /* avoid key repeating when a long-press is in course  */
+  if ((context->enable_long_press) &&
+      (context->long_press_last_key_event != NULL))
+  {
+    if (event->hardware_keycode !=
+        context->long_press_last_key_event->hardware_keycode)
+    {
+      hildon_im_context_abort_long_press (context);
+    }
+    else
+    {
+      return TRUE;
+    }
+  }
 
   is_suggesting_autocompleted_word = context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
@@ -2267,8 +2386,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     c = gdk_keyval_to_unicode (event->keyval);
   }
 
-  reset_shift_and_level_keys_if_needed (context, event);
-
   if (c)
   {
     gchar utf8[10];
@@ -2300,6 +2417,22 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
       commit_text (context, utf8);
 
     context->committed_preedit = FALSE;
+
+    /* launch long press timeout */
+    if (context->enable_long_press)
+    {
+      context->char_key_is_down = TRUE;
+      context->long_press_timeout_src_id =
+        g_timeout_add (context->long_press_timeout,
+                       (GSourceFunc) hildon_im_context_on_long_press_timeout,
+                       (gpointer) context);
+      /* cache the key event */
+      if (context->long_press_last_key_event != NULL)
+        gdk_event_free ((GdkEvent *) context->long_press_last_key_event);
+
+      context->long_press_last_key_event =
+        (GdkEventKey *) gdk_event_copy ((GdkEvent *) event);
+    }
 
     return TRUE;
   }

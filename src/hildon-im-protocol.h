@@ -53,6 +53,7 @@ typedef enum
   HILDON_IM_CLIPBOARD_SELECTION_REPLY,
   HILDON_IM_PREEDIT_COMMITTED,
   HILDON_IM_PREEDIT_COMMITTED_CONTENT,
+  HILDON_IM_LONG_PRESS_SETTINGS,
 
   /* always last */
   HILDON_IM_NUM_ATOMS
@@ -75,6 +76,7 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_CLIPBOARD_SELECTION_REPLY_NAME "_HILDON_IM_CLIPBOARD_SELECTION_REPLY"
 #define HILDON_IM_PREEDIT_COMMITTED_NAME         "_HILDON_IM_PREEDIT_COMMITTED"
 #define HILDON_IM_PREEDIT_COMMITTED_CONTENT_NAME "_HILDON_IM_PREEDIT_COMMITTED_CONTENT"
+#define HILDON_IM_LONG_PRESS_SETTINGS_NAME       "_HILDON_IM_LONG_PRESS_SETTINGS"
 
 /* IM ClientMessage formats */
 #define HILDON_IM_WINDOW_ID_FORMAT 32
@@ -89,6 +91,7 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
 #define HILDON_IM_CLIPBOARD_SELECTION_REPLY_FORMAT 32
 #define HILDON_IM_PREEDIT_COMMITTED_FORMAT 8
 #define HILDON_IM_PREEDIT_COMMITTED_CONTENT_FORMAT 8
+#define HILDON_IM_LONG_PRESS_SETTINGS_FORMAT 32
 
 /**
  * HildonIMCommand:
@@ -353,6 +356,13 @@ typedef struct
   HildonIMOptionMask options;
 
 } HildonIMComMessage;
+
+/* Long-press settings message from IM to context */
+typedef struct
+{
+  gboolean enable_long_press;
+  guint16 long_press_timeout;
+} HildonIMLongPressSettingsMessage;
 
 G_END_DECLS
 
