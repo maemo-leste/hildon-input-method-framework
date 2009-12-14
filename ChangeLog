@@ -1,3 +1,10 @@
+2009-12-14  Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.43-1~unreleased
+	* src/hildon-im-context.c : Clears the client's selection when the received
+	  cursor offset is 0
+	* Fixes: NB#148175
+
 2009-12-11  Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.42-1

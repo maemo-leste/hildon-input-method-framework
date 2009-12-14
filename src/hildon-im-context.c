@@ -1183,7 +1183,7 @@ hildon_im_context_set_client_cursor_location(HildonIMContext *self,
       if (is_relative)
       {
         if (offset == 0)
-          return;
+          gtk_text_buffer_select_range (buffer, &iter, &iter);
         else if (offset >= 0)
           gtk_text_iter_forward_chars(&iter, offset);
         else
