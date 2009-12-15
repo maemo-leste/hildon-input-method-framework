@@ -2253,7 +2253,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
       set_preedit_buffer(context, NULL);
       context->committed_preedit = FALSE;
       
-      if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+      if (event->keyval == GDK_Left)
       {
         return TRUE;
       }
