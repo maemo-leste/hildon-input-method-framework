@@ -1525,12 +1525,9 @@ hildon_im_context_set_client_window(GtkIMContext *context,
     gdk_window_remove_filter(self->client_gdk_window,
                              (GdkFilterFunc)client_message_filter, self );
 
-    if (window == NULL && self->has_focus ) /* Hide IM window when textwidget is unrealized */
+    if (window == NULL && !self->is_internal_widget)
     {
-      if (!self->is_internal_widget)
-      {
-        hildon_im_context_send_command(self, HILDON_IM_HIDE);
-      }
+      hildon_im_context_send_command(self, HILDON_IM_HIDE);
     }
   }
 

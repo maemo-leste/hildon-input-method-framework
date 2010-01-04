@@ -1,3 +1,10 @@
+2010-01-04 Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.45-1~unreleased
+	* src/hildon-im-context.c : Send the hide command even when the client
+	  application is not focused.
+	* Fixes: NB#141282
+
 2009-12-18 Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.44-1
