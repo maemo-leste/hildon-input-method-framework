@@ -1,9 +1,9 @@
-hildon-input-method-framework (1:2.1.45-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.45-1) unstable; urgency=low
 
-  * Version 1:2.1.45-1~unreleased
+  * Version 1:2.1.45-1
   * Fixes: NB#141282 FKB is poping up even after the application is closed.
 
- -- Joaquim Rocha <jrocha@maemo.org>  Mon, 04 Jan 2010 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Tue, 05 Jan 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.44-1) unstable; urgency=low
 
