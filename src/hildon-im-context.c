@@ -1763,12 +1763,6 @@ hildon_im_context_get_event_keyval_for_level(HildonIMContext *self,
     k.keycode = event->hardware_keycode;
     k.group = event->group;
     k.level = level;
-    if (self->mask & HILDON_IM_SHIFT_LOCK_MASK ||
-        event->state & GDK_SHIFT_MASK)
-    {
-      if (k.level + 1 <= n_entries)
-        k.level++;
-    }
 
     keyval = gdk_keymap_lookup_key(gdk_keymap_get_default(), &k);
   }
