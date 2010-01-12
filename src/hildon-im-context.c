@@ -2296,14 +2296,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   }
 #endif
 
-  if (context->options & HILDON_IM_LOCK_LEVEL)
-  {
-    event->keyval = hildon_im_context_get_event_keyval_for_level(context,
-                                                                 event,
-                                                                 LOCKABLE_LEVEL);
-  }
-
-
   if (shift_key_is_sticky || shift_key_is_locked || shift_key_is_down)
   {
     translation_state |= GDK_SHIFT_MASK;
@@ -2322,14 +2314,12 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     }
     else if (level_key_is_down)
     {
-      gboolean lock_level = context->options & HILDON_IM_LOCK_LEVEL;
       /* this fixes the case of pressing Fn+key at the same time:
        * X gives us the translated value, so as the LEVEL behaviour should be
        * inverted we use this to translate that numeric/special value to alpha;
        * we get the translated value, and have to translate it back */
       event->keyval = hildon_im_context_get_event_keyval_for_level(context,
                                                                    event,
-                                                                   lock_level ? LOCKABLE_LEVEL:
                                                                    BASE_LEVEL);
     }
 
