@@ -1,9 +1,9 @@
-hildon-input-method-framework (1:2.1.46-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.46-1) unstable; urgency=low
 
-  * Version 1:2.1.46-1~unreleased
+  * Version 1:2.1.46-1
   * Fixes: NB#152454 Cannot enter capital letter in Russian locale
 
- -- Joaquim Rocha <jrocha@maemo.org>  Tue, 12 Jan 2010 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Thu, 14 Jan 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.45-1) unstable; urgency=low
 
