@@ -2,6 +2,9 @@
 
 	* src/hildon-im-context.c : Completely re-implements shift and level state
 	  management.
+	* src/hildon-im-context.c: Moves call to 'reset_shift_and_level_keys_if_needed' from
+	  key_released to key_pressed.
+	* Fixes regression: NB#145043 was happening.
 	* Fixes: NB#143933
 
 2010-01-19 Joaquim Rocha <jrocha@maemo.org>

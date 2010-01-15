@@ -1910,8 +1910,6 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
     context->long_press_last_key_event = NULL;
   }
 
-  reset_shift_and_level_keys_if_needed (context, event);
-
   if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
 
@@ -2392,6 +2390,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   {
     c = gdk_keyval_to_unicode (event->keyval);
   }
+
+  reset_shift_and_level_keys_if_needed (context, event);
 
   if (c)
   {
