@@ -49,6 +49,47 @@ hildon_im_common_changes_case(const gchar *chr)
           || uni == 0x00bf); /* inverted question mark */
 }
 
+gboolean
+hildon_im_common_check_auto_cap (const gchar *content, gint offset)
+{
+  gchar *iter;
+  gboolean space = FALSE;
+  gunichar ch;
+
+  if (content == NULL || content[0] == '\0')
+    return TRUE;
+
+  iter = g_utf8_offset_to_pointer (content, offset);
+  while (TRUE)
+  {
+    iter = g_utf8_find_prev_char (content, iter);
+
+    if (iter == NULL)
+      break;
+
+    ch = g_utf8_get_char (iter);
+
+    if (g_unichar_isspace (ch))
+    {
+      space = TRUE;
+    }
+    else if (g_unichar_ispunct (ch))
+    {
+      if (space && hildon_im_common_changes_case (iter))
+        return TRUE;
+      else
+        continue;
+    }
+    else
+    {
+      break;
+    }
+
+  }
+
+  return FALSE;
+}
+
 gint
 hildon_im_autocorrection_check_character (const gchar *text)
 {

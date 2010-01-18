@@ -98,8 +98,6 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
  * @HILDON_IM_MODE: Update the hildon-input-mode property
  * @HILDON_IM_SHOW: Show the IM UI
  * @HILDON_IM_HIDE: Hide the IM UI
- * @HILDON_IM_UPP: Set the auto-capitalization as uppercase at cursor
- * @HILDON_IM_LOW: Set the auto-capitalization as lowercase at cursor
  * @HILDON_IM_DESTROY: (Deprecated) Destroy the IM UI
  * @HILDON_IM_CLEAR: Clear the IM UI state
  * @HILDON_IM_SETCLIENT: Set the client widget
@@ -109,6 +107,10 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
  * @HILDON_IM_SHIFT_UNLOCKED: Unlock shift key
  * @HILDON_IM_MOD_LOCKED: Lock mod key
  * @HILDON_IM_MOD_UNLOCKED: Unlock mod key
+ * @HILDON_IM_SHIFT_STICKY: Activate shift stickyness
+ * @HILDON_IM_SHIFT_UNSTICKY: Deactivate shift stickyness
+ * @HILDON_IM_MOD_STICKY: Activate level stickyness
+ * @HILDON_IM_MOD_UNSTICKY: Deactivate level stickyness
  * @HILDON_IM_NUM_COMMANDS: The number of defined commands
  *
  * IM commands and notifications, from context to the IM process
@@ -119,8 +121,6 @@ typedef enum
   HILDON_IM_MODE,
   HILDON_IM_SHOW,
   HILDON_IM_HIDE,
-  HILDON_IM_UPP,
-  HILDON_IM_LOW,
   HILDON_IM_DESTROY,
   HILDON_IM_CLEAR,
   HILDON_IM_SETCLIENT,
@@ -131,6 +131,10 @@ typedef enum
   HILDON_IM_SHIFT_UNLOCKED,
   HILDON_IM_MOD_LOCKED,
   HILDON_IM_MOD_UNLOCKED,
+  HILDON_IM_SHIFT_STICKY,
+  HILDON_IM_SHIFT_UNSTICKY,
+  HILDON_IM_MOD_STICKY,
+  HILDON_IM_MOD_UNSTICKY,
 
   /* always last */
   HILDON_IM_NUM_COMMANDS
@@ -158,11 +162,16 @@ typedef enum
  * @HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL: Request the contents of the text widget
  * @HILDON_IM_CONTEXT_WIDGET_CHANGED: The client widget has changed
  * @HILDON_IM_CONTEXT_OPTION_CHANGED: The OptionMask for the active context has changed
- * @HILDON_IM_CONTEXT_CLEAR_STICKY: Clear the sticky keys state
  * @HILDON_IM_CONTEXT_ENTER_ON_FOCUS: Generate a virtual enter key event the next time
  * the client widget is focused
  * @HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT: Append a space when the preedit text is committed
  * @HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT: Do not append said space
+ * @HILDON_IM_CONTEXT_SHIFT_LOCKED: Notify context of shift locked in a plugin
+ * @HILDON_IM_CONTEXT_SHIFT_UNLOCKED: Notify context of shift unlocked in a plugin
+ * @HILDON_IM_CONTEXT_LEVEL_LOCKED: Notify context of level locked in a plugin
+ * @HILDON_IM_CONTEXT_LEVEL_UNLOCKED: Notify context of level unlocked in a plugin
+ * @HILDON_IM_CONTEXT_SHIFT_UNSTICKY: Notify context to remove stickyness of shift
+ * @HILDON_IM_CONTEXT_LEVEL_UNSTICKY: Notify context to remove stickyness of level
  * @HILDON_IM_CONTEXT_NUM_COM: The number of defined commands
  *
  * IM communications, from IM process to context.
@@ -192,11 +201,17 @@ typedef enum
   HILDON_IM_CONTEXT_REQUEST_SURROUNDING_FULL,
   HILDON_IM_CONTEXT_WIDGET_CHANGED,
   HILDON_IM_CONTEXT_OPTION_CHANGED,
-  HILDON_IM_CONTEXT_CLEAR_STICKY,
   HILDON_IM_CONTEXT_ENTER_ON_FOCUS,
   
   HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT,
   HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT,
+
+  HILDON_IM_CONTEXT_SHIFT_LOCKED,
+  HILDON_IM_CONTEXT_SHIFT_UNLOCKED,
+  HILDON_IM_CONTEXT_LEVEL_LOCKED,
+  HILDON_IM_CONTEXT_LEVEL_UNLOCKED,
+  HILDON_IM_CONTEXT_SHIFT_UNSTICKY,
+  HILDON_IM_CONTEXT_LEVEL_UNSTICKY,
 
   /* always last */
   HILDON_IM_CONTEXT_NUM_COM
@@ -268,6 +283,15 @@ typedef enum
   HILDON_IM_COMMIT_BUFFERED,
   HILDON_IM_COMMIT_PREEDIT
 } HildonIMCommitMode;
+
+typedef enum {
+  HILDON_IM_SHIFT_STICKY_MASK     = 1 << 0,
+  HILDON_IM_SHIFT_LOCK_MASK       = 1 << 1,
+  HILDON_IM_LEVEL_STICKY_MASK     = 1 << 2,
+  HILDON_IM_LEVEL_LOCK_MASK       = 1 << 3,
+  HILDON_IM_COMPOSE_MASK          = 1 << 4,
+  HILDON_IM_DEAD_KEY_MASK         = 1 << 5
+} HildonIMInternalModifierMask;
 
 /* Command activation message, from context to IM (see HildonIMCommand) */
 typedef struct

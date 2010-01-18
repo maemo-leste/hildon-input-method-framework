@@ -61,6 +61,19 @@ gint hildon_im_autocorrection_check_character (const gchar *chr);
  */
 gboolean hildon_im_common_should_be_appended_after_letter (const gchar *chr);
 
+/**
+ * hildon_im_common_check_auto_cap:
+ * @content: a unichar string
+ * @offset: the position in content from which to start checking
+ *
+ * Checks whether auto-capitalization applies to the given content
+ * at the given offset.
+ *
+ * Returns: a boolean.
+ */
+gboolean hildon_im_common_check_auto_cap (const gchar *content,
+                                          gint offset);
+
 G_END_DECLS
 
 #endif /* ifndef HILDON_IM_COMMON_H_ */

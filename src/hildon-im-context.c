@@ -76,15 +76,6 @@ static HildonIMTrigger trigger = HILDON_IM_TRIGGER_UNKNOWN;
 static gboolean internal_reset = FALSE;
 static gboolean enter_on_focus_pending = FALSE;
 
-typedef enum {
-  HILDON_IM_SHIFT_STICKY_MASK     = 1 << 0,
-  HILDON_IM_SHIFT_LOCK_MASK       = 1 << 1,
-  HILDON_IM_LEVEL_STICKY_MASK     = 1 << 2,
-  HILDON_IM_LEVEL_LOCK_MASK       = 1 << 3,
-  HILDON_IM_COMPOSE_MASK          = 1 << 4,
-  HILDON_IM_DEAD_KEY_MASK         = 1 << 5
-} HildonIMInternalModifierMask;
-
 typedef struct _HildonIMContext HildonIMContext;
 
 struct _HildonIMContext
@@ -1364,13 +1355,6 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
         case HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY:
             hildon_im_clipboard_selection_query(self);
           break;
-        case HILDON_IM_CONTEXT_CLEAR_STICKY:
-          self->mask &= ~(HILDON_IM_SHIFT_STICKY_MASK |
-                          HILDON_IM_SHIFT_LOCK_MASK   |
-                          HILDON_IM_LEVEL_STICKY_MASK |
-                          HILDON_IM_LEVEL_LOCK_MASK   |
-                          HILDON_IM_COMPOSE_MASK);
-          break;
         case HILDON_IM_CONTEXT_OPTION_CHANGED:
           break;
         case HILDON_IM_CONTEXT_SPACE_AFTER_COMMIT:
@@ -1378,6 +1362,22 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           break;
         case HILDON_IM_CONTEXT_NO_SPACE_AFTER_COMMIT:
           self->space_after_commit = FALSE;
+          break;
+        case HILDON_IM_CONTEXT_SHIFT_LOCKED:
+          self->mask |= HILDON_IM_SHIFT_LOCK_MASK;
+          break;
+        case HILDON_IM_CONTEXT_SHIFT_UNLOCKED:
+          self->mask &= ~HILDON_IM_SHIFT_LOCK_MASK;
+        case HILDON_IM_CONTEXT_SHIFT_UNSTICKY:
+          self->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+          break;
+        case HILDON_IM_CONTEXT_LEVEL_LOCKED:
+          self->mask |= HILDON_IM_LEVEL_LOCK_MASK;
+          break;
+        case HILDON_IM_CONTEXT_LEVEL_UNLOCKED:
+          self->mask &= ~HILDON_IM_LEVEL_LOCK_MASK;
+        case HILDON_IM_CONTEXT_LEVEL_UNSTICKY:
+          self->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
           break;
         default:
           g_warning("Invalid communication message from IM");
@@ -1850,6 +1850,10 @@ hildon_im_context_set_mask_state(HildonIMContext *self,
     /* Pressing the key for the first time stickies the key for one character,
      * but only if no characters were entered while holding the key down */
     *mask |= sticky_mask;
+    if (sticky_mask & HILDON_IM_SHIFT_STICKY_MASK)
+      hildon_im_context_send_command (self, HILDON_IM_SHIFT_STICKY);
+    else if (sticky_mask & HILDON_IM_LEVEL_STICKY_MASK)
+      hildon_im_context_send_command (self, HILDON_IM_MOD_STICKY);
   }
   
 }
@@ -1879,11 +1883,13 @@ reset_shift_and_level_keys_if_needed (HildonIMContext *context, GdkEventKey *eve
       (context->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
   {
     context->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+    hildon_im_context_send_command (context, HILDON_IM_SHIFT_UNSTICKY);
   }
   /* If not locked, pressing any character resets level state */
   if (event->keyval != LEVEL_KEY && (context->mask & HILDON_IM_LEVEL_LOCK_MASK) == 0)
   {
     context->mask &= ~HILDON_IM_LEVEL_STICKY_MASK;
+    hildon_im_context_send_command (context, HILDON_IM_MOD_UNSTICKY);
   }
 }
 
@@ -1971,7 +1977,7 @@ hildon_im_context_invert_case (GdkEventKey *event)
 }
 
 static void
-perform_shift_translation (GdkEventKey *event)
+perform_shift_translation (GdkEventKey *event, GdkModifierType state)
 {
   guint lower, upper;
 
@@ -1981,7 +1987,7 @@ perform_shift_translation (GdkEventKey *event)
   {
     gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),
                                         event->hardware_keycode,
-                                        GDK_SHIFT_MASK,
+                                        state,
                                         event->group,
                                         &event->keyval,
                                         NULL, NULL, NULL);
@@ -2350,7 +2356,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   if (shift_key_is_sticky && !shift_key_is_locked)
   {
     /* Inverts the case or gets the character in the shift level */
-    perform_shift_translation (event);
+    perform_shift_translation (event, translation_state);
   }
   else if (shift_key_is_down)
   {
@@ -2405,7 +2411,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
                                      gdk_unicode_to_keyval(c),
                                      event->hardware_keycode);
     context->last_internal_change = TRUE;
-    context->auto_upper = FALSE;
 
     gboolean inserted_text = FALSE;
 
@@ -2649,137 +2654,53 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
   self->prev_cursor_x = area->x;
 }
 
-static gint
-hildon_im_context_get_insert (HildonIMContext *self, gint cursor_position)
-{
-  gint insert = -1;
-
-  if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
-  {
-    GtkTextIter selection_begin, cursor;
-    GtkTextBuffer *buffer = NULL;
-    GtkTextMark *cursor_mark = NULL;
-    gchar *slice = NULL;
-
-    buffer = get_buffer (self->client_gtk_widget);
-    if (buffer != NULL &&
-        gtk_text_buffer_get_selection_bounds (buffer, &selection_begin, NULL))
-    {
-      cursor_mark = gtk_text_buffer_get_insert (buffer);
-      gtk_text_buffer_get_iter_at_mark (buffer, &cursor, cursor_mark);
-      if (!gtk_text_iter_equal (&cursor, &selection_begin))
-      {
-        slice = gtk_text_iter_get_visible_slice (&selection_begin, &cursor);
-
-        if (slice != NULL)
-          insert = cursor_position - g_utf8_strlen (slice, -1);
-      }
-    }
-  }
-  else if (GTK_IS_EDITABLE (self->client_gtk_widget))
-  {
-    gtk_editable_get_selection_bounds (GTK_EDITABLE (self->client_gtk_widget),
-                                       &insert,
-                                       NULL);
-  }
-
-  if (insert < 0)
-    return cursor_position;
-  return insert;
-}
-
-/* Updates the IM with the autocap state at the active cursor position 
- * TODO this can be optimized a lot */
+/* Updates the IM with the autocap state at the active cursor position */
 static void
 hildon_im_context_check_sentence_start (HildonIMContext *self)
 {
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-#endif
-  gchar *surrounding = NULL;
-  gchar *iter;
-  gint cpos = 0;
-  gboolean has_surrounding, space;
-  gunichar ch;
-
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
-#ifdef MAEMO_CHANGES
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-  if ((input_mode & (HILDON_GTK_INPUT_MODE_ALPHA |
-       HILDON_GTK_INPUT_MODE_AUTOCAP)) !=
-      (HILDON_GTK_INPUT_MODE_ALPHA |
-       HILDON_GTK_INPUT_MODE_AUTOCAP))
+  if ( (self->options & HILDON_IM_AUTOCASE) == 0)
   {
-    /* If autocap is off, but the mode contains alpha, send autocap message.
-       The important part is that when entering a numerical entry the autocap
-       is not defined, and the plugin sets the mode appropriate for the language */
-    if (input_mode & HILDON_GTK_INPUT_MODE_ALPHA)
-    {
-      self->auto_upper = FALSE;
-      hildon_im_context_send_command(self, HILDON_IM_LOW);
-    }
-    return;
-  }
-#endif
-
-
-  has_surrounding = hildon_im_context_get_surrounding(GTK_IM_CONTEXT(self),
-                                                      &surrounding, &cpos);
-
-  if (!has_surrounding)
-  {
-    self->auto_upper = self->options & HILDON_IM_AUTOCASE;
-    
-    if (self->auto_upper)
-      hildon_im_context_send_command(self, HILDON_IM_UPP);
-    else
-      hildon_im_context_send_command(self, HILDON_IM_LOW);
-    return;
-  }
-
-  cpos = hildon_im_context_get_insert (self, cpos);
-  iter = g_utf8_offset_to_pointer (surrounding, cpos);
-  space = FALSE;
-
-  while (TRUE)
-  {
-    iter = g_utf8_find_prev_char(surrounding, iter);
-
-    if (iter == NULL)
-      break;
-
-    ch = g_utf8_get_char(iter);
-
-    if (g_unichar_isspace(ch))
-    {
-      space = TRUE;
-    }
-    else if(g_unichar_ispunct(ch))
-    {
-      if (space && hildon_im_common_changes_case(iter))
-        break;
-      else
-        continue;
-    }
-    else
-    {
-      break;
-    }
-  }
-
-  if (iter == NULL || (space == TRUE && hildon_im_common_changes_case(iter)))
-  {
-    self->auto_upper = self->options & HILDON_IM_AUTOCASE;
-    hildon_im_context_send_command(self, HILDON_IM_UPP);
+    self->auto_upper = FALSE;
   }
   else
   {
-    self->auto_upper = FALSE;
-    hildon_im_context_send_command(self, HILDON_IM_LOW);
-  }
+    gboolean shift_is_sticky;
+    gboolean shift_is_locked;
+    gboolean old_auto_upper;
 
-  g_free (surrounding);
+    shift_is_sticky = self->mask & HILDON_IM_SHIFT_STICKY_MASK;
+    shift_is_locked = self->mask & HILDON_IM_SHIFT_LOCK_MASK;
+
+    old_auto_upper = self->auto_upper;
+
+    if (shift_is_sticky || shift_is_locked)
+    {
+      self->auto_upper = FALSE;
+    }
+    else
+    {
+      gchar *surrounding = NULL;
+      gint cpos = 0;
+
+      hildon_im_context_get_surrounding (GTK_IM_CONTEXT (self),
+                                         &surrounding,
+                                         &cpos);
+
+      if (hildon_im_common_check_auto_cap (surrounding, cpos))
+        self->auto_upper = TRUE;
+      else
+        self->auto_upper = FALSE;
+
+      g_free (surrounding);
+    }
+
+    if ( (! old_auto_upper) && self->auto_upper)
+      hildon_im_context_send_command (self, HILDON_IM_SHIFT_STICKY);
+    else if (old_auto_upper && (! self->auto_upper))
+      hildon_im_context_send_command (self, HILDON_IM_SHIFT_UNSTICKY);
+  }
 }
 
 /* Ask the client widget to insert the specified text at the cursor
