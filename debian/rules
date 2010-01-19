@@ -96,9 +96,9 @@ binary-indep: build install
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+#	dh_installchangelogs
 #	dh_installexamples
-	dh_installdocs
+#	dh_installdocs
 	dh_install --sourcedir=debian/build -v
 #	dh_installmenu
 #	dh_installdebconf

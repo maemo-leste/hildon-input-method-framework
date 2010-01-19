@@ -2,8 +2,9 @@ hildon-input-method-framework (1:2.1.47-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.47-1~unreleased
   * Fixes: NB#136775 ActiveSync auto-completes the password
+  * Fixes: NB#149136 Remove doc files from im debs
 
- -- Joaquim Rocha <jrocha@maemo.org>  Mon, 18 Jan 2010 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Tue, 19 Jan 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.46-1) unstable; urgency=low
 

@@ -1,3 +1,9 @@
+2010-01-19 Joaquim Rocha <jrocha@maemo.org>
+
+	* debian/rules : Prevents installing changelogs and docs from the Debian
+	  package. (NB#149136)
+	* Fixes: NB#149136
+
 2010-01-18 Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.47-1~unreleased
