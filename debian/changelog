@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.47-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.47-1) unstable; urgency=low
 
-  * Version 1:2.1.47-1~unreleased
+  * Version 1:2.1.47-1
   * Fixes: NB#136775 ActiveSync auto-completes the password
   * Fixes: NB#149136 Remove doc files from im debs
   * Fixes regression: NB#145043 was happening.

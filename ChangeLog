@@ -1,3 +1,7 @@
+2010-01-25 Joaquim Rocha <jrocha@maemo.org>
+
+	* Version 1:2.1.47-1
+
 2010-01-25 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* src/hildon-im-context.c: Adds long-press data clean-up when IM context loses focus.
