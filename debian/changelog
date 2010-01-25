@@ -5,8 +5,9 @@ hildon-input-method-framework (1:2.1.47-1~unreleased) unstable; urgency=low
   * Fixes: NB#149136 Remove doc files from im debs
   * Fixes regression: NB#145043 was happening.
   * Fixes: NB#143933 Inconsistency in mode is observed when switched from HKB to FKB.
+  * Fixes: NB#152149 Crash is observed while creating a Note by pressing key pad keys in Notes view.
 
- -- Joaquim Rocha <jrocha@maemo.org>  Tue, 19 Jan 2010 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Mon, 25 Jan 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.46-1) unstable; urgency=low
 

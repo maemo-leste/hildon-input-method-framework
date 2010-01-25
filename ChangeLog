@@ -1,3 +1,8 @@
+2010-01-25 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* src/hildon-im-context.c: Adds long-press data clean-up when IM context loses focus.
+	* Fixes: NB#152149
+
 2010-01-22 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* src/hildon-im-context.c : Completely re-implements shift and level state

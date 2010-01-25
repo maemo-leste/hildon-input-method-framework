@@ -1661,6 +1661,14 @@ hildon_im_context_focus_out(GtkIMContext *context)
   self->has_focus = FALSE;
 
   set_preedit_buffer (self, NULL);
+
+  /* clear any long-press data */
+  hildon_im_context_abort_long_press (self);
+  if (self->long_press_last_key_event != NULL)
+  {
+    gdk_event_free ((GdkEvent *) self->long_press_last_key_event);
+    self->long_press_last_key_event = NULL;
+  }
 }
 
 static gboolean
