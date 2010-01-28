@@ -1,3 +1,10 @@
+hildon-input-method-framework (1:2.1.48-1~unreleased) unstable; urgency=low
+
+  * Version 1:2.1.48-1~unreleased
+  * Drop HKB from TI settings
+
+ -- Joaquim Rocha <jrocha@maemo.org>  Mon, 25 Jan 2010 12:00:00 +0100
+
 hildon-input-method-framework (1:2.1.47-1) unstable; urgency=low
 
   * Version 1:2.1.47-1
