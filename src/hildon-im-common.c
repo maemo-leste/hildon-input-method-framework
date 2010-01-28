@@ -56,7 +56,7 @@ hildon_im_common_check_auto_cap (const gchar *content, gint offset)
   gboolean space = FALSE;
   gunichar ch;
 
-  if (content == NULL || content[0] == '\0')
+  if (content == NULL || content[0] == '\0' || offset == 0)
     return TRUE;
 
   iter = g_utf8_offset_to_pointer (content, offset);

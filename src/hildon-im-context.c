@@ -2662,6 +2662,45 @@ hildon_im_context_set_cursor_location(GtkIMContext *context,
   self->prev_cursor_x = area->x;
 }
 
+static gint
+hildon_im_context_get_insert (HildonIMContext *self, gint cursor_position)
+{
+  gint insert = -1;
+
+  if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+  {
+    GtkTextIter selection_begin, cursor;
+    GtkTextBuffer *buffer = NULL;
+    GtkTextMark *cursor_mark = NULL;
+    gchar *slice = NULL;
+
+    buffer = get_buffer (self->client_gtk_widget);
+    if (buffer != NULL &&
+        gtk_text_buffer_get_selection_bounds (buffer, &selection_begin, NULL))
+    {
+      cursor_mark = gtk_text_buffer_get_insert (buffer);
+      gtk_text_buffer_get_iter_at_mark (buffer, &cursor, cursor_mark);
+      if (!gtk_text_iter_equal (&cursor, &selection_begin))
+      {
+        slice = gtk_text_iter_get_visible_slice (&selection_begin, &cursor);
+
+        if (slice != NULL)
+          insert = cursor_position - g_utf8_strlen (slice, -1);
+      }
+    }
+  }
+  else if (GTK_IS_EDITABLE (self->client_gtk_widget))
+  {
+    gtk_editable_get_selection_bounds (GTK_EDITABLE (self->client_gtk_widget),
+                                       &insert,
+                                       NULL);
+  }
+
+  if (insert < 0)
+    return cursor_position;
+  return insert;
+}
+
 /* Updates the IM with the autocap state at the active cursor position */
 static void
 hildon_im_context_check_sentence_start (HildonIMContext *self)
@@ -2695,6 +2734,8 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
       hildon_im_context_get_surrounding (GTK_IM_CONTEXT (self),
                                          &surrounding,
                                          &cpos);
+
+      cpos = hildon_im_context_get_insert (self, cpos);
 
       if (hildon_im_common_check_auto_cap (surrounding, cpos))
         self->auto_upper = TRUE;
