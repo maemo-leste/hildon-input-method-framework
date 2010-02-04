@@ -1269,6 +1269,14 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
     {
       HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
 
+      /* if autocap was suddenly deactivated, cleanup shift stickiness */
+      if ( (! (msg->options & HILDON_IM_AUTOCASE)) &&
+           (self->options & HILDON_IM_AUTOCASE) )
+        {
+          self->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
+          hildon_im_context_send_command (self, HILDON_IM_SHIFT_UNSTICKY);
+        }
+
       self->options = msg->options;
 
       switch(msg->type)
@@ -2399,11 +2407,11 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     c = gdk_keyval_to_unicode (event->keyval);
   }
 
-  reset_shift_and_level_keys_if_needed (context, event);
-
   if (c)
   {
     gchar utf8[10];
+
+    reset_shift_and_level_keys_if_needed (context, event);
 
     /* Entering a new character cleans the preedit buffer */
     set_preedit_buffer (context, NULL);

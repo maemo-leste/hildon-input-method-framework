@@ -2,8 +2,9 @@ hildon-input-method-framework (1:2.1.48-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.48-1~unreleased
   * Fixes regression pointed in NB#154630
+  * Fixes regression pointed in NB#143452
 
- -- Joaquim Rocha <jrocha@maemo.org>  Thu, 28 Jan 2010 12:00:00 +0100
+ -- Joaquim Rocha <jrocha@maemo.org>  Thu, 04 Feb 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.47-1) unstable; urgency=low
 

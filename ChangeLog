@@ -1,3 +1,9 @@
+2010-02-04 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* src/hildon-im-context.c : Solved regression to NB#143933(reset autocap state in context upon
+	  deactivation in Settings panel).
+	* Fixes NB#143452
+
 2010-01-28 Joaquim Rocha <jrocha@maemo.org>
 
 	* Version 1:2.1.48-1~unreleased
