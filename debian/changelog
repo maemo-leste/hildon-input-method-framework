@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.48-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.48-1) unstable; urgency=low
 
-  * Version 1:2.1.48-1~unreleased
+  * Version 1:2.1.48-1
   * Fixes regression pointed in NB#154630
   * Fixes regression pointed in NB#143452
 
