@@ -1,3 +1,10 @@
+hildon-input-method-framework (1:2.1.57-1~unreleased) unstable; urgency=low
+
+  * Version 1:2.1.57-1~unreleased
+  * Partial fix to NB#155966 Del key functionality is missing (shift-backspace).
+
+ -- Eduardo Lima Mitev <e-lima@maemo.org>  Wed, 17 Mar 2010 12:00:00 +0100
+
 hildon-input-method-framework (1:2.1.56-1) unstable; urgency=low
 
   * Version 1:2.1.56-1

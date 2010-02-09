@@ -137,6 +137,8 @@ struct _HildonIMContext
   guint long_press_timeout_src_id;
   guint long_press_timeout;
   GdkEventKey *long_press_last_key_event;
+
+  gboolean last_was_shift_backspace;
 };
 
 /* Initialisation/finalisation functions */
@@ -628,6 +630,8 @@ hildon_im_context_init(HildonIMContext *self)
   self->long_press_timeout_src_id = 0;
   self->long_press_timeout = DEFAULT_LONG_PRESS_TIMEOUT;
   self->long_press_last_key_event = NULL;
+
+  self->last_was_shift_backspace = FALSE;
 
 #ifdef MAEMO_CHANGES
   g_signal_connect(self, "notify::hildon-input-mode",
@@ -1234,6 +1238,39 @@ hildon_im_context_do_backspace (HildonIMContext *self)
   {
     hildon_im_context_send_fake_key(GDK_BackSpace, TRUE);
     hildon_im_context_send_fake_key(GDK_BackSpace, FALSE);
+  }
+}
+
+static gboolean
+hildon_im_context_do_del (HildonIMContext *self)
+{
+  gint cpos1;
+  gchar *sur;
+
+  /* This is only for non-GTK+ widgets. For normal GTK+ text entries,
+     'del' key is handled normally at X level */
+  self->last_was_shift_backspace = TRUE;
+
+  if ( (! GTK_IS_TEXT_VIEW (self->client_gtk_widget)) &&
+       (! GTK_IS_EDITABLE (self->client_gtk_widget)) )
+  {
+    gtk_im_context_get_surrounding (GTK_IM_CONTEXT (self), &sur, &cpos1);
+
+    if (g_utf8_strlen (sur, -1) > cpos1)
+    {
+      hildon_im_context_send_fake_key (GDK_Shift_L, FALSE);
+      hildon_im_context_send_fake_key (GDK_Right, TRUE);
+      hildon_im_context_send_fake_key (GDK_Right, FALSE);
+      hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
+      hildon_im_context_send_fake_key (GDK_Shift_L, TRUE);
+    }
+    g_free (sur);
+
+    return TRUE;
+  }
+  else
+  {
+    return FALSE;
   }
 }
 
@@ -1930,11 +1967,14 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
 
   if (event->keyval == GDK_Shift_L || event->keyval == GDK_Shift_R)
   {
-    hildon_im_context_set_mask_state(context,
-                                     &context->mask,
-                                     HILDON_IM_SHIFT_LOCK_MASK,
-                                     HILDON_IM_SHIFT_STICKY_MASK,
-                                     last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
+    if (! context->last_was_shift_backspace)
+      hildon_im_context_set_mask_state(context,
+                                       &context->mask,
+                                       HILDON_IM_SHIFT_LOCK_MASK,
+                                       HILDON_IM_SHIFT_STICKY_MASK,
+                                       last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
+    else
+      context->last_was_shift_backspace = FALSE;
   }
   else if (event->keyval == LEVEL_KEY)
   {
@@ -2282,6 +2322,10 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
       return TRUE;
     }
   }
+
+  if (event->keyval == GDK_Delete)
+    if (hildon_im_context_do_del (context))
+      return TRUE;
 
   is_suggesting_autocompleted_word = context->preedit_buffer != NULL &&
                                      context->preedit_buffer->len != 0;
