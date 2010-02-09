@@ -2133,6 +2133,46 @@ get_representation_for_dead_character (GdkEventKey *event, guint32 dead_characte
   return gdk_keyval_to_unicode (event->keyval);
 }
 
+static void
+hildon_im_context_delete_penultimate_char (HildonIMContext *self)
+{
+  if (GTK_IS_TEXT_VIEW (self->client_gtk_widget))
+  {
+    GtkTextBuffer *buffer;
+    GtkTextIter iter1, iter2;
+
+    buffer = get_buffer (self->client_gtk_widget);
+    gtk_text_buffer_get_iter_at_mark (buffer,
+                                      &iter1,
+                                      gtk_text_buffer_get_insert (buffer));
+    gtk_text_iter_backward_char (&iter1);
+    iter2 = iter1;
+    gtk_text_iter_backward_char (&iter1);
+    gtk_text_buffer_delete (buffer,
+                            &iter1, &iter2);
+  }
+  else if (GTK_IS_EDITABLE(self->client_gtk_widget))
+  {
+    gint pos;
+
+    pos = gtk_editable_get_position (GTK_EDITABLE (self->client_gtk_widget));
+    gtk_editable_delete_text (GTK_EDITABLE(self->client_gtk_widget),
+                              pos - 2,
+                              pos - 1);
+  }
+  else
+  {
+    hildon_im_context_send_fake_key (GDK_Left, TRUE);
+    hildon_im_context_send_fake_key (GDK_Left, FALSE);
+
+    hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key (GDK_BackSpace, FALSE);
+
+    hildon_im_context_send_fake_key (GDK_Right, TRUE);
+    hildon_im_context_send_fake_key (GDK_Right, FALSE);
+  }
+}
+
 static gboolean
 hildon_im_context_on_long_press_timeout (gpointer user_data)
 {
@@ -2140,8 +2180,6 @@ hildon_im_context_on_long_press_timeout (gpointer user_data)
   HildonIMInternalModifierMask mask_backup;
 
   mask_backup = self->mask;
-
-  hildon_im_context_do_backspace (self);
 
   if ((self->mask & HILDON_IM_LEVEL_LOCK_MASK) != 0)
   {
@@ -2166,6 +2204,8 @@ hildon_im_context_on_long_press_timeout (gpointer user_data)
   self->enable_long_press = FALSE;
   key_pressed (self, self->long_press_last_key_event);
   self->enable_long_press = TRUE;
+
+  hildon_im_context_delete_penultimate_char (self);
 
   self->mask = mask_backup;
 

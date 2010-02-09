@@ -1,3 +1,9 @@
+2010-02-09 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* Version 1:2.1.49-1~unreleased
+	* src/hildon-im-context.c : Avoids doing backspace to detele character during key long-press.
+	* Fixes : NB#155634
+
 2010-02-04 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* Version 1:2.1.48-1
