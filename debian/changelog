@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.49-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.49-1) unstable; urgency=low
 
-  * Version 1:2.1.49-1~unreleased
+  * Version 1:2.1.49-1
   * Fixes: NB#155634 Long pressing a key in live search results in a crash.
   * Fixes: NB#154576 Hardware keyboard layout should be implemented by language.
 
