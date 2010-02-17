@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.51-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.51-1) unstable; urgency=low
 
-  * Version 1:2.1.51-1~unreleased
+  * Version 1:2.1.51-1
   * Fixes regression: NB#101069 was happening.
   * Fixes: NB#157343 FKB doesn't pop up when tapping on Qt widgets
 
