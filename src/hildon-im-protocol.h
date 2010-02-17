@@ -98,6 +98,8 @@ Atom hildon_im_protocol_get_atom(HildonIMAtom atom_name);
  * @HILDON_IM_MODE: Update the hildon-input-mode property
  * @HILDON_IM_SHOW: Show the IM UI
  * @HILDON_IM_HIDE: Hide the IM UI
+ * @HILDON_IM_UP: Deprecated, left here as a placeholder to avoid breaking ABI
+ * @HILDON_IM_LOW: Deprecated, left here as a placeholder to avoid breaking ABI
  * @HILDON_IM_DESTROY: (Deprecated) Destroy the IM UI
  * @HILDON_IM_CLEAR: Clear the IM UI state
  * @HILDON_IM_SETCLIENT: Set the client widget
@@ -121,6 +123,8 @@ typedef enum
   HILDON_IM_MODE,
   HILDON_IM_SHOW,
   HILDON_IM_HIDE,
+  HILDON_IM_UP,
+  HILDON_IM_LOW,
   HILDON_IM_DESTROY,
   HILDON_IM_CLEAR,
   HILDON_IM_SETCLIENT,

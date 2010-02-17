@@ -1,3 +1,10 @@
+2010-02-17 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* Version 1:2.1.50-1~unreleased
+	* src/hildon-im-protocol.h : Adds placeholders in protocol command constants to restore
+	  ABI breakage.
+	* Fixes regression from NB#143933
+
 2010-02-12 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* Version 1:2.1.49-1
