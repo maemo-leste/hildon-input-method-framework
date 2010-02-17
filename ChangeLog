@@ -1,5 +1,11 @@
 2010-02-17 Eduardo Lima Mitev <e-lima@maemo.org>
 
+	* Version 1:2.1.51-1~unreleased
+	* src/hildon-im-context.c : Resets shift and level states on key release.
+	* Fixes regression: NB#101069 was happening.
+
+2010-02-17 Eduardo Lima Mitev <e-lima@maemo.org>
+
 	* Version 1:2.1.50-1
 	* src/hildon-im-protocol.h : Adds placeholders in protocol command constants to restore
 	  ABI breakage.
