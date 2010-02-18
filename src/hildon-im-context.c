@@ -2260,7 +2260,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean invert_level_behavior = FALSE;
   
-  GdkModifierType translation_state = LEVEL_KEY_MOD_MASK;
+  GdkModifierType translation_state = 0;
 
   /* avoid key repeating when a long-press is in course  */
   if ((context->enable_long_press) &&
@@ -2355,6 +2355,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
   {
+    translation_state |= LEVEL_KEY_MOD_MASK;
+
     /* When the level key is in sticky or locked state,  and we're not
      * in numeric/tele mode, translate the keyboard state as if that
      * level key was being held down. */
