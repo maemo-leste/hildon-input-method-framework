@@ -1,6 +1,6 @@
 2010-02-23 Eduardo Lima Mitev <e-lima@maemo.org>
 
-	* Version 1:2.1.54-1~unreleased
+	* Version 1:2.1.54-1
 	* src/hildon-im-context.c : Resets auto-capitalization flag right after using it in
 	  key_pressed handler, rather than waiting to reset it in key_release.
 	* Fixes : NB#157751

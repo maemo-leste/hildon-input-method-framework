@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.54-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.54-1) unstable; urgency=low
 
-  * Version 1:2.1.54-1~unreleased
+  * Version 1:2.1.54-1
   * Fixes: NB#157751 First two letters are in upper case instead of only one.
 
  -- Eduardo Lima Mitev <e-lima@maemo.org>  Tue, 23 Feb 2010 12:00:00 +0100
