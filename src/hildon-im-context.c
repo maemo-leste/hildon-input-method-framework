@@ -1915,7 +1915,6 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   gboolean level_key_is_sticky = context->mask & HILDON_IM_LEVEL_STICKY_MASK;
   gboolean level_key_is_locked = context->mask & HILDON_IM_LEVEL_LOCK_MASK;
   gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
-  gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
 
   if ((context->long_press_last_key_event != NULL) &&
       (event->hardware_keycode ==
@@ -1962,10 +1961,7 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
   }
 
-  if (ctrl_key_is_down)
-  {
-    hildon_im_context_check_sentence_start (context);
-  }
+  hildon_im_context_check_sentence_start (context);
 
   hildon_im_context_send_key_event(context, event->type, event->state,
                                    event->keyval, event->hardware_keycode);
@@ -2391,6 +2387,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
   {
     event->keyval = gdk_keyval_to_upper(event->keyval);
+    context->auto_upper = FALSE;
   }
 #endif
 
