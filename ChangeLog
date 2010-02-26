@@ -1,3 +1,10 @@
+2010-02-26 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* Version 1:2.1.55-1~unreleased
+	* src/hildon-im-context.c : Adds russian latin layout again, reverting changes for
+	  NB#154576.
+	* Fixes : NB#157749
+
 2010-02-23 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* Version 1:2.1.54-1
