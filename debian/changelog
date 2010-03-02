@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.56-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.56-1) unstable; urgency=low
 
-  * Version 1:2.1.56-1~unreleased
+  * Version 1:2.1.56-1
   * Fixes: NB#158515 Unable to enter numerical values during PC-Device BT pairing.
 
  -- Eduardo Lima Mitev <e-lima@maemo.org>  Wed, 03 Mar 2010 12:00:00 +0100
