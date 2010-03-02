@@ -1,3 +1,10 @@
+2010-03-03 Eduardo Lima Mitev <e-lima@maemo.org>
+
+	* Version 1:2.1.56-1~unreleased
+	* src/hildon-im-context.c : Restores broken level-inverting when default mode is
+	  TELE.
+	* Fixes : NB#158515
+
 2010-03-02 Eduardo Lima Mitev <e-lima@maemo.org>
 
 	* Version 1:2.1.55-1

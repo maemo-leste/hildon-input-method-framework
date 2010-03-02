@@ -2176,6 +2176,7 @@ hildon_im_context_on_long_press_timeout (gpointer user_data)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT (user_data);
   HildonIMInternalModifierMask mask_backup;
+  gint cpos1 = 0, cpos2 = 0;
 
   mask_backup = self->mask;
 
@@ -2199,11 +2200,20 @@ hildon_im_context_on_long_press_timeout (gpointer user_data)
     self->mask |= HILDON_IM_LEVEL_STICKY_MASK;
   }
 
+  gtk_im_context_get_surrounding (GTK_IM_CONTEXT (self), NULL, &cpos1);
+
   self->enable_long_press = FALSE;
   key_pressed (self, self->long_press_last_key_event);
   self->enable_long_press = TRUE;
 
-  hildon_im_context_delete_penultimate_char (self);
+  gtk_im_context_get_surrounding (GTK_IM_CONTEXT (self), NULL, &cpos2);
+
+  if ( (cpos2 > cpos1) ||
+       (! GTK_IS_EDITABLE (self->client_gtk_widget)) ||
+       (! GTK_IS_TEXT_VIEW (self->client_gtk_widget)) )
+    {
+      hildon_im_context_delete_penultimate_char (self);
+    }
 
   self->mask = mask_backup;
 
@@ -2389,7 +2399,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   if (invert_level_behavior)
   {
-    perform_level_translation (event, translation_state);
+    perform_level_translation (event, translation_state | LEVEL_KEY_MOD_MASK);
   }
 
 #ifdef MAEMO_CHANGES
