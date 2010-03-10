@@ -2,8 +2,11 @@ hildon-input-method-framework (1:2.1.57-1~unreleased) unstable; urgency=low
 
   * Version 1:2.1.57-1~unreleased
   * Partial fix to NB#155966 Del key functionality is missing (shift-backspace).
+  * Fixes : NB#159285 Auto caps is on for the user name field in email application.
+  * Fixes : NB#159896 FKB not opens in number tab for tele mode and numeric mode editors.
+  * Fixes : NB#161496 FKB opens in upper case letters in contact fields while creating a new contact.
 
- -- Eduardo Lima Mitev <e-lima@maemo.org>  Wed, 17 Mar 2010 12:00:00 +0100
+ -- Eduardo Lima Mitev <e-lima@maemo.org>  Mon, 22 Mar 2010 12:00:00 +0100
 
 hildon-input-method-framework (1:2.1.56-1) unstable; urgency=low
 

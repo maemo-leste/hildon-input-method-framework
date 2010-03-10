@@ -116,6 +116,7 @@ struct _HildonIMContext
   GdkEventKey *last_key_event;
   guint32 combining_char;
   gboolean auto_upper;
+  gboolean auto_upper_enabled;
   gboolean has_focus;
   gboolean is_url_entry;
   gboolean committed_preedit;
@@ -581,7 +582,16 @@ static void
 hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(object);
-  
+  gint input_mode = 0;
+  gint default_input_mode = 0;
+
+  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
+  g_object_get (self, "hildon-input-default", &default_input_mode, NULL);
+
+  self->auto_upper_enabled =
+    ( (self->options & HILDON_IM_AUTOCASE) != 0 &&
+      (input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP) != 0);
+
   if (self->client_gtk_widget != NULL && GTK_WIDGET_HAS_FOCUS (self->client_gtk_widget))
   {
     /* Notify IM of any input mode changes in cases where the UI is
@@ -621,7 +631,10 @@ hildon_im_context_init(HildonIMContext *self)
   self->commit_mode = HILDON_IM_COMMIT_REDIRECT;
   self->previous_commit_mode = self->commit_mode;
   self->incoming_preedit_buffer = g_string_new ("");
-  
+
+  self->auto_upper_enabled = FALSE;
+  self->auto_upper = FALSE;
+
   self->button_press_x = -1.0;
   self->button_press_y = -1.0;
 
@@ -1687,6 +1700,9 @@ hildon_im_context_focus_in(GtkIMContext *context)
   }
 
   hildon_im_context_send_command(self, HILDON_IM_SETCLIENT);
+
+  hildon_im_context_send_command (self, HILDON_IM_SHIFT_UNSTICKY);
+  hildon_im_context_send_command (self, HILDON_IM_MOD_UNSTICKY);
 
   if (enter_on_focus_pending)
   {
@@ -2810,7 +2826,9 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 {
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
-  if ( (self->options & HILDON_IM_AUTOCASE) == 0)
+  hildon_im_context_input_mode_changed (G_OBJECT (self), NULL);
+
+  if (! self->auto_upper_enabled)
   {
     self->auto_upper = FALSE;
   }
