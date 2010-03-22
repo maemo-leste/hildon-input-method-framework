@@ -1,5 +1,6 @@
 2010-03-22 Eduardo Lima Mitev <e-lima@maemo.org>
 
+	* Version 1:2.1.57-1
 	* src/hildon-im-context.c : Makes auto-capitalization respect context's input mode.
 	* Fixes : NB#159285
 	* Fixes : NB#159896
