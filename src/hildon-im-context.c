@@ -2429,14 +2429,12 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
    * keyboard state as if that level key was being held down. */
   if (level_key_is_sticky || level_key_is_locked || level_key_is_down)
   {
-    translation_state |= LEVEL_KEY_MOD_MASK;
-
     /* When the level key is in sticky or locked state,  and we're not
      * in numeric/tele mode, translate the keyboard state as if that
      * level key was being held down. */
     if (!invert_level_behavior)
     {
-      perform_level_translation (event, translation_state);
+      translation_state |= LEVEL_KEY_MOD_MASK;
     }
     else if (level_key_is_down)
     {
@@ -2457,10 +2455,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     invert_level_behavior = FALSE;
   }
 
-  if (invert_level_behavior)
-  {
-    perform_level_translation (event, translation_state | LEVEL_KEY_MOD_MASK);
-  }
+  if (translation_state > 0)
+    perform_level_translation (event, translation_state);
 
 #ifdef MAEMO_CHANGES
   /* Hardware keyboard autocapitalization  */
