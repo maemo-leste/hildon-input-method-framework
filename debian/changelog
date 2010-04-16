@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.58-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.58-1) unstable; urgency=low
 
-  * Version 1:2.1.58-1~unreleased
+  * Version 1:2.1.58-1
   * Fixes : NB#164592 Auto capitalisation cannot be unshifted.
 
  -- Eduardo Lima Mitev <e-lima@maemo.org>  Fri, 16 Apr 2010 12:00:00 +0100

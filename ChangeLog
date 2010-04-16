@@ -1,6 +1,6 @@
 2010-04-16 Eduardo Lima Mitev <e-lima@maemo.org>
 
-	* Version 1:2.1.58-1~unreleased
+	* Version 1:2.1.58-1
 	* src/hildon-im-context.c : Fixes broken shift sticky translation during key-press
 	  handling. Regression from NB#157380.
 	* Fixes : NB#164592
