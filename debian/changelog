@@ -1,6 +1,6 @@
-hildon-input-method-framework (1:2.1.59-1~unreleased) unstable; urgency=low
+hildon-input-method-framework (1:2.1.59-1) unstable; urgency=low
 
-  * Version 1:2.1.59-1~unreleased
+  * Version 1:2.1.59-1
   * Fixes regressions introduced in patch for NB#164592 Auto capitalisation cannot be unshifted.
   * Fixes : NB#164592 Auto capitalisation cannot be unshifted.
 

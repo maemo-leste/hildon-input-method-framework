@@ -1,6 +1,6 @@
 2010-04-19 Eduardo Lima Mitev <e-lima@maemo.org>
 
-	* Version 1:2.1.59-1~unreleased
+	* Version 1:2.1.59-1
 	* src/hildon-im-context.c : Reverts patch for NB#164592 due to regressions.
 	  Level-inverting in TELE mode was broken again (NB#158515).
 	  Implements other solution to fix broken shift sticky without introducing
