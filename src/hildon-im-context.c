@@ -2240,16 +2240,8 @@ hildon_im_context_on_long_press_timeout (gpointer user_data)
   {
     self->mask &= ~ (HILDON_IM_LEVEL_LOCK_MASK | HILDON_IM_LEVEL_STICKY_MASK);
 
-    if ( (self->mask & HILDON_IM_SHIFT_STICKY_MASK) != 0)
-    {
-      perform_level_translation (self->long_press_last_key_event,
-                                 GDK_SHIFT_MASK);
-      self->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
-    }
-    else
-    {
-      perform_level_translation (self->long_press_last_key_event, 0);
-    }
+    perform_level_translation (self->long_press_last_key_event,
+                               GDK_SHIFT_MASK);
   }
   else
   {
@@ -2464,10 +2456,9 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
 #ifdef MAEMO_CHANGES
   /* Hardware keyboard autocapitalization  */
-  if (context->auto_upper && input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP)
+  if (context->auto_upper)
   {
     event->keyval = gdk_keyval_to_upper(event->keyval);
-    context->auto_upper = FALSE;
   }
 #endif
 
@@ -2843,7 +2834,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 
     old_auto_upper = self->auto_upper;
 
-    if (shift_is_sticky || shift_is_locked)
+    if (shift_is_locked)
     {
       self->auto_upper = FALSE;
     }
