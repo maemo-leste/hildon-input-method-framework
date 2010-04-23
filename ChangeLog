@@ -1,6 +1,6 @@
 2010-04-23 Eduardo Lima Mitev <e-lima@maemo.org>
 
-	* Version 1:2.1.60-1~unreleased
+	* Version 1:2.1.60-1
 	* debian/changelog : Removes space incorrectly introduced after " * Fixes".
 	* Fixes : NB#164592
 
