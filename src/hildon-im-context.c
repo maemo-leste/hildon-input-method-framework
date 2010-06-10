@@ -2459,6 +2459,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   if (context->auto_upper)
   {
     event->keyval = gdk_keyval_to_upper(event->keyval);
+    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R)
+      context->auto_upper = FALSE;
   }
 #endif
 
