@@ -1,6 +1,6 @@
 2010-06-10 Eduardo Lima Mitev <e-lima@maemo.org>
 
-	* Version 1:2.1.61-1~unreleased
+	* Version 1:2.1.61-1
 	* src/hildon-im-context.c: Removes auto_case flag right after applying
 	  auto-capitalization during key-press handler.
 	* Fixes regressions: NB#157751 and NB#173596
