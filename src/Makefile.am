@@ -13,6 +13,8 @@ INCLUDES = \
 	$(LIBOSSOHELP_CFLAGS) \
 	$(HILDON_LGPL_CFLAGS) \
 	$(XEXTPROTO_CFLAGS) \
+	$(X11_CFLAGS) \
+	$(XTST_CFLAGS) \
 	-DLOCALEDIR=\"$(localedir)\"
 
 immoduledir = $(libdir)/gtk-2.0/$(GTK_VERSION)/immodules
@@ -26,7 +28,7 @@ libhildon_im_common_la_SOURCES = \
   hildon-im-protocol.c \
 	hildon-im-common.h
 libhildon_im_common_la_LDFLAGS = -version-info $(LIBVERSION)\
-	$(GTK_LIBS) 
+	$(GTK_LIBS)
 
 hildon_im_module_la_SOURCES = \
 	hildon-im-context.h \
@@ -35,7 +37,7 @@ hildon_im_module_la_SOURCES = \
 	hildon-im-gtk.h \
 	hildon-im-gtk.c
 hildon_im_module_la_LIBADD = \
-	$(GTK_LIBS) $(XEXTPROTO_LIBS) \
+	$(GTK_LIBS) $(XEXTPROTO_LIBS) $(X11_LIBS) $(XTST_LIBS) \
 	-lhildon_im_common
 hildon_im_module_la_LDFLAGS = \
 	-rpath $(immoduledir) \
