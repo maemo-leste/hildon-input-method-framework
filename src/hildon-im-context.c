@@ -995,7 +995,7 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
   {
     gint offset_start, offset_end;
     gchar *str, *start, *end = NULL;
-    gboolean deleted;
+    /* gboolean deleted; */
 
     str = &surrounding[cpos];
 
