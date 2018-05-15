@@ -373,9 +373,9 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
     gboolean is_editable_entry, is_editable_text_view;
     gboolean is_inside_completion_popup;
     gboolean allow_deselect;
-    GtkWidget *parent;
+/*    GtkWidget *parent;
 
-    parent = gtk_widget_get_parent (focus_widget);
+    parent = gtk_widget_get_parent (focus_widget);*/
     is_combo_box_entry = GTK_IS_COMBO_BOX_ENTRY(focus_widget);
     is_inside_toolbar =
       gtk_widget_get_ancestor (focus_widget, GTK_TYPE_TOOLBAR) != NULL;
@@ -1010,9 +1010,10 @@ hildon_im_context_commit_surrounding(HildonIMContext *self)
       offset_end = end - start;
 
       /* Remove the surrounding context on the line with the cursor */
-      deleted = gtk_im_context_delete_surrounding(GTK_IM_CONTEXT(self),
-                                                  -offset_start,
-                                                  offset_end);
+      /* deleted = */
+      gtk_im_context_delete_surrounding(GTK_IM_CONTEXT(self),
+                                        -offset_start,
+                                        offset_end);
     }
   }
 
@@ -2827,11 +2828,11 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
   }
   else
   {
-    gboolean shift_is_sticky;
+    /* gboolean shift_is_sticky; */
     gboolean shift_is_locked;
     gboolean old_auto_upper;
 
-    shift_is_sticky = self->mask & HILDON_IM_SHIFT_STICKY_MASK;
+    /* shift_is_sticky = self->mask & HILDON_IM_SHIFT_STICKY_MASK; */
     shift_is_locked = self->mask & HILDON_IM_SHIFT_LOCK_MASK;
 
     old_auto_upper = self->auto_upper;
@@ -3158,17 +3159,17 @@ get_full_line (HildonIMContext *self, gint *offset)
   /* TODO gtk_im_context_get_surrounding doesn't work well with multiple lines
    * check mode & HILDON_GTK_INPUT_MODE_MULTILINE */
   gchar *surrounding = NULL;
-  gboolean multiline = FALSE;
+  /* gboolean multiline = FALSE; */
   
   *offset = 0;
 
 #ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode;
   g_object_get(self, "hildon-input-mode", &input_mode, NULL);
-  multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0;
+  /* multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0; */
 #else
   /* TODO add other multiline widgets */
-  multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget);
+  /* multiline = GTK_IS_TEXT_VIEW(self->client_gtk_widget); */
 #endif
   
   if (GTK_IS_EDITABLE (self->client_gtk_widget))
@@ -3239,7 +3240,7 @@ get_short_surrounding (HildonIMContext *self, gint *offset)
   gchar* next_char = NULL;
   gint long_offset = 0;
   gint off_start = 0;
-  gint off_end = 0;
+  /* gint off_end = 0; */
   
   long_surrounding = get_full_line (self, &long_offset);
   
@@ -3287,7 +3288,7 @@ get_short_surrounding (HildonIMContext *self, gint *offset)
          && !g_unichar_isspace (g_utf8_get_char(next_char)));
   
   off_start = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_start);
-  off_end = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_end);
+  /* off_end = g_utf8_pointer_to_offset (long_surrounding, short_surrounding_end); */
   
   *offset = long_offset - off_start;
   short_surrounding = g_strndup(short_surrounding_start,
@@ -3372,7 +3373,7 @@ hildon_im_context_send_surrounding(HildonIMContext *self, gboolean send_full_lin
                           (XPointer)self);
 
 
-    if (go_on == True && &next_request_event != NULL)
+    if (go_on == True)
     {
       XClientMessageEvent *cme = (XClientMessageEvent *) &next_request_event;
       HildonIMComMessage *msg = (HildonIMComMessage *)&cme->data;
