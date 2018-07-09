@@ -1,3 +1,9 @@
+hildon-input-method-framework (1:2.1.63-1) unstable; urgency=low
+
+  * Fix format specifier on 64 bit platforms
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 09 July 2018 23:45:00 +0200
+
 hildon-input-method-framework (1:2.1.62-1) unstable; urgency=low
 
   * Version 1:2.1.62-0
