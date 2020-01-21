@@ -1,3 +1,9 @@
+hildon-input-method-framework (1:2.1.64-1) unstable; urgency=medium
+
+  * Don't ignore Enter key presses
+
+ -- Arthur Demchenkov <spinal.by@gmail.com>  Wed, 22 Jan 2020 02:45:58 +0300
+
 hildon-input-method-framework (1:2.1.63-1) unstable; urgency=low
 
   * Fix format specifier on 64 bit platforms
