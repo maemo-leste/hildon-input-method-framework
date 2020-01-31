@@ -2076,24 +2076,29 @@ process_enter_key (HildonIMContext *context, GdkEventKey *event)
                                      event->keyval, event->hardware_keycode);
 
   /* Enter advances focus as if tab was pressed */
-  if (g_type_class_peek(GTK_TYPE_ENTRY) != NULL)
+  if (event->keyval == GDK_KP_Enter || event->keyval == GDK_ISO_Enter)
   {
-    if (g_signal_handler_find(context->client_gtk_widget,
-                              G_SIGNAL_MATCH_ID,
-                              g_signal_lookup("activate", GTK_TYPE_ENTRY),
-                              0, NULL, NULL, NULL))
-      return FALSE;
+    if (g_type_class_peek(GTK_TYPE_ENTRY) != NULL)
+    {
+      if (g_signal_handler_find(context->client_gtk_widget,
+                                G_SIGNAL_MATCH_ID,
+                                g_signal_lookup("activate", GTK_TYPE_ENTRY),
+                                0, NULL, NULL, NULL))
+        return FALSE;
+    }
+
+    if (GTK_IS_ENTRY(context->client_gtk_widget) &&
+        !gtk_entry_get_activates_default(GTK_ENTRY(context->client_gtk_widget)))
+    {
+      hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
+                                           GTK_DIR_TAB_FORWARD);
+      return TRUE;
+    }
+
+    return FALSE;
   }
 
-  if (GTK_IS_ENTRY(context->client_gtk_widget) &&
-      !gtk_entry_get_activates_default(GTK_ENTRY(context->client_gtk_widget)))
-  {
-    hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
-                                         GTK_DIR_TAB_FORWARD);
-    return TRUE;
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 static gboolean
