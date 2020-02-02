@@ -300,8 +300,8 @@ typedef enum {
 /* Command activation message, from context to IM (see HildonIMCommand) */
 typedef struct
 {
-  Window input_window;
-  Window app_window;
+  guint32 input_window;
+  guint32 app_window;
   HildonIMCommand cmd;
   HildonIMTrigger trigger;
 } HildonIMActivateMessage;
@@ -361,7 +361,7 @@ typedef struct
 /* Key event message, from context to IM */
 typedef struct
 {
-  Window input_window;
+  guint32 input_window;
   int type;
   unsigned int state;
   unsigned int keyval;
@@ -379,7 +379,7 @@ enum
 /* Communication message from IM to context */
 typedef struct
 {
-  Window input_window;
+  guint32 input_window;
   HildonIMCommunication type;
   HildonIMOptionMask options;
 
