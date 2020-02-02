@@ -1,3 +1,10 @@
+hildon-input-method-framework (1:2.1.66-1) unstable; urgency=low
+
+  * Make it work on 64 bit platforms
+  * Port to debhelper 10
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sun, 02 Feb 2020 09:27:55 +0200
+
 hildon-input-method-framework (1:2.1.65-1) unstable; urgency=low
 
   * Bump version
@@ -21,7 +28,7 @@ hildon-input-method-framework (1:2.1.63-1) unstable; urgency=low
 
   * Fix format specifier on 64 bit platforms
 
- -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 09 July 2018 23:45:00 +0200
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 09 Jul 2018 23:45:00 +0200
 
 hildon-input-method-framework (1:2.1.62-1) unstable; urgency=low
 
