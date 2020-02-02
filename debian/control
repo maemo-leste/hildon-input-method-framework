@@ -2,12 +2,13 @@ Source: hildon-input-method-framework
 Section: x11
 Priority: optional
 Maintainer: Richard Sun <Richard.Sun@nokia.com>
-Build-Depends: debhelper (>= 4.0.0), pkg-config, libgtk2.0-dev (>= 2:2.6.10-1.osso15), libosso-dev (>=0.9.10-2), x11proto-xext-dev, libhildon1-dev, libpango1.0-dev (>= 1.16.0), libxi-dev, gtk-doc-tools, libxtst-dev
-Standards-Version: 3.6.0
+Build-Depends: debhelper (>= 10), pkg-config, libgtk2.0-dev (>= 2:2.6.10-1.osso15), libosso-dev (>=0.9.10-2), x11proto-xext-dev, libhildon1-dev, libpango1.0-dev (>= 1.16.0), libxi-dev, gtk-doc-tools, libxtst-dev
+Standards-Version: 3.8.0
 
 Package: hildon-input-method-framework
 Section: x11
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Replaces: libhildon-input-method-framework-sdk2 (<< 3.0.0-1), libhildon-input-method-framework2 (<< 3.0.0-1)
 Conflicts: libhildon-input-method-framework-sdk2 (<< 3.0.0-1), libhildon-input-method-framework2 (<< 3.0.0-1)
@@ -17,7 +18,8 @@ Description: Framework for Hildon Input Method
 
 Package: hildon-input-method-framework-dev
 Section: x11
-Architecture: all
+Architecture: any
+Multi-Arch: same
 Replaces: libhildon-input-method-framework-dev (<< 3.0.0-1), hildon-input-method-framework-header
 Conflicts: libhildon-input-method-framework-dev (<< 3.0.0-1), hildon-input-method-framework-header
 Depends: hildon-input-method-framework (= ${binary:Version}), ${misc:Depends}
@@ -25,11 +27,3 @@ Description: Developers package for Hildon Input Method framework
  This package contains developers information of the
  HildonIMContext, the GTK input method module.
 
-Package: hildon-input-method-framework-dbg
-Section: x11
-Architecture: any
-Replaces: libhildon-input-method-framework2-dbg (<< 3.0.0-1)
-Conflicts: libhildon-input-method-framework2-dbg (<< 3.0.0-1)
-Depends: hildon-input-method-framework (= ${binary:Version}), ${misc:Depends}
-Description: Debug versions of the hildon-input-method-framework library
- Symbols for hildon-input-method-framework

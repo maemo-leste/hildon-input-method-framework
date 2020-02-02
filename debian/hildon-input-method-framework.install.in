@@ -1,2 +1,2 @@
-usr/lib/gtk-2.0/@GTK_VERSION@/immodules/hildon-im-module.so
-usr/lib/*.so.*
+usr/lib/*/gtk-2.0/@GTK_VERSION@/immodules/hildon-im-module.so
+usr/lib/*/*.so.*

@@ -6,12 +6,13 @@
 #
 #
 
-AC_INIT(Makefile.am)
-VERSION=2.1.44
+AC_INIT(hildon-input-method-framework, 2.1.44)
+AC_CONFIG_SRCDIR(Makefile.am)
+AM_INIT_AUTOMAKE
+
 LIBVERSION=3
 AC_SUBST(LIBVERSION)
 
-AM_INIT_AUTOMAKE(hildon-input-method-framework, $VERSION)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug],
@@ -42,14 +43,7 @@ fi
 
 AM_CONDITIONAL(TIMER_ENABLED, test x${hildon_use_timestamping} = xyes)
 
-
 CFLAGS="$CFLAGS -Werror -Wall -ansi -Wmissing-prototypes -Wmissing-declarations"
-
-GCCVERSION=`gcc -dumpversion`;
-if test x$GCCVERSION = "x3.4.4"
-then
-	LDFLAGS = "$LDFLAGS -Wl,--as-needed"
-fi
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.6.10)
 AC_SUBST(GTK_LIBS)
@@ -110,6 +104,4 @@ AC_OUTPUT([Makefile \
 	src/Makefile \
 	docs/Makefile \
 	debian/hildon-input-method-framework.install \
-	debian/hildon-input-method-framework.postinst \
-	debian/hildon-input-method-framework.postrm \
   ])
