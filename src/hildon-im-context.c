@@ -1335,10 +1335,6 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
         case HILDON_IM_CONTEXT_WIDGET_CHANGED:
           self->mask = 0;
           break;
-        case HILDON_IM_CONTEXT_HANDLE_ENTER:
-          hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
-          hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
-          break;
         case HILDON_IM_CONTEXT_ENTER_ON_FOCUS:
           enter_on_focus_pending = TRUE;
           break;
@@ -2070,38 +2066,6 @@ perform_shift_translation (GdkEventKey *event, GdkModifierType state)
 }
 
 static gboolean
-process_enter_key (HildonIMContext *context, GdkEventKey *event)
-{
-  hildon_im_context_send_key_event(context, event->type, event->state,
-                                     event->keyval, event->hardware_keycode);
-
-  /* Enter advances focus as if tab was pressed */
-  if (event->keyval == GDK_KP_Enter || event->keyval == GDK_ISO_Enter)
-  {
-    if (g_type_class_peek(GTK_TYPE_ENTRY) != NULL)
-    {
-      if (g_signal_handler_find(context->client_gtk_widget,
-                                G_SIGNAL_MATCH_ID,
-                                g_signal_lookup("activate", GTK_TYPE_ENTRY),
-                                0, NULL, NULL, NULL))
-        return FALSE;
-    }
-
-    if (GTK_IS_ENTRY(context->client_gtk_widget) &&
-        !gtk_entry_get_activates_default(GTK_ENTRY(context->client_gtk_widget)))
-    {
-      hildon_im_gtk_focus_next_text_widget(context->client_gtk_widget,
-                                           GTK_DIR_TAB_FORWARD);
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
 client_has_selection (HildonIMContext *context)
 {
   if (GTK_IS_TEXT_VIEW (context->client_gtk_widget))
@@ -2305,9 +2269,9 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   gboolean level_key_is_locked = context->mask & HILDON_IM_LEVEL_LOCK_MASK;
   gboolean level_key_is_down = event->state & LEVEL_KEY_MOD_MASK;
 
-  gboolean enter_key_is_down = event->keyval == GDK_Return   ||
+  /*gboolean enter_key_is_down = event->keyval == GDK_Return   ||
                                event->keyval == GDK_KP_Enter ||
-                               event->keyval == GDK_ISO_Enter;
+                               event->keyval == GDK_ISO_Enter;*/
 
   gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
 
@@ -2367,13 +2331,6 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
         return TRUE;
       }
     }
-  }
-
-  /* The IM determines the action for the return and enter keys */
-  if (enter_key_is_down)
-  {
-    context->committed_preedit = FALSE;
-    return process_enter_key (context, event);
   }
 
   if (tab_key_is_down && GTK_IS_ENTRY (context->client_gtk_widget))

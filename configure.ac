@@ -43,7 +43,7 @@ fi
 
 AM_CONDITIONAL(TIMER_ENABLED, test x${hildon_use_timestamping} = xyes)
 
-CFLAGS="$CFLAGS -Werror -Wall -ansi -Wmissing-prototypes -Wmissing-declarations"
+CFLAGS="$CFLAGS -Wall -ansi -Wmissing-prototypes -Wmissing-declarations"
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.6.10)
 AC_SUBST(GTK_LIBS)
