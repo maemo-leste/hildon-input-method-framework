@@ -28,6 +28,7 @@
 #include <string.h>
 #include <libintl.h>
 #include <gtk/gtk.h>
+#include <gtk/gtkx.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkx.h>
 #include <pango/pango.h>
@@ -41,8 +42,8 @@
 
 #define HILDON_IM_DEFAULT_LAUNCH_DELAY 70
 
-#define COMPOSE_KEY GDK_Multi_key
-#define LEVEL_KEY GDK_ISO_Level3_Shift
+#define COMPOSE_KEY XK_Multi_key
+#define LEVEL_KEY XK_ISO_Level3_Shift
 #define LEVEL_KEY_MOD_MASK GDK_MOD5_MASK
 
 #define BASE_LEVEL     0
@@ -244,7 +245,7 @@ hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
 
   if(gdk_keymap_get_entries_for_keyval (NULL, key_val, &keys, &n_keys))
   {
-    XTestFakeKeyEvent(GDK_DISPLAY(),keys->keycode, is_press, 0);
+    XTestFakeKeyEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),keys->keycode, is_press, 0);
   }
   else
   {
@@ -338,11 +339,11 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
 
   focus_widget = g_value_get_object(&param_values[0]);
 
-  if (!GTK_WIDGET_VISIBLE (focus_widget))
+  if (!gtk_widget_get_visible (focus_widget))
     return TRUE;
 
   toplevel = gtk_widget_get_toplevel (focus_widget);
-  if (!GTK_WIDGET_TOPLEVEL (toplevel) ||
+  if (!gtk_widget_is_toplevel (toplevel) ||
       !GTK_IS_WINDOW(toplevel))
   {
     /* No parent toplevel */
@@ -357,7 +358,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
   }
 
   if (old_focus_widget == NULL ||
-      !GTK_WIDGET_HAS_FOCUS(old_focus_widget))
+      !gtk_widget_has_focus(old_focus_widget))
   {
     return TRUE;
   }
@@ -376,7 +377,8 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
 /*    GtkWidget *parent;
 
     parent = gtk_widget_get_parent (focus_widget);*/
-    is_combo_box_entry = GTK_IS_COMBO_BOX_ENTRY(focus_widget);
+    is_combo_box_entry = GTK_IS_COMBO_BOX(focus_widget)
+	&& gtk_combo_box_get_has_entry(GTK_COMBO_BOX(focus_widget));
     is_inside_toolbar =
       gtk_widget_get_ancestor (focus_widget, GTK_TYPE_TOOLBAR) != NULL;
     is_editable_entry = GTK_IS_ENTRY (focus_widget) &&
@@ -418,7 +420,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
     {
       GtkWidget *selection_toplevel = gtk_widget_get_toplevel(old_focus_widget);
 
-      if (!GTK_WIDGET_TOPLEVEL(selection_toplevel) ||
+      if (!gtk_widget_is_toplevel(selection_toplevel) ||
           selection_toplevel != toplevel)
         return TRUE;
 
@@ -460,7 +462,7 @@ hildon_im_hook_unmap_handler(GSignalInvocationHint *ihint,
   widget = g_value_get_object(&param_values[0]);
 
   /* If the IM is opened for this widget, hide the IM */
-  if (GTK_WIDGET_HAS_FOCUS(widget))
+  if (gtk_widget_has_focus(widget))
   {
     GtkIMContext *context = NULL;
 
@@ -557,7 +559,7 @@ get_window_id(Atom window_atom)
   } value;
 
   gdk_error_trap_push();
-  status = XGetWindowProperty(GDK_DISPLAY(), GDK_ROOT_WINDOW(),
+  status = XGetWindowProperty(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), GDK_ROOT_WINDOW(),
                               window_atom, 0L, 4L, 0,
                               XA_WINDOW, &realType, &format,
                               &n, &extra, (unsigned char **) &value.val);
@@ -713,7 +715,7 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
   }
 #endif
   if (self->client_gtk_widget == NULL
-      || !GTK_WIDGET_REALIZED(self->client_gtk_widget))
+      || !gtk_widget_get_realized(self->client_gtk_widget))
     return;
 
   if (s != NULL)
@@ -836,7 +838,7 @@ hildon_im_clipboard_copied(HildonIMContext *self)
   ev.xclient.format = HILDON_IM_CLIPBOARD_FORMAT;
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+  XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
@@ -845,7 +847,7 @@ hildon_im_clipboard_copied(HildonIMContext *self)
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       ev.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+      XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -871,7 +873,7 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 #endif
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+  XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
@@ -880,7 +882,7 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       ev.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+      XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -1250,8 +1252,8 @@ hildon_im_context_do_backspace (HildonIMContext *self)
   }
   else
   {
-    hildon_im_context_send_fake_key(GDK_BackSpace, TRUE);
-    hildon_im_context_send_fake_key(GDK_BackSpace, FALSE);
+    hildon_im_context_send_fake_key(XK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key(XK_BackSpace, FALSE);
   }
 }
 
@@ -1272,11 +1274,11 @@ hildon_im_context_do_del (HildonIMContext *self)
 
     if (g_utf8_strlen (sur, -1) > cpos1)
     {
-      hildon_im_context_send_fake_key (GDK_Shift_L, FALSE);
-      hildon_im_context_send_fake_key (GDK_Right, TRUE);
-      hildon_im_context_send_fake_key (GDK_Right, FALSE);
-      hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
-      hildon_im_context_send_fake_key (GDK_Shift_L, TRUE);
+      hildon_im_context_send_fake_key (XK_Shift_L, FALSE);
+      hildon_im_context_send_fake_key (XK_Right, TRUE);
+      hildon_im_context_send_fake_key (XK_Right, FALSE);
+      hildon_im_context_send_fake_key (XK_BackSpace, TRUE);
+      hildon_im_context_send_fake_key (XK_Shift_L, TRUE);
     }
     g_free (sur);
 
@@ -1342,8 +1344,8 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_check_sentence_start(self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_TAB:
-          hildon_im_context_send_fake_key(GDK_Tab, TRUE);
-          hildon_im_context_send_fake_key(GDK_Tab, FALSE);
+          hildon_im_context_send_fake_key(XK_Tab, TRUE);
+          hildon_im_context_send_fake_key(XK_Tab, FALSE);
           break;
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
           hildon_im_context_do_backspace (self);
@@ -1516,7 +1518,7 @@ hildon_im_context_widget_hide(GtkIMContext *context)
   self = HILDON_IM_CONTEXT(context);
 
   if (self->client_gtk_widget &&
-      GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget))
+      gtk_widget_has_focus(self->client_gtk_widget))
   {
     hildon_im_context_hide(context);
   }
@@ -1703,8 +1705,8 @@ hildon_im_context_focus_in(GtkIMContext *context)
 
   if (enter_on_focus_pending)
   {
-    hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
-    hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
+    hildon_im_context_send_fake_key(XK_KP_Enter, TRUE);
+    hildon_im_context_send_fake_key(XK_KP_Enter, FALSE);
     enter_on_focus_pending = FALSE;
   }
 }
@@ -1737,12 +1739,12 @@ hildon_im_context_font_has_char(HildonIMContext *self, guint32 c)
   cairo_t *cr;
   gchar utf8[7];
   gint len;
+  GdkWindow *window = gtk_widget_get_window(self->client_gtk_widget);
 
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), TRUE);
-  g_return_val_if_fail(self->client_gtk_widget &&
-                       self->client_gtk_widget->window, TRUE);
+  g_return_val_if_fail(self->client_gtk_widget && window, TRUE);
 
-  cr = gdk_cairo_create(self->client_gtk_widget->window);
+  cr = gdk_cairo_create(window);
   len = g_unichar_to_utf8(c, utf8);
   layout = pango_cairo_create_layout(cr);
   pango_layout_set_text(layout, utf8, len);
@@ -1761,25 +1763,25 @@ dead_key_to_unicode_combining_character(guint keyval)
 
   switch (keyval)
   {
-    case GDK_dead_grave:            combining = 0x0300; break;
-    case GDK_dead_acute:            combining = 0x0301; break;
-    case GDK_dead_circumflex:       combining = 0x0302; break;
-    case GDK_dead_tilde:            combining = 0x0303; break;
-    case GDK_dead_macron:           combining = 0x0304; break;
-    case GDK_dead_breve:            combining = 0x032e; break;
-    case GDK_dead_abovedot:         combining = 0x0307; break;
-    case GDK_dead_diaeresis:        combining = 0x0308; break;
-    case GDK_dead_abovering:        combining = 0x030a; break;
-    case GDK_dead_doubleacute:      combining = 0x030b; break;
-    case GDK_dead_caron:            combining = 0x030c; break;
-    case GDK_dead_cedilla:          combining = 0x0327; break;
-    case GDK_dead_ogonek:           combining = 0x0328; break;
-    case GDK_dead_iota:             combining = 0; break; /* Cannot be combined */
-    case GDK_dead_voiced_sound:     combining = 0; break; /* Cannot be combined */
-    case GDK_dead_semivoiced_sound: combining = 0; break; /* Cannot be combined */
-    case GDK_dead_belowdot:         combining = 0x0323; break;
-    case GDK_dead_hook:             combining = 0x0309; break;
-    case GDK_dead_horn:             combining = 0x031b; break;
+    case XK_dead_grave:            combining = 0x0300; break;
+    case XK_dead_acute:            combining = 0x0301; break;
+    case XK_dead_circumflex:       combining = 0x0302; break;
+    case XK_dead_tilde:            combining = 0x0303; break;
+    case XK_dead_macron:           combining = 0x0304; break;
+    case XK_dead_breve:            combining = 0x032e; break;
+    case XK_dead_abovedot:         combining = 0x0307; break;
+    case XK_dead_diaeresis:        combining = 0x0308; break;
+    case XK_dead_abovering:        combining = 0x030a; break;
+    case XK_dead_doubleacute:      combining = 0x030b; break;
+    case XK_dead_caron:            combining = 0x030c; break;
+    case XK_dead_cedilla:          combining = 0x0327; break;
+    case XK_dead_ogonek:           combining = 0x0328; break;
+    case XK_dead_iota:             combining = 0; break; /* Cannot be combined */
+    case XK_dead_voiced_sound:     combining = 0; break; /* Cannot be combined */
+    case XK_dead_semivoiced_sound: combining = 0; break; /* Cannot be combined */
+    case XK_dead_belowdot:         combining = 0x0323; break;
+    case XK_dead_hook:             combining = 0x0309; break;
+    case XK_dead_horn:             combining = 0x031b; break;
     default: combining = 0; break; /* Unknown dead key */
   }
 
@@ -1945,7 +1947,7 @@ reset_shift_and_level_keys_if_needed (HildonIMContext *context, GdkEventKey *eve
     return;
 
   /* If not locked, pressing any character resets shift state */
-  if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R &&
+  if (event->keyval != XK_Shift_L && event->keyval != XK_Shift_R &&
       (context->mask & HILDON_IM_SHIFT_LOCK_MASK) == 0)
   {
     context->mask &= ~HILDON_IM_SHIFT_STICKY_MASK;
@@ -1978,14 +1980,14 @@ key_released (HildonIMContext *context, GdkEventKey *event, guint last_keyval)
   if (event->keyval == COMPOSE_KEY)
       context->mask &= ~HILDON_IM_COMPOSE_MASK;
 
-  if (event->keyval == GDK_Shift_L || event->keyval == GDK_Shift_R)
+  if (event->keyval == XK_Shift_L || event->keyval == XK_Shift_R)
   {
     if (! context->last_was_shift_backspace)
       hildon_im_context_set_mask_state(context,
                                        &context->mask,
                                        HILDON_IM_SHIFT_LOCK_MASK,
                                        HILDON_IM_SHIFT_STICKY_MASK,
-                                       last_keyval == GDK_Shift_L || last_keyval == GDK_Shift_R);
+                                       last_keyval == XK_Shift_L || last_keyval == XK_Shift_R);
     else
       context->last_was_shift_backspace = FALSE;
   }
@@ -2146,7 +2148,7 @@ get_representation_for_dead_character (GdkEventKey *event, guint32 dead_characte
   gint32 last;
   last = dead_key_to_unicode_combining_character (event->keyval);
 
-  if ((last == dead_character) || event->keyval == GDK_space)
+  if ((last == dead_character) || event->keyval == XK_space)
     return combining_character_to_unicode (dead_character);
 
   return gdk_keyval_to_unicode (event->keyval);
@@ -2181,14 +2183,14 @@ hildon_im_context_delete_penultimate_char (HildonIMContext *self)
   }
   else
   {
-    hildon_im_context_send_fake_key (GDK_Left, TRUE);
-    hildon_im_context_send_fake_key (GDK_Left, FALSE);
+    hildon_im_context_send_fake_key (XK_Left, TRUE);
+    hildon_im_context_send_fake_key (XK_Left, FALSE);
 
-    hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
-    hildon_im_context_send_fake_key (GDK_BackSpace, FALSE);
+    hildon_im_context_send_fake_key (XK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key (XK_BackSpace, FALSE);
 
-    hildon_im_context_send_fake_key (GDK_Right, TRUE);
-    hildon_im_context_send_fake_key (GDK_Right, FALSE);
+    hildon_im_context_send_fake_key (XK_Right, TRUE);
+    hildon_im_context_send_fake_key (XK_Right, FALSE);
   }
 }
 
@@ -2275,7 +2277,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   gboolean ctrl_key_is_down = event->state & GDK_CONTROL_MASK;
 
-  gboolean tab_key_is_down = event->keyval == GDK_Tab;
+  gboolean tab_key_is_down = event->keyval == XK_Tab;
 
   gboolean invert_level_behavior = FALSE;
   
@@ -2296,7 +2298,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     }
   }
 
-  if (event->keyval == GDK_Delete)
+  if (event->keyval == XK_Delete)
     if (hildon_im_context_do_del (context))
       return TRUE;
 
@@ -2316,7 +2318,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   /* word completion manipulation */
   if (is_suggesting_autocompleted_word)
   {
-    if (event->keyval == GDK_Right)
+    if (event->keyval == XK_Right)
     {
       hildon_im_context_commit_preedit_data(context);
       return TRUE;
@@ -2326,7 +2328,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
       set_preedit_buffer(context, NULL);
       context->committed_preedit = FALSE;
       
-      if (event->keyval == GDK_BackSpace || event->keyval == GDK_Left)
+      if (event->keyval == XK_BackSpace || event->keyval == XK_Left)
       {
         return TRUE;
       }
@@ -2417,7 +2419,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
   if (context->auto_upper)
   {
     event->keyval = gdk_keyval_to_upper(event->keyval);
-    if (event->keyval != GDK_Shift_L && event->keyval != GDK_Shift_R)
+    if (event->keyval != XK_Shift_L && event->keyval != XK_Shift_R)
       context->auto_upper = FALSE;
   }
 #endif
@@ -2458,7 +2460,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
 
   /* If a dead key was pressed twice, or once and followed by a space,
    * inputs the dead key's character representation */
-  if ((context->mask & HILDON_IM_DEAD_KEY_MASK || event->keyval == GDK_space) &&
+  if ((context->mask & HILDON_IM_DEAD_KEY_MASK || event->keyval == XK_space) &&
       context->combining_char)
   {
     c = get_representation_for_dead_character (event, context->combining_char);
@@ -2530,8 +2532,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
                                      event->hardware_keycode);
 
     /* Non-printable characters invalidate any previous dead keys */
-    if (event->keyval != GDK_Shift_L &&
-        event->keyval != GDK_Shift_R &&
+    if (event->keyval != XK_Shift_L &&
+        event->keyval != XK_Shift_R &&
         event->keyval != LEVEL_KEY)
     {
       context->combining_char = 0;
@@ -2539,7 +2541,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     }
   }
 
-  if (event->keyval == GDK_BackSpace)
+  if (event->keyval == XK_BackSpace)
   {
     context->last_internal_change = TRUE;
   }
@@ -3032,7 +3034,7 @@ hildon_im_context_send_command(HildonIMContext *self,
    */
   gdk_error_trap_push();
 
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
+  XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &event);
   /* TODO this call can cause a hang, see NB#97380 */
 
   xerror = gdk_error_trap_pop();
@@ -3042,7 +3044,7 @@ hildon_im_context_send_command(HildonIMContext *self,
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       event.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
+      XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, &event);
     }
     else
     {
@@ -3091,7 +3093,7 @@ hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
      */
     gdk_error_trap_push();
 
-    XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
+    XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, event);
 
     xerror = gdk_error_trap_pop();
     if( xerror )
@@ -3100,7 +3102,7 @@ hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
       {
         self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
         event->xclient.window = self->im_window;
-        XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
+        XSendEvent(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), self->im_window, False, 0, event);
       }
       else
       {

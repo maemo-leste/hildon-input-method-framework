@@ -17,7 +17,7 @@ AM_CPPFLAGS = \
 	$(XTST_CFLAGS) \
 	-DLOCALEDIR=\"$(localedir)\"
 
-immoduledir = $(libdir)/gtk-2.0/$(GTK_VERSION)/immodules
+immoduledir = $(libdir)/gtk-3.0/$(GTK_VERSION)/immodules
 immodule_LTLIBRARIES = hildon-im-module.la 
 
 commondir = $(libdir)

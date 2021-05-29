@@ -35,9 +35,9 @@
 
 #include "hildon-im-protocol.h"
 
-#define HILDON_IS_IM_CONTEXT(obj) (GTK_CHECK_TYPE (obj, im_context_type))
+#define HILDON_IS_IM_CONTEXT(obj) (G_TYPE_CHECK_INSTANCE_TYPE (obj, im_context_type))
 #define HILDON_IM_CONTEXT(obj) \
-        (GTK_CHECK_CAST (obj, im_context_type, HildonIMContext))
+        (G_TYPE_CHECK_INSTANCE_CAST (obj, im_context_type, HildonIMContext))
 
 G_BEGIN_DECLS
 

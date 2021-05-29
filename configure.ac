@@ -10,7 +10,7 @@ AC_INIT(hildon-input-method-framework, 2.1.44)
 AC_CONFIG_SRCDIR(Makefile.am)
 AM_INIT_AUTOMAKE
 
-LIBVERSION=3
+LIBVERSION=4
 AC_SUBST(LIBVERSION)
 
 AM_CONFIG_HEADER(config.h)
@@ -45,7 +45,7 @@ AM_CONDITIONAL(TIMER_ENABLED, test x${hildon_use_timestamping} = xyes)
 
 CFLAGS="$CFLAGS -Wall -ansi -Wmissing-prototypes -Wmissing-declarations"
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.6.10)
+PKG_CHECK_MODULES(GTK, gtk+-3.0)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
@@ -70,7 +70,7 @@ AC_SUBST(X11_LIBS)
 AC_SUBST(X11_CFLAGS)
 
 # We need this for our immodule
-GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-3.0`
 AC_SUBST(GTK_VERSION)
 
 AM_GLIB_GNU_GETTEXT
@@ -100,7 +100,7 @@ AC_SUBST(etcdir)
 AC_SUBST(initdir)
 
 AC_OUTPUT([Makefile \
-	hildon-input-method-framework-3.0.pc \
+	hildon-input-method-framework-4.0.pc \
 	src/Makefile \
 	docs/Makefile \
 	debian/hildon-input-method-framework.install \
