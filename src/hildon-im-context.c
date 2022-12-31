@@ -613,16 +613,77 @@ get_window_id(Atom window_atom)
   return result;
 }
 
-#ifdef MAEMO_CHANGES
+
+static void
+hildon_get_input_mode(HildonIMContext *self, HildonGtkInputMode *input_mode,
+                      HildonGtkInputMode *default_input_mode)
+{
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
+#if defined(MAEMO_CHANGES)
+  if (input_mode)
+    g_object_get (self, "hildon-input-mode", input_mode, NULL);
+
+  if (default_input_mode)
+    g_object_get (self, "hildon-input-default", default_input_mode, NULL);
+#else
+  GtkInputPurpose purpose = 0;
+  GtkInputHints hints = 0;
+  HildonGtkInputMode mode = 0;
+
+  g_object_get (self,
+                "input-purpose", &purpose,
+                "input-hints", &hints,
+                NULL);
+
+  switch (purpose)
+  {
+    case GTK_INPUT_PURPOSE_ALPHA:
+      mode = HILDON_GTK_INPUT_MODE_ALPHA;
+    case GTK_INPUT_PURPOSE_DIGITS:
+      mode = HILDON_GTK_INPUT_MODE_NUMERIC;
+    case GTK_INPUT_PURPOSE_NUMBER:
+      mode = HILDON_GTK_INPUT_MODE_NUMERIC | HILDON_GTK_INPUT_MODE_SPECIAL;
+    case GTK_INPUT_PURPOSE_PHONE:
+      mode = HILDON_GTK_INPUT_MODE_TELE;
+    case GTK_INPUT_PURPOSE_PASSWORD:
+    case GTK_INPUT_PURPOSE_PIN:
+      mode = HILDON_GTK_INPUT_MODE_FULL | HILDON_GTK_INPUT_MODE_INVISIBLE;
+    default:
+      mode = HILDON_GTK_INPUT_MODE_FULL;
+  }
+
+  if (hints & GTK_INPUT_HINT_UPPERCASE_SENTENCES)
+    mode |= HILDON_GTK_INPUT_MODE_AUTOCAP;
+
+  if (hints & GTK_INPUT_HINT_WORD_COMPLETION)
+    mode |=  HILDON_GTK_INPUT_MODE_DICTIONARY ;
+
+  if (input_mode)
+    *input_mode = mode;
+
+  if (default_input_mode)
+    *default_input_mode = mode;
+#endif
+}
+#else
+
+  if (input_mode)
+    *input_mode = 0;
+
+  if (default_input_mode)
+    *default_input_mode = 0;
+}
+#endif
+
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
 static void
 hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
 {
   HildonIMContext *self = HILDON_IM_CONTEXT(object);
-  gint input_mode = 0;
-  gint default_input_mode = 0;
+  HildonGtkInputMode input_mode = 0;
+  HildonGtkInputMode default_input_mode = 0;
 
-  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
-  g_object_get (self, "hildon-input-default", &default_input_mode, NULL);
+  hildon_get_input_mode (self, &input_mode, &default_input_mode);
 
   self->auto_upper_enabled =
     ( (self->options & HILDON_IM_AUTOCASE) != 0 &&
@@ -687,6 +748,11 @@ hildon_im_context_init(HildonIMContext *self)
     G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
   g_signal_connect(self, "notify::hildon-input-default",
       G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
+#elif GTK_CHECK_VERSION(3,0,0)
+  g_signal_connect(self, "notify::input-purpose",
+    G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
+  g_signal_connect(self, "notify::input-hints",
+      G_CALLBACK(hildon_im_context_input_mode_changed), NULL);
 #endif
 }
 
@@ -738,16 +804,16 @@ commit_text (HildonIMContext *self, const gchar* s)
 static void
 set_preedit_buffer (HildonIMContext *self, const gchar* s)
 {
-#ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode;
-  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
+
+  hildon_get_input_mode (self, &input_mode, NULL);
 
   if ((input_mode & HILDON_GTK_INPUT_MODE_DICTIONARY) == 0 ||
       (input_mode & HILDON_GTK_INPUT_MODE_INVISIBLE) != 0)
   {
     return;
   }
-#endif
+
   if (self->client_gtk_widget == NULL
       || !gtk_widget_get_realized(self->client_gtk_widget))
     return;
@@ -1909,9 +1975,9 @@ hildon_im_context_set_mask_state(HildonIMContext *self,
                                  HildonIMInternalModifierMask sticky_mask,
                                  gboolean was_press_and_release)
 {
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
+  HildonGtkInputMode input_mode = 0;
+  hildon_get_input_mode (self, &input_mode, NULL);
 
   /* Locking Fn is disabled in TELE and NUMERIC */
   if (!(input_mode & HILDON_GTK_INPUT_MODE_ALPHA) &&
@@ -2295,7 +2361,7 @@ hildon_im_context_abort_long_press (HildonIMContext *context)
 static gboolean
 key_pressed (HildonIMContext *context, GdkEventKey *event)
 {
-#ifdef MAEMO_CHANGES
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
   HildonGtkInputMode input_mode, default_input_mode;
 #endif
 
@@ -2389,9 +2455,8 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     return TRUE;
   }
 
-#ifdef MAEMO_CHANGES
-  g_object_get(context, "hildon-input-mode", &input_mode, NULL);
-  g_object_get(context, "hildon-input-default", &default_input_mode, NULL);
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
+  hildon_get_input_mode (context, &input_mode, &default_input_mode);
   /* If the input mode is TELE, the behavior of the level key is inverted */
   gboolean should_invert = default_input_mode == HILDON_GTK_INPUT_MODE_NUMERIC;
   if (!should_invert)
@@ -2459,7 +2524,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     perform_level_translation (event, translation_state | LEVEL_KEY_MOD_MASK);
   }
 
-#ifdef MAEMO_CHANGES
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
   /* Hardware keyboard autocapitalization  */
   if (context->auto_upper)
   {
@@ -2977,13 +3042,8 @@ hildon_im_context_send_input_mode (HildonIMContext *self)
   XEvent event;
   Window window;
   HildonIMInputModeMessage *msg;
-#ifdef MAEMO_CHANGES
   HildonGtkInputMode input_mode = 0;
   HildonGtkInputMode default_input_mode = 0;
-#else
-  gint input_mode = 0;
-  gint default_input_mode = 0;
-#endif
 
   window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
 
@@ -2993,9 +3053,8 @@ hildon_im_context_send_input_mode (HildonIMContext *self)
     return;
   }
 
-#ifdef MAEMO_CHANGES
-  g_object_get (self, "hildon-input-mode", &input_mode, NULL);
-  g_object_get (self, "hildon-input-default", &default_input_mode, NULL);
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
+  hildon_get_input_mode (self, &input_mode, &default_input_mode);
 #endif
 
   memset(&event, 0, sizeof(XEvent));
@@ -3169,9 +3228,9 @@ get_full_line (HildonIMContext *self, gint *offset)
   
   *offset = 0;
 
-#ifdef MAEMO_CHANGES
-  HildonGtkInputMode input_mode;
-  g_object_get(self, "hildon-input-mode", &input_mode, NULL);
+#if defined(MAEMO_CHANGES) || GTK_CHECK_VERSION(3,0,0)
+  HildonGtkInputMode input_mode = 0;
+  hildon_get_input_mode (self, &input_mode, NULL);
   /* multiline = (input_mode & HILDON_GTK_INPUT_MODE_MULTILINE) != 0; */
 #else
   /* TODO add other multiline widgets */
