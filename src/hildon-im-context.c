@@ -1508,6 +1508,28 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
         case HILDON_IM_CONTEXT_CLIPBOARD_PASTE:
             hildon_gtk_im_context_paste(GTK_IM_CONTEXT(self));
           break;
+#elif GTK_CHECK_VERSION(3,0,0)
+        case HILDON_IM_CONTEXT_CLIPBOARD_COPY:
+        {
+          if (GTK_IS_ENTRY(self->client_gtk_widget))
+            g_signal_emit_by_name(self, "copy-clipboard", 0);
+
+          break;
+        }
+        case HILDON_IM_CONTEXT_CLIPBOARD_CUT:
+        {
+          if (GTK_IS_ENTRY(self->client_gtk_widget))
+            g_signal_emit_by_name(self, "cut-clipboard", 0);
+
+          break;
+        }
+        case HILDON_IM_CONTEXT_CLIPBOARD_PASTE:
+        {
+          if (GTK_IS_ENTRY(self->client_gtk_widget))
+            g_signal_emit_by_name(self, "paste-clipboard", 0);
+
+          break;
+        }
 #endif
         case HILDON_IM_CONTEXT_CLIPBOARD_SELECTION_QUERY:
             hildon_im_clipboard_selection_query(self);
