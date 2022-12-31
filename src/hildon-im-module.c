@@ -27,7 +27,7 @@
 
 
 #include <gtk/gtkimmodule.h>
-#include <hildon-im-context.h>
+#include "hildon-im-context.h"
 #include <string.h>
 
 #ifdef HAVE_CONFIG_H
@@ -35,8 +35,6 @@
 #endif
 
 #define N_(String) (String)
-
-#define HILDON_IM_CONTEXT_ID "hildon-input-method"
 
 /*GType hildon_im_type = 0;*/
 

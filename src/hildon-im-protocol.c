@@ -29,7 +29,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
-#include <gtk/gtkenums.h>
+#include <gtk/gtk.h>
 #include "hildon-im-protocol.h"
 
 
@@ -71,7 +71,8 @@ hildon_im_protocol_get_atom(HildonIMAtom atom_name)
   {
     for (i = 0; i < HILDON_IM_NUM_ATOMS; ++i)
     {
-      atom_list[i] = XInternAtom( GDK_DISPLAY(), ATOM_NAME[i], False);
+      atom_list[i] = XInternAtom(gdk_x11_get_default_xdisplay(), ATOM_NAME[i],
+                                 False);
       g_return_val_if_fail(atom_list[i], result);
     }
   }

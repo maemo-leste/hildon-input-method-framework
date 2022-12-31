@@ -8,7 +8,8 @@ SUBDIRS = src docs
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = hildon-input-method-framework-3.0.pc 
+pkgconfig_DATA = hildon-input-method-framework-3.0.pc \
+	hildon-input-method-framework-3-3.0.pc
 
 configdir = $(sysconfdir)/hildon
 

@@ -2,8 +2,6 @@
 
 #export DH_VERBOSE=1
 
-export DEB_CPPFLAGS_MAINT_APPEND=-DMAEMO_CHANGES
-
 %:
 	dh $@ --with autoreconf
 

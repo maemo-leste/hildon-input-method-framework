@@ -33,17 +33,22 @@ tab_compare(gconstpointer a,
             gconstpointer b,
             gpointer      data)
 {
-  const GtkWidget *child1 = a;
-  const GtkWidget *child2 = b;
+  GtkWidget *child1 = (GtkWidget *)a;
+  GtkWidget *child2 = (GtkWidget *)b;
   GtkTextDirection text_direction = GPOINTER_TO_INT(data);
+  GtkAllocation a_allocation;
+  GtkAllocation b_allocation;
 
-  gint y1 = child1->allocation.y + child1->allocation.height / 2;
-  gint y2 = child2->allocation.y + child2->allocation.height / 2;
+  gtk_widget_get_allocation (child1, &a_allocation);
+  gtk_widget_get_allocation (child2, &b_allocation);
+
+  gint y1 = a_allocation.y + a_allocation.height / 2;
+  gint y2 = b_allocation.y + b_allocation.height / 2;
 
   if (y1 == y2)
   {
-    gint x1 = child1->allocation.x + child1->allocation.width / 2;
-    gint x2 = child2->allocation.x + child2->allocation.width / 2;
+    gint x1 = a_allocation.x + a_allocation.width / 2;
+    gint x2 = b_allocation.x + b_allocation.width / 2;
       
     if (text_direction == GTK_TEXT_DIR_RTL) 
       return (x1 < x2) ? 1 : ((x1 == x2) ? 0 : -1);
@@ -99,10 +104,9 @@ move_focus(GtkContainer     *container,
   GtkWidget *child_widget;
   gboolean found = FALSE;
 
-  if (container->has_focus_chain)
+  if (gtk_container_get_focus_chain(container, NULL))
   {
-    children = g_list_copy(g_object_get_data(G_OBJECT(container),
-                                             "gtk-container-focus-chain"));
+    gtk_container_get_focus_chain(container, &children);
 
     if (direction == GTK_DIR_TAB_BACKWARD)
       children = g_list_reverse(children);
@@ -114,7 +118,7 @@ move_focus(GtkContainer     *container,
     child = all_children = container_get_all_children(container);
     while (child)
     {
-      if (GTK_WIDGET_DRAWABLE (child->data))
+      if (gtk_widget_is_drawable (child->data))
         visible_children = g_list_prepend(visible_children, child->data);
       child = child->next;
     }    
@@ -142,7 +146,7 @@ move_focus(GtkContainer     *container,
 
     if (GTK_IS_ENTRY(child_widget) || GTK_IS_TEXT_VIEW(child_widget))
     {
-      if (GTK_WIDGET_CAN_FOCUS(child_widget))
+      if (gtk_widget_get_can_focus(child_widget))
       {
         gtk_widget_child_focus(child_widget, direction);
         found = TRUE;
@@ -173,7 +177,7 @@ hildon_im_gtk_focus_next_text_widget(GtkWidget *current_focus,
   GtkWidget *child;
 
   toplevel = gtk_widget_get_toplevel(current_focus);
-  if (!GTK_WIDGET_TOPLEVEL(toplevel))
+  if (!gtk_widget_is_toplevel(toplevel))
     return;
 
   container = gtk_widget_get_ancestor(gtk_window_get_focus(GTK_WINDOW(toplevel)),

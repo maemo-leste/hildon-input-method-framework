@@ -28,7 +28,11 @@
 #include <string.h>
 #include <libintl.h>
 #include <gtk/gtk.h>
+#if GTK_CHECK_VERSION(3,0,0)
+#include <gtk/gtkx.h>
+#endif
 #include <gdk/gdkkeysyms.h>
+#include <gdk/gdkkeysyms-compat.h>
 #include <gdk/gdkx.h>
 #include <pango/pango.h>
 #include <cairo/cairo.h>
@@ -75,6 +79,10 @@ static guint launch_delay = HILDON_IM_DEFAULT_LAUNCH_DELAY;
 static HildonIMTrigger trigger = HILDON_IM_TRIGGER_UNKNOWN;
 static gboolean internal_reset = FALSE;
 static gboolean enter_on_focus_pending = FALSE;
+
+#if GTK_CHECK_VERSION(3,0,0)
+static GtkIMContext *current_context = NULL;
+#endif
 
 typedef struct _HildonIMContext HildonIMContext;
 
@@ -244,7 +252,8 @@ hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
 
   if(gdk_keymap_get_entries_for_keyval (NULL, key_val, &keys, &n_keys))
   {
-    XTestFakeKeyEvent(GDK_DISPLAY(),keys->keycode, is_press, 0);
+    XTestFakeKeyEvent(gdk_x11_get_default_xdisplay (),
+                      keys->keycode, is_press, 0);
   }
   else
   {
@@ -338,11 +347,11 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
 
   focus_widget = g_value_get_object(&param_values[0]);
 
-  if (!GTK_WIDGET_VISIBLE (focus_widget))
+  if (!gtk_widget_get_visible (focus_widget))
     return TRUE;
 
   toplevel = gtk_widget_get_toplevel (focus_widget);
-  if (!GTK_WIDGET_TOPLEVEL (toplevel) ||
+  if (!gtk_widget_is_toplevel (toplevel) ||
       !GTK_IS_WINDOW(toplevel))
   {
     /* No parent toplevel */
@@ -357,15 +366,20 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
   }
 
   if (old_focus_widget == NULL ||
-      !GTK_WIDGET_HAS_FOCUS(old_focus_widget))
+      !gtk_widget_has_focus(old_focus_widget))
   {
     return TRUE;
   }
 
+#if GTK_CHECK_VERSION(3,0,0)
+  if (GTK_IS_ENTRY (old_focus_widget) || GTK_IS_TEXT_VIEW (old_focus_widget))
+    context = current_context;
+#else
   if (GTK_IS_ENTRY (old_focus_widget))
     context = GTK_ENTRY (old_focus_widget)->im_context;
   else if (GTK_IS_TEXT_VIEW (old_focus_widget))
     context = GTK_TEXT_VIEW (old_focus_widget)->im_context;
+#endif
 
   if (focus_widget)
   {
@@ -376,7 +390,14 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
 /*    GtkWidget *parent;
 
     parent = gtk_widget_get_parent (focus_widget);*/
+#if GTK_CHECK_VERSION(3,0,0)
+    is_combo_box_entry = GTK_IS_COMBO_BOX(focus_widget);
+
+    if (is_combo_box_entry)
+      g_object_get (focus_widget, "has-entry", &is_combo_box_entry, NULL);
+#else
     is_combo_box_entry = GTK_IS_COMBO_BOX_ENTRY(focus_widget);
+#endif
     is_inside_toolbar =
       gtk_widget_get_ancestor (focus_widget, GTK_TYPE_TOOLBAR) != NULL;
     is_editable_entry = GTK_IS_ENTRY (focus_widget) &&
@@ -405,9 +426,16 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
     if (is_inside_toolbar && context)
     {
       internal_reset = TRUE;
-      gtk_im_context_reset(context);
-    }
 
+#if GTK_CHECK_VERSION(3,0,0)
+      if (GTK_IS_ENTRY (old_focus_widget))
+        gtk_entry_reset_im_context (GTK_ENTRY (old_focus_widget));
+      else if (GTK_IS_TEXT_VIEW (old_focus_widget))
+        gtk_text_view_reset_im_context (GTK_TEXT_VIEW (old_focus_widget));
+#else
+      gtk_im_context_reset(context);
+#endif
+    }
     /* Remove text highlight (selection) unless focus is moved
        inside a toolbar, scrollbar or combo */
     allow_deselect = (!is_inside_toolbar &&
@@ -418,7 +446,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
     {
       GtkWidget *selection_toplevel = gtk_widget_get_toplevel(old_focus_widget);
 
-      if (!GTK_WIDGET_TOPLEVEL(selection_toplevel) ||
+      if (!gtk_widget_is_toplevel(selection_toplevel) ||
           selection_toplevel != toplevel)
         return TRUE;
 
@@ -460,23 +488,30 @@ hildon_im_hook_unmap_handler(GSignalInvocationHint *ihint,
   widget = g_value_get_object(&param_values[0]);
 
   /* If the IM is opened for this widget, hide the IM */
-  if (GTK_WIDGET_HAS_FOCUS(widget))
+  if (gtk_widget_has_focus(widget))
   {
     GtkIMContext *context = NULL;
 
+#if GTK_CHECK_VERSION(3,0,0)
+    if (GTK_IS_ENTRY (widget) || GTK_IS_TEXT_VIEW (widget))
+      context = current_context;
+#else
     if (GTK_IS_ENTRY (widget))
       context = GTK_ENTRY (widget)->im_context;
     else if (GTK_IS_TEXT_VIEW (widget))
       context = GTK_TEXT_VIEW (widget)->im_context;
-    
+#endif
+
     if (HILDON_IS_IM_CONTEXT (context))
     {
       hildon_im_context_hide(context);
     }
+#if !GTK_CHECK_VERSION(3,0,0)
     else if (GTK_IS_IM_CONTEXT (context))
     {
       gtk_im_context_hide (context);
     }
+#endif
   }
 
   return TRUE;
@@ -557,7 +592,8 @@ get_window_id(Atom window_atom)
   } value;
 
   gdk_error_trap_push();
-  status = XGetWindowProperty(GDK_DISPLAY(), GDK_ROOT_WINDOW(),
+  status = XGetWindowProperty(gdk_x11_get_default_xdisplay (),
+                              GDK_ROOT_WINDOW(),
                               window_atom, 0L, 4L, 0,
                               XA_WINDOW, &realType, &format,
                               &n, &extra, (unsigned char **) &value.val);
@@ -592,7 +628,7 @@ hildon_im_context_input_mode_changed(GObject *object, GParamSpec *pspec)
     ( (self->options & HILDON_IM_AUTOCASE) != 0 &&
       (input_mode & HILDON_GTK_INPUT_MODE_AUTOCAP) != 0);
 
-  if (self->client_gtk_widget != NULL && GTK_WIDGET_HAS_FOCUS (self->client_gtk_widget))
+  if (self->client_gtk_widget != NULL && gtk_widget_has_focus (self->client_gtk_widget))
   {
     /* Notify IM of any input mode changes in cases where the UI is
        already visible. */
@@ -713,7 +749,7 @@ set_preedit_buffer (HildonIMContext *self, const gchar* s)
   }
 #endif
   if (self->client_gtk_widget == NULL
-      || !GTK_WIDGET_REALIZED(self->client_gtk_widget))
+      || !gtk_widget_get_realized(self->client_gtk_widget))
     return;
 
   if (s != NULL)
@@ -836,7 +872,7 @@ hildon_im_clipboard_copied(HildonIMContext *self)
   ev.xclient.format = HILDON_IM_CLIPBOARD_FORMAT;
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+  XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
@@ -845,7 +881,7 @@ hildon_im_clipboard_copied(HildonIMContext *self)
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       ev.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+      XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -871,7 +907,7 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
 #endif
 
   gdk_error_trap_push();
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+  XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &ev);
 
   xerror = gdk_error_trap_pop();
   if (xerror)
@@ -880,7 +916,7 @@ hildon_im_clipboard_selection_query(HildonIMContext *self)
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       ev.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &ev);
+      XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &ev);
     }
     else
     {
@@ -1516,7 +1552,7 @@ hildon_im_context_widget_hide(GtkIMContext *context)
   self = HILDON_IM_CONTEXT(context);
 
   if (self->client_gtk_widget &&
-      GTK_WIDGET_HAS_FOCUS(self->client_gtk_widget))
+      gtk_widget_has_focus(self->client_gtk_widget))
   {
     hildon_im_context_hide(context);
   }
@@ -1676,8 +1712,10 @@ hildon_im_context_set_client_window(GtkIMContext *context,
                 "changed", G_CALLBACK(hildon_im_context_widget_changed), self);
       }
 
+#if !GTK_CHECK_VERSION(3,0,0)
       gtk_widget_set_extension_events(self->client_gtk_widget,
                                       GDK_EXTENSION_EVENTS_ALL);
+#endif
     }
   }
 }
@@ -1696,6 +1734,10 @@ hildon_im_context_focus_in(GtkIMContext *context)
     return;
   }
 
+#if GTK_CHECK_VERSION(3,0,0)
+  current_context = context;
+#endif
+
   hildon_im_context_send_command(self, HILDON_IM_SETCLIENT);
 
   hildon_im_context_send_command (self, HILDON_IM_SHIFT_UNSTICKY);
@@ -1713,8 +1755,13 @@ static void
 hildon_im_context_focus_out(GtkIMContext *context)
 {
   HildonIMContext *self;
+
   g_return_if_fail(HILDON_IS_IM_CONTEXT(context));
   self = HILDON_IM_CONTEXT(context);
+
+#if GTK_CHECK_VERSION(3,0,0)
+  current_context = NULL;
+#endif
 
   self->has_focus = FALSE;
 
@@ -1740,9 +1787,9 @@ hildon_im_context_font_has_char(HildonIMContext *self, guint32 c)
 
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), TRUE);
   g_return_val_if_fail(self->client_gtk_widget &&
-                       self->client_gtk_widget->window, TRUE);
+                       gtk_widget_get_window(self->client_gtk_widget), TRUE);
 
-  cr = gdk_cairo_create(self->client_gtk_widget->window);
+  cr = gdk_cairo_create(gtk_widget_get_window(self->client_gtk_widget));
   len = g_unichar_to_utf8(c, utf8);
   layout = pango_cairo_create_layout(cr);
   pango_layout_set_text(layout, utf8, len);
@@ -2777,7 +2824,9 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 {
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
+#if !GTK_CHECK_VERSION(3,0,0)
   hildon_im_context_input_mode_changed (G_OBJECT (self), NULL);
+#endif
 
   if (! self->auto_upper_enabled)
   {
@@ -3032,7 +3081,7 @@ hildon_im_context_send_command(HildonIMContext *self,
    */
   gdk_error_trap_push();
 
-  XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
+  XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &event);
   /* TODO this call can cause a hang, see NB#97380 */
 
   xerror = gdk_error_trap_pop();
@@ -3042,7 +3091,7 @@ hildon_im_context_send_command(HildonIMContext *self,
     {
       self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
       event.xclient.window = self->im_window;
-      XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, &event);
+      XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, &event);
     }
     else
     {
@@ -3091,7 +3140,7 @@ hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
      */
     gdk_error_trap_push();
 
-    XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
+    XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, event);
 
     xerror = gdk_error_trap_pop();
     if( xerror )
@@ -3100,7 +3149,7 @@ hildon_im_context_send_event(HildonIMContext *self, XEvent *event)
       {
         self->im_window = get_window_id(hildon_im_protocol_get_atom(HILDON_IM_WINDOW));
         event->xclient.window = self->im_window;
-        XSendEvent(GDK_DISPLAY(), self->im_window, False, 0, event);
+        XSendEvent(gdk_x11_get_default_xdisplay (), self->im_window, False, 0, event);
       }
       else
       {

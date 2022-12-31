@@ -35,7 +35,6 @@ AC_HEADER_STDC
 
 GTK_DOC_CHECK(1.9)
 
-
 if test foobar${hildon_use_debug} = foobaryes
 then
 	CFLAGS="$CFLAGS -DDEBUG"
@@ -43,11 +42,15 @@ fi
 
 AM_CONDITIONAL(TIMER_ENABLED, test x${hildon_use_timestamping} = xyes)
 
-CFLAGS="$CFLAGS -Wall -ansi -Wmissing-prototypes -Wmissing-declarations"
+CFLAGS="$CFLAGS -Wall -ansi -Wmissing-prototypes -Wmissing-declarations -Wno-deprecated-declarations"
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.6.10)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 hildon-1)
+AC_SUBST(GTK2_LIBS)
+AC_SUBST(GTK2_CFLAGS)
+
+PKG_CHECK_MODULES(GTK3, gtk+-3.0)
+AC_SUBST(GTK3_LIBS)
+AC_SUBST(GTK3_CFLAGS)
 
 PKG_CHECK_MODULES(LIBOSSO, libosso >= 0.7.6)
 AC_SUBST(LIBOSSO_LIBS)
@@ -70,8 +73,10 @@ AC_SUBST(X11_LIBS)
 AC_SUBST(X11_CFLAGS)
 
 # We need this for our immodule
-GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
-AC_SUBST(GTK_VERSION)
+GTK2_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+AC_SUBST(GTK2_VERSION)
+GTK3_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-3.0`
+AC_SUBST(GTK3_VERSION)
 
 AM_GLIB_GNU_GETTEXT
 
@@ -101,7 +106,10 @@ AC_SUBST(initdir)
 
 AC_OUTPUT([Makefile \
 	hildon-input-method-framework-3.0.pc \
+	hildon-input-method-framework-3-3.0.pc \
 	src/Makefile \
+	src/gtk2/Makefile \
+	src/gtk3/Makefile \
 	docs/Makefile \
 	debian/hildon-input-method-framework.install \
   ])
