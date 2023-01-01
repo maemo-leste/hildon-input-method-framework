@@ -2915,9 +2915,7 @@ hildon_im_context_check_sentence_start (HildonIMContext *self)
 {
   g_return_if_fail(HILDON_IS_IM_CONTEXT(self));
 
-#if !GTK_CHECK_VERSION(3,0,0)
   hildon_im_context_input_mode_changed (G_OBJECT (self), NULL);
-#endif
 
   if (! self->auto_upper_enabled)
   {
