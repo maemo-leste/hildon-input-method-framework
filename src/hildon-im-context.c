@@ -792,8 +792,12 @@ static gboolean
 commit_text (HildonIMContext *self, const gchar* s)
 {
   g_return_val_if_fail(HILDON_IS_IM_CONTEXT(self), FALSE);
+#if GTK_CHECK_VERSION(3,0,0)
+  if (s == NULL)
+#else
   if (self->client_gtk_widget == NULL
       || s == NULL)
+#endif
     return FALSE;
 
   g_signal_emit_by_name(self, "commit", s);
