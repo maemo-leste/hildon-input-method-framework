@@ -3138,7 +3138,8 @@ hildon_im_context_send_command(HildonIMContext *self,
 
     /* When the client widget is a child of GtkPlug, the application can
        override the ID of the window the IM will be set transient to */
-    if (GTK_IS_PLUG(gtk_widget_get_toplevel(self->client_gtk_widget)))
+    if (self->client_gtk_widget != NULL &&
+        GTK_IS_PLUG(gtk_widget_get_toplevel(self->client_gtk_widget)))
     {
       GtkPlug *plug = (GtkPlug *)gtk_widget_get_toplevel(self->client_gtk_widget);
       guint32 transient_window_xid;
