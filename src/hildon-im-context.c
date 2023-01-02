@@ -391,10 +391,7 @@ hildon_im_hook_grab_focus_handler(GSignalInvocationHint *ihint,
 
     parent = gtk_widget_get_parent (focus_widget);*/
 #if GTK_CHECK_VERSION(3,0,0)
-    is_combo_box_entry = GTK_IS_COMBO_BOX(focus_widget);
-
-    if (is_combo_box_entry)
-      g_object_get (focus_widget, "has-entry", &is_combo_box_entry, NULL);
+    is_combo_box_entry = FALSE;
 #else
     is_combo_box_entry = GTK_IS_COMBO_BOX_ENTRY(focus_widget);
 #endif
