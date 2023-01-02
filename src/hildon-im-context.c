@@ -2384,6 +2384,23 @@ hildon_im_context_abort_long_press (HildonIMContext *context)
   }
 }
 
+/*
+ * GTK3 added couple of control chars to be supported by
+ * gdk_keyval_to_unicode(), ignore them
+ */
+
+static gboolean
+is_ascii_control_char(guint32 c)
+{
+#if GTK_CHECK_VERSION(3,0,0)
+  return
+      c == '\b' || c == '\t' || c == '\n' ||
+      c == '\v' || c == '\r' || c == '\033';
+#else
+  return FALSE;
+#endif
+}
+
 static gboolean
 key_pressed (HildonIMContext *context, GdkEventKey *event)
 {
@@ -2607,7 +2624,7 @@ key_pressed (HildonIMContext *context, GdkEventKey *event)
     c = gdk_keyval_to_unicode (event->keyval);
   }
 
-  if (c)
+  if (c && !is_ascii_control_char(c))
   {
     gchar utf8[10];
 
