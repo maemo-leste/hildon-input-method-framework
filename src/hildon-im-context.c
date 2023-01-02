@@ -1837,8 +1837,15 @@ hildon_im_context_focus_in(GtkIMContext *context)
 
   if (enter_on_focus_pending)
   {
-    hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
-    hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
+#if GTK_CHECK_VERSION(3,0,0)
+    if (self->client_gtk_widget &&
+        !gtk_widget_activate(self->client_gtk_widget))
+#endif
+    {
+      hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
+      hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
+    }
+
     enter_on_focus_pending = FALSE;
   }
 }
