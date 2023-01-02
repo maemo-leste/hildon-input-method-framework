@@ -1,3 +1,9 @@
+hildon-input-method-framework (1:2.1.69-1) unstable; urgency=low
+
+  * Add initial support for Gtk3 (by freemangordon)
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 02 Jan 2023 12:40:56 +0100
+
 hildon-input-method-framework (1:2.1.68-1) unstable; urgency=low
 
   * Fix enter behaviour by undirecting the enter key
