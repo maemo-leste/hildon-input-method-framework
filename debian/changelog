@@ -1,3 +1,9 @@
+hildon-input-method-framework (1:2.1.70-1) unstable; urgency=low
+
+  * hildon_im_context_send_fake_key: Use correct keymap
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Thu, 23 Feb 2023 07:39:32 +0200
+
 hildon-input-method-framework (1:2.1.69-1) unstable; urgency=low
 
   * Add initial support for Gtk3 (by freemangordon)
