@@ -245,12 +245,23 @@ static gboolean key_pressed (HildonIMContext *context, GdkEventKey *event);
 static void hildon_im_context_abort_long_press (HildonIMContext *context);
 
 static void
-hildon_im_context_send_fake_key (guint key_val, gboolean is_press)
+hildon_im_context_send_fake_key (HildonIMContext *self,
+                                 guint key_val, gboolean is_press)
 {
-  GdkKeymapKey *keys=NULL;
-  gint n_keys=0;
+  GdkKeymapKey *keys = NULL;
+  gint n_keys = 0;
+  GdkKeymap *keymap = NULL;
 
-  if(gdk_keymap_get_entries_for_keyval (NULL, key_val, &keys, &n_keys))
+  if (self->client_gtk_widget)
+  {
+    GdkDisplay *display = gtk_widget_get_display (self->client_gtk_widget);
+
+    keymap = gdk_keymap_get_for_display (display);
+  }
+  else
+    keymap = gdk_keymap_get_default ();
+
+  if(gdk_keymap_get_entries_for_keyval (keymap, key_val, &keys, &n_keys))
   {
     XTestFakeKeyEvent(gdk_x11_get_default_xdisplay (),
                       keys->keycode, is_press, 0);
@@ -1353,8 +1364,8 @@ hildon_im_context_do_backspace (HildonIMContext *self)
   }
   else
   {
-    hildon_im_context_send_fake_key(GDK_BackSpace, TRUE);
-    hildon_im_context_send_fake_key(GDK_BackSpace, FALSE);
+    hildon_im_context_send_fake_key(self, GDK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key(self, GDK_BackSpace, FALSE);
   }
 }
 
@@ -1375,11 +1386,11 @@ hildon_im_context_do_del (HildonIMContext *self)
 
     if (g_utf8_strlen (sur, -1) > cpos1)
     {
-      hildon_im_context_send_fake_key (GDK_Shift_L, FALSE);
-      hildon_im_context_send_fake_key (GDK_Right, TRUE);
-      hildon_im_context_send_fake_key (GDK_Right, FALSE);
-      hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
-      hildon_im_context_send_fake_key (GDK_Shift_L, TRUE);
+      hildon_im_context_send_fake_key (self, GDK_Shift_L, FALSE);
+      hildon_im_context_send_fake_key (self, GDK_Right, TRUE);
+      hildon_im_context_send_fake_key (self, GDK_Right, FALSE);
+      hildon_im_context_send_fake_key (self, GDK_BackSpace, TRUE);
+      hildon_im_context_send_fake_key (self, GDK_Shift_L, TRUE);
     }
     g_free (sur);
 
@@ -1445,8 +1456,8 @@ client_message_filter(GdkXEvent *xevent,GdkEvent *event,
           hildon_im_context_check_sentence_start(self);
           break;
         case HILDON_IM_CONTEXT_HANDLE_TAB:
-          hildon_im_context_send_fake_key(GDK_Tab, TRUE);
-          hildon_im_context_send_fake_key(GDK_Tab, FALSE);
+          hildon_im_context_send_fake_key(self, GDK_Tab, TRUE);
+          hildon_im_context_send_fake_key(self, GDK_Tab, FALSE);
           break;
         case HILDON_IM_CONTEXT_HANDLE_BACKSPACE:
           hildon_im_context_do_backspace (self);
@@ -1839,8 +1850,8 @@ hildon_im_context_focus_in(GtkIMContext *context)
         !gtk_widget_activate(self->client_gtk_widget))
 #endif
     {
-      hildon_im_context_send_fake_key(GDK_KP_Enter, TRUE);
-      hildon_im_context_send_fake_key(GDK_KP_Enter, FALSE);
+      hildon_im_context_send_fake_key(self, GDK_KP_Enter, TRUE);
+      hildon_im_context_send_fake_key(self, GDK_KP_Enter, FALSE);
     }
 
     enter_on_focus_pending = FALSE;
@@ -2324,14 +2335,14 @@ hildon_im_context_delete_penultimate_char (HildonIMContext *self)
   }
   else
   {
-    hildon_im_context_send_fake_key (GDK_Left, TRUE);
-    hildon_im_context_send_fake_key (GDK_Left, FALSE);
+    hildon_im_context_send_fake_key (self, GDK_Left, TRUE);
+    hildon_im_context_send_fake_key (self, GDK_Left, FALSE);
 
-    hildon_im_context_send_fake_key (GDK_BackSpace, TRUE);
-    hildon_im_context_send_fake_key (GDK_BackSpace, FALSE);
+    hildon_im_context_send_fake_key (self, GDK_BackSpace, TRUE);
+    hildon_im_context_send_fake_key (self, GDK_BackSpace, FALSE);
 
-    hildon_im_context_send_fake_key (GDK_Right, TRUE);
-    hildon_im_context_send_fake_key (GDK_Right, FALSE);
+    hildon_im_context_send_fake_key (self, GDK_Right, TRUE);
+    hildon_im_context_send_fake_key (self, GDK_Right, FALSE);
   }
 }
 
