@@ -1,3 +1,9 @@
+hildon-input-method-framework (1:2.1.71-1) unstable; urgency=low
+
+  * hildon-im-protocol.h: move HildonGtkInputMode hack
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Sat, 30 Nov 2024 07:57:17 +0200
+
 hildon-input-method-framework (1:2.1.70-1) unstable; urgency=low
 
   * hildon_im_context_send_fake_key: Use correct keymap
