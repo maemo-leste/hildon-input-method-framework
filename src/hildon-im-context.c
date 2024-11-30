@@ -39,6 +39,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
+#include "hildon-im-gtk-compat.h"
 #include "hildon-im-context.h"
 #include "hildon-im-gtk.h"
 #include "hildon-im-common.h"

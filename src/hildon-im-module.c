@@ -27,6 +27,7 @@
 
 
 #include <gtk/gtkimmodule.h>
+#include "hildon-im-gtk-compat.h"
 #include "hildon-im-context.h"
 #include <string.h>
 

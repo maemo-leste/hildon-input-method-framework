@@ -297,24 +297,6 @@ typedef enum {
   HILDON_IM_DEAD_KEY_MASK         = 1 << 5
 } HildonIMInternalModifierMask;
 
-#if !defined(MAEMO_CHANGES)
-/* remove from here once we have gtk3 hildon */
-typedef enum
-{
-  HILDON_GTK_INPUT_MODE_ALPHA             = 1 << 0,
-  HILDON_GTK_INPUT_MODE_NUMERIC           = 1 << 1,
-  HILDON_GTK_INPUT_MODE_SPECIAL           = 1 << 2,
-  HILDON_GTK_INPUT_MODE_HEXA              = 1 << 3,
-  HILDON_GTK_INPUT_MODE_TELE              = 1 << 4,
-  HILDON_GTK_INPUT_MODE_FULL              = (HILDON_GTK_INPUT_MODE_ALPHA | HILDON_GTK_INPUT_MODE_NUMERIC | HILDON_GTK_INPUT_MODE_SPECIAL),
-  HILDON_GTK_INPUT_MODE_NO_SCREEN_PLUGINS = 1 << 27,
-  HILDON_GTK_INPUT_MODE_MULTILINE         = 1 << 28,
-  HILDON_GTK_INPUT_MODE_INVISIBLE         = 1 << 29,
-  HILDON_GTK_INPUT_MODE_AUTOCAP           = 1 << 30,
-  HILDON_GTK_INPUT_MODE_DICTIONARY        = 1 << 31
-} HildonGtkInputMode;
-#endif
-
 /* Command activation message, from context to IM (see HildonIMCommand) */
 typedef struct
 {

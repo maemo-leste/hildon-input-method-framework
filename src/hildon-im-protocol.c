@@ -30,6 +30,8 @@
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+
+#include "hildon-im-gtk-compat.h"
 #include "hildon-im-protocol.h"
 
 
